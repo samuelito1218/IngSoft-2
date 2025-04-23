@@ -1,4 +1,0 @@
-spring:
-  data:
-    mongodb:
-      uri: mongodb+srv://samuelarredondo:Simon2004@samuelito1218.djj1gpt.mongodb.net/tu_base_de_datos?retryWrites=true&w=majority
