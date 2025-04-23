@@ -1,6 +1,5 @@
-// Corrección de src/components/Login.jsx
-
-import React, { useState } from 'react';
+// Login mejorado visualmente
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import api from '../services/api';
@@ -16,6 +15,12 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [animateForm, setAnimateForm] = useState(false);
+
+  // Añadir animación después de que el componente se monte
+  useEffect(() => {
+    setAnimateForm(true);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -65,11 +70,11 @@ function Login() {
   
   return (
     <div className="login-container">
-      <div className="login-card">
-        <h2 className="login-title">Iniciar Sesión</h2>
+      <div className={`login-card ${animateForm ? 'animate-fade-in' : ''}`}>
+        <h2 className="login-title">FastFood</h2>
         
         <div className="welcome-message">
-          <p>¡Hola, es un gusto verte de nuevo en FastFood! 👋</p>
+          <p>¡Hola, bienvenido de nuevo! 👋</p>
         </div>
         
         <form onSubmit={handleSubmit}>
@@ -80,7 +85,7 @@ function Login() {
               <span className="input-icon">📧</span>
               <input 
                 type="email" 
-                placeholder="Correo" 
+                placeholder="Correo electrónico" 
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
                 required 
@@ -132,7 +137,7 @@ function Login() {
             className="login-button" 
             disabled={isLoading}
           >
-            {isLoading ? 'Cargando...' : 'Ingresar'}
+            {isLoading ? 'Cargando...' : 'Iniciar sesión'}
           </button>
         </form>
         

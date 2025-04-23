@@ -1,6 +1,4 @@
-// Controlador de autenticación con soporte para comuna
 
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const {PrismaClient} = require('@prisma/client');
 const crypto = require('crypto');
@@ -12,9 +10,9 @@ const saltRounds = 10;
 // Registro de usuario
 exports.register = async(req, res) => {
     try {
-        const { nombreCompleto, email, password, telefono, cedula, direccion, comuna, rol } = req.body;
+        const { nombreCompleto, email, password, telefono, cedula, direccion, comuna, rol, vehiculo } = req.body;
 
-        console.log('Datos recibidos:', { nombreCompleto, email, telefono, cedula, direccion, comuna, rol });
+        console.log('Datos recibidos:', { nombreCompleto, email, telefono, cedula, direccion, comuna, rol, vehiculo });
 
         // Verificar si el usuario ya existe
         const existingUser = await prisma.usuario.findUnique({
@@ -31,6 +29,13 @@ exports.register = async(req, res) => {
         if (!rolesValidos.includes(rol)) {
             return res.status(400).json({
                 message: 'Rol no válido. Los roles permitidos son: Cliente, Repartidor, Admin'
+            });
+        }
+
+        // Validar vehículo para repartidores
+        if (rol === 'Repartidor' && (!vehiculo || !['Moto', 'Bicicleta'].includes(vehiculo))) {
+            return res.status(400).json({
+                message: 'Vehículo no válido. Las opciones son: Moto, Bicicleta'
             });
         }
 
@@ -57,6 +62,7 @@ exports.register = async(req, res) => {
             cedula: cedulaNum,
             direccion,
             rol,
+            vehiculo: rol === 'Repartidor' ? vehiculo : null, // Solo agregar vehículo para repartidores
             historialDirecciones: {
                 set: [
                     {
@@ -95,6 +101,7 @@ exports.register = async(req, res) => {
                 cedula: newUser.cedula,
                 direccion: newUser.direccion,
                 rol: newUser.rol,
+                vehiculo: newUser.vehiculo
             },
         });
     } catch (error) {
@@ -152,6 +159,7 @@ exports.login = async(req, res) => {
                 cedula: user.cedula,
                 direccion: user.direccion,
                 rol: user.rol,
+                vehiculo: user.vehiculo
             },
         });
     } catch (error) {

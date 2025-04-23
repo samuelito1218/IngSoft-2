@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../services/api';
 import '../styles/Login.css';
@@ -13,6 +14,12 @@ function ResetPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [animateForm, setAnimateForm] = useState(false);
+
+  // Añadir animación después de que el componente se monte
+  useEffect(() => {
+    setAnimateForm(true);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,12 +60,13 @@ function ResetPassword() {
 
   return (
     <div className="login-container">
-      <div className="login-card">
-        <h2 className="login-title">Restablecer Contraseña</h2>
+      <div className={`login-card ${animateForm ? 'animate-fade-in' : ''}`}>
+        <h2 className="login-title">Restablecer contraseña</h2>
         
         {success ? (
           <div className="success-message">
-            <p>Tu contraseña ha sido restablecida exitosamente.</p>
+            <p>¡Tu contraseña ha sido restablecida exitosamente!</p>
+            <p>Ya puedes iniciar sesión con tu nueva contraseña.</p>
             <button 
               className="login-button" 
               onClick={() => navigate('/')}
@@ -68,9 +76,13 @@ function ResetPassword() {
           </div>
         ) : (
           <>
-            <p className="input-label">Ingresa tu nueva contraseña</p>
+            <div className="welcome-message">
+              <p>Crea una nueva contraseña segura para tu cuenta</p>
+            </div>
             
             <form onSubmit={handleSubmit}>
+              <p className="input-label">Tu nueva contraseña debe tener al menos 6 caracteres</p>
+              
               <div className="input-group">
                 <div className="input-container">
                   <span className="input-icon">🔒</span>
@@ -94,7 +106,7 @@ function ResetPassword() {
                   <span className="input-icon">🔒</span>
                   <input 
                     type={showPassword ? "text" : "password"} 
-                    placeholder="Confirmar contraseña" 
+                    placeholder="Confirmar nueva contraseña" 
                     value={confirmPassword} 
                     onChange={(e) => setConfirmPassword(e.target.value)} 
                     required 
@@ -112,6 +124,17 @@ function ResetPassword() {
                 {isLoading ? 'Procesando...' : 'Restablecer contraseña'}
               </button>
             </form>
+            
+            <div className="register-option">
+              <p>¿Recordaste tu contraseña?</p>
+              <button 
+                type="button" 
+                className="register-link" 
+                onClick={() => navigate('/')}
+              >
+                Volver al inicio de sesión
+              </button>
+            </div>
           </>
         )}
       </div>

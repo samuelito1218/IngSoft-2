@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import api from '../services/api';
@@ -16,13 +17,20 @@ function Register() {
     telefono: '',
     cedula: '',
     direccion: '',
-    comuna: '', // Campo para la comuna
-    rol: 'Cliente'
+    comuna: '',
+    rol: 'Cliente',
+    vehiculo: ''
   });
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [animateForm, setAnimateForm] = useState(false);
+
+  // Añadir animación después de que el componente se monte
+  useEffect(() => {
+    setAnimateForm(true);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -32,12 +40,25 @@ function Register() {
     });
   };
 
+  const selectVehicle = (vehicleType) => {
+    setFormData({
+      ...formData,
+      vehiculo: vehicleType
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Validar que las contraseñas coincidan
     if (formData.password !== formData.confirmPassword) {
       setError('Las contraseñas no coinciden');
+      return;
+    }
+
+    // Validar que si el rol es Repartidor, se haya seleccionado un vehículo
+    if (formData.rol === 'Repartidor' && !formData.vehiculo) {
+      setError('Por favor selecciona un tipo de vehículo');
       return;
     }
     
@@ -53,8 +74,9 @@ function Register() {
         telefono: formData.telefono,
         cedula: formData.cedula,
         direccion: formData.direccion,
-        comuna: formData.comuna, // Incluir la comuna
-        rol: formData.rol
+        comuna: formData.comuna,
+        rol: formData.rol,
+        vehiculo: formData.rol === 'Repartidor' ? formData.vehiculo : undefined
       };
       
       console.log('Enviando datos de registro:', userData);
@@ -70,9 +92,7 @@ function Register() {
       login(user, token);
       
       // Redireccionar según el rol
-      if (user.rol === 'Admin') {
-        navigate('/admin');
-      } else if (user.rol === 'Repartidor') {
+      if (user.rol === 'Repartidor') {
         navigate('/repartidor');
       } else {
         navigate('/dashboard');
@@ -92,11 +112,11 @@ function Register() {
 
   return (
     <div className="login-container">
-      <div className="login-card">
-        <h2 className="login-title">Registro</h2>
+      <div className={`login-card ${animateForm ? 'animate-fade-in' : ''}`}>
+        <h2 className="login-title">Crea tu cuenta</h2>
         
         <div className="welcome-message">
-          <p>¡Bienvenido a FastFood! Registra tus datos para comenzar.</p>
+          <p>¡Únete a FastFood y disfruta de comida a domicilio!</p>
         </div>
         
         <form onSubmit={handleSubmit}>
@@ -130,7 +150,7 @@ function Register() {
               <input 
                 type="tel" 
                 name="telefono"
-                placeholder="Teléfono" 
+                placeholder="Número de teléfono" 
                 value={formData.telefono} 
                 onChange={handleChange} 
                 required 
@@ -142,7 +162,7 @@ function Register() {
               <input 
                 type="text" 
                 name="cedula"
-                placeholder="Cédula" 
+                placeholder="Cédula de identidad" 
                 value={formData.cedula} 
                 onChange={handleChange} 
                 required 
@@ -161,7 +181,6 @@ function Register() {
               />
             </div>
             
-            {/* Nuevo campo para comuna */}
             <div className="input-container">
               <span className="input-icon">🏙️</span>
               <input 
@@ -175,7 +194,7 @@ function Register() {
               />
             </div>
             
-            {/* Selector de rol */}
+            {/* Selector de rol (solo Cliente o Repartidor) */}
             <div className="input-container">
               <span className="input-icon">👥</span>
               <select
@@ -187,8 +206,25 @@ function Register() {
               >
                 <option value="Cliente">Cliente</option>
                 <option value="Repartidor">Repartidor</option>
-                <option value="Admin">Administrador</option>
               </select>
+            </div>
+            
+            {/* Selector de vehículo para repartidores */}
+            <div className={`vehicle-container ${formData.rol === 'Repartidor' ? 'show' : ''}`}>
+              <div 
+                className={`vehicle-option ${formData.vehiculo === 'Moto' ? 'selected' : ''}`}
+                onClick={() => selectVehicle('Moto')}
+              >
+                <div className="vehicle-icon">🏍️</div>
+                <div className="vehicle-name">Moto</div>
+              </div>
+              <div 
+                className={`vehicle-option ${formData.vehiculo === 'Bicicleta' ? 'selected' : ''}`}
+                onClick={() => selectVehicle('Bicicleta')}
+              >
+                <div className="vehicle-icon">🚲</div>
+                <div className="vehicle-name">Bicicleta</div>
+              </div>
             </div>
             
             <div className="input-container">
@@ -245,7 +281,7 @@ function Register() {
             className="register-link" 
             onClick={() => navigate('/')}
           >
-            Iniciar sesión
+            Inicia sesión
           </button>
         </div>
       </div>
