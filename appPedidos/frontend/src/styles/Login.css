@@ -166,3 +166,44 @@
     padding: 0;
     font-size: 14px;
   }
+
+  /* Añadir al archivo src/styles/Login.css */
+
+/* Estilo para el selector de rol */
+.role-select {
+  flex: 1;
+  padding: 12px 0;
+  border: none;
+  color: #333;
+  outline: none;
+  background: transparent;
+  font-size: 16px;
+  appearance: none; /* Quita la apariencia por defecto del selector */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+/* Agregar un indicador de dropdown personalizado */
+.input-container:has(.role-select) {
+  position: relative;
+}
+
+.input-container:has(.role-select)::after {
+  content: "▼";
+  font-size: 12px;
+  color: #777;
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* Estilo para las opciones */
+.role-select option {
+  background-color: white;
+  color: #333;
+  padding: 10px;
+}

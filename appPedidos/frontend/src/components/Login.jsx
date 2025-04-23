@@ -1,3 +1,5 @@
+// Corrección de src/components/Login.jsx
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -48,7 +50,10 @@ function Login() {
     } catch (error) {
       console.error('Error de inicio de sesión:', error);
       
-      if (error.response && error.response.data) {
+      // Mejora en el manejo de errores
+      if (error.code === 'ERR_NETWORK') {
+        setError('No se pudo conectar al servidor. Verifica que el backend esté funcionando.');
+      } else if (error.response && error.response.data) {
         setError(error.response.data.message || 'Credenciales inválidas');
       } else {
         setError('Error al conectar con el servidor. Intenta de nuevo más tarde.');
@@ -64,7 +69,7 @@ function Login() {
         <h2 className="login-title">Iniciar Sesión</h2>
         
         <div className="welcome-message">
-          <p>¡Hola, es un gusto verte de nuevo en FastFood!👋</p>
+          <p>¡Hola, es un gusto verte de nuevo en FastFood! 👋</p>
         </div>
         
         <form onSubmit={handleSubmit}>

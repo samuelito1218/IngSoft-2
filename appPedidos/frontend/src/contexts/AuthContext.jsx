@@ -1,3 +1,5 @@
+// Corrección de src/contexts/AuthContext.jsx
+
 import React, { createContext, useState, useEffect } from 'react';
 import api from '../services/api';
 
@@ -16,12 +18,20 @@ export const AuthProvider = ({ children }) => {
       
       if (token) {
         try {
+          // Configurar el token para esta petición específica
+          const config = {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          };
+          
           // Verificar token llamando al endpoint /me
-          const response = await api.get('/auth/me');
+          const response = await api.get('/auth/me', config);
           
           setUser(response.data.user);
           setIsAuthenticated(true);
         } catch (error) {
+          console.error('Error al verificar autenticación:', error);
           // Si hay error, limpiar tokens
           localStorage.removeItem('token');
           sessionStorage.removeItem('token');
@@ -50,16 +60,17 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
   };
 
+  // Valor del contexto
+  const contextValue = {
+    user,
+    loading,
+    isAuthenticated,
+    login,
+    logout
+  };
+
   return (
-    <AuthContext.Provider 
-      value={{ 
-        user, 
-        loading, 
-        isAuthenticated, 
-        login, 
-        logout 
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

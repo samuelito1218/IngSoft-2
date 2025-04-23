@@ -1,4 +1,5 @@
-// Punto de entrada
+// Corrección de src/index.js
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -12,7 +13,7 @@ const PORT = process.env.PORT || 5000;
 
 // Middlewares
 app.use(cors({
-  origin: 'http://localhost:5173', // URL de tu frontend React
+  origin: 'http://localhost:5173', // URL de tu frontend React/Vite
   credentials: true // Permite enviar cookies si es necesario
 }));
 app.use(express.json());
@@ -25,7 +26,16 @@ app.get('/', (req, res) => {
   res.json({ message: 'API de AppPedidos funcionando correctamente' });
 });
 
+// Middleware para manejo de errores
+app.use((err, req, res, next) => {
+  console.error('Error general:', err);
+  res.status(500).json({ 
+    message: 'Error interno del servidor', 
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined 
+  });
+});
+
 // Iniciar servidor
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}`);
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

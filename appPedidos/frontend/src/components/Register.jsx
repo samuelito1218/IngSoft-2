@@ -15,7 +15,9 @@ function Register() {
     confirmPassword: '',
     telefono: '',
     cedula: '',
-    direccion: ''
+    direccion: '',
+    comuna: '', // Campo para la comuna
+    rol: 'Cliente'
   });
   
   const [isLoading, setIsLoading] = useState(false);
@@ -50,8 +52,12 @@ function Register() {
         password: formData.password,
         telefono: formData.telefono,
         cedula: formData.cedula,
-        direccion: formData.direccion
+        direccion: formData.direccion,
+        comuna: formData.comuna, // Incluir la comuna
+        rol: formData.rol
       };
+      
+      console.log('Enviando datos de registro:', userData);
       
       // Llamada a la API para registro
       const response = await api.post('/auth/register', userData);
@@ -63,8 +69,14 @@ function Register() {
       // Actualizar estado de autenticación
       login(user, token);
       
-      // Redireccionar al dashboard
-      navigate('/dashboard');
+      // Redireccionar según el rol
+      if (user.rol === 'Admin') {
+        navigate('/admin');
+      } else if (user.rol === 'Repartidor') {
+        navigate('/repartidor');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error) {
       console.error('Error de registro:', error);
       
@@ -147,6 +159,36 @@ function Register() {
                 onChange={handleChange} 
                 required 
               />
+            </div>
+            
+            {/* Nuevo campo para comuna */}
+            <div className="input-container">
+              <span className="input-icon">🏙️</span>
+              <input 
+                type="number" 
+                name="comuna"
+                placeholder="Comuna (número)" 
+                value={formData.comuna} 
+                onChange={handleChange} 
+                required 
+                min="1"
+              />
+            </div>
+            
+            {/* Selector de rol */}
+            <div className="input-container">
+              <span className="input-icon">👥</span>
+              <select
+                name="rol"
+                value={formData.rol}
+                onChange={handleChange}
+                className="role-select"
+                required
+              >
+                <option value="Cliente">Cliente</option>
+                <option value="Repartidor">Repartidor</option>
+                <option value="Admin">Administrador</option>
+              </select>
             </div>
             
             <div className="input-container">
