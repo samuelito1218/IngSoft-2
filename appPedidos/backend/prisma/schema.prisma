@@ -25,6 +25,8 @@ model Usuario {
   pedidosRepartidor   Pedido[]  @relation("repartidor")
   mensajesEnviados    Mensaje[] @relation("emisor")
   mensajesRecibidos   Mensaje[] @relation("receptor")
+
+  @@map("Usuarios")
 }
 
 type HistorialDireccion {
@@ -46,6 +48,7 @@ model Pedido {
   productos       ProductoPedido[]
   mensajes        Mensaje[]
   calificacion    Calificacion?
+  @@map("Pedidos")
 }
 
 type ProductoPedido {
@@ -58,6 +61,7 @@ model Restaurante {
   nombre      String
   ubicaciones Ubicacion[]
   productos   Producto[]
+  @@map("Restaurantes")
 }
 
 type Ubicacion {
@@ -72,6 +76,7 @@ model Producto {
   especificaciones String
   restauranteId    String  @db.ObjectId
   restaurante      Restaurante @relation(fields: [restauranteId], references: [id])
+  @@map("Productos")
 }
 
 model Calificacion {
@@ -81,6 +86,7 @@ model Calificacion {
   comentarios           String?
   pedidoId              String  @unique @db.ObjectId
   pedido                Pedido  @relation(fields: [pedidoId], references: [id])
+  @@map("Calificaciones")
 }
 
 model Mensaje {
@@ -93,4 +99,6 @@ model Mensaje {
   usuarioReceptor   Usuario @relation("receptor", fields: [usuarioReceptorId], references: [id])
   texto            String
   fechaEnvio       DateTime
+
+  @@map("Mensajes")
 }
