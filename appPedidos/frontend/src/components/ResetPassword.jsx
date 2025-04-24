@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../services/api';
-import '../styles/Login.css';
+import '../styles/ResetPassword.css';
 
 function ResetPassword() {
   const { token } = useParams();
@@ -15,11 +14,24 @@ function ResetPassword() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [animateForm, setAnimateForm] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
 
-  // Añadir animación después de que el componente se monte
   useEffect(() => {
     setAnimateForm(true);
   }, []);
+
+  useEffect(() => {
+    // Evaluar la fuerza de la contraseña
+    if (password.length === 0) {
+      setPasswordStrength(0);
+    } else if (password.length < 6) {
+      setPasswordStrength(1); // Débil
+    } else if (password.length >= 6 && /[A-Z]/.test(password) && /[0-9]/.test(password)) {
+      setPasswordStrength(3); // Fuerte
+    } else {
+      setPasswordStrength(2); // Media
+    }
+  }, [password]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,7 +50,6 @@ function ResetPassword() {
       setIsLoading(true);
       setError('');
       
-      // Llamada a la API para restablecer contraseña
       await api.post('/auth/reset-password', { 
         token, 
         newPassword: password 
@@ -58,17 +69,37 @@ function ResetPassword() {
     }
   };
 
+  const getPasswordStrengthText = () => {
+    switch(passwordStrength) {
+      case 1:
+        return { text: 'Débil', color: '#e74c3c' };
+      case 2:
+        return { text: 'Media', color: '#f39c12' };
+      case 3:
+        return { text: 'Fuerte', color: '#27ae60' };
+      default:
+        return { text: '', color: '#ccc' };
+    }
+  };
+
   return (
-    <div className="login-container">
-      <div className={`login-card ${animateForm ? 'animate-fade-in' : ''}`}>
-        <h2 className="login-title">Restablecer contraseña</h2>
+    <div className="reset-container">
+      <div className={`reset-card ${animateForm ? 'animate-fade-in' : ''}`}>
+        <div className="card-header">
+          <div className="logo-container">
+            <span className="logo-icon">🍔</span>
+            <h1 className="logo-text">FastFood</h1>
+          </div>
+          <h2 className="reset-title">Restablecer contraseña</h2>
+        </div>
         
         {success ? (
           <div className="success-message">
+            <div className="success-icon">✅</div>
             <p>¡Tu contraseña ha sido restablecida exitosamente!</p>
             <p>Ya puedes iniciar sesión con tu nueva contraseña.</p>
             <button 
-              className="login-button" 
+              className="primary-button" 
               onClick={() => navigate('/')}
             >
               Ir al inicio de sesión
@@ -80,8 +111,11 @@ function ResetPassword() {
               <p>Crea una nueva contraseña segura para tu cuenta</p>
             </div>
             
-            <form onSubmit={handleSubmit}>
-              <p className="input-label">Tu nueva contraseña debe tener al menos 6 caracteres</p>
+            <form onSubmit={handleSubmit} className="reset-form">
+              <div className="form-description">
+                <span className="info-icon">🔐</span>
+                <p>Tu nueva contraseña debe tener al menos 6 caracteres. Te recomendamos incluir letras mayúsculas, minúsculas y números.</p>
+              </div>
               
               <div className="input-group">
                 <div className="input-container">
@@ -102,8 +136,21 @@ function ResetPassword() {
                   </button>
                 </div>
                 
+                {password && (
+                  <div className="password-strength">
+                    <div className="strength-bars">
+                      <div className={`bar ${passwordStrength >= 1 ? 'active' : ''}`} style={{backgroundColor: passwordStrength >= 1 ? getPasswordStrengthText().color : ''}}></div>
+                      <div className={`bar ${passwordStrength >= 2 ? 'active' : ''}`} style={{backgroundColor: passwordStrength >= 2 ? getPasswordStrengthText().color : ''}}></div>
+                      <div className={`bar ${passwordStrength >= 3 ? 'active' : ''}`} style={{backgroundColor: passwordStrength >= 3 ? getPasswordStrengthText().color : ''}}></div>
+                    </div>
+                    <span className="strength-text" style={{color: getPasswordStrengthText().color}}>
+                      {getPasswordStrengthText().text}
+                    </span>
+                  </div>
+                )}
+                
                 <div className="input-container">
-                  <span className="input-icon">🔒</span>
+                  <span className="input-icon">🔐</span>
                   <input 
                     type={showPassword ? "text" : "password"} 
                     placeholder="Confirmar nueva contraseña" 
@@ -118,18 +165,23 @@ function ResetPassword() {
               
               <button 
                 type="submit" 
-                className="login-button" 
+                className="primary-button" 
                 disabled={isLoading}
               >
-                {isLoading ? 'Procesando...' : 'Restablecer contraseña'}
+                {isLoading ? (
+                  <span className="loading-text">
+                    <span className="loading-spinner"></span>
+                    Procesando...
+                  </span>
+                ) : 'Restablecer contraseña'}
               </button>
             </form>
             
-            <div className="register-option">
+            <div className="redirect-option">
               <p>¿Recordaste tu contraseña?</p>
               <button 
                 type="button" 
-                className="register-link" 
+                className="text-link" 
                 onClick={() => navigate('/')}
               >
                 Volver al inicio de sesión
