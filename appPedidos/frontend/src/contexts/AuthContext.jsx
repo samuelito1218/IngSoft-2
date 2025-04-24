@@ -48,8 +48,9 @@ export const AuthProvider = ({ children }) => {
   const login = (userData, token) => {
     setUser(userData);
     setIsAuthenticated(true);
-    
-    // Token ya debe estar guardado en localStorage o sessionStorage
+
+    // Guardar el token en localStorage o sessionStorage
+    localStorage.setItem('token', token); // O sessionStorage dependiendo del caso
   };
 
   // Función para cerrar sesión

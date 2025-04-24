@@ -1,6 +1,7 @@
-// Corrección de src/services/api.js
-
 import axios from 'axios';
+
+// Función para obtener el token del almacenamiento
+const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
 
 // Crear instancia de axios con URL base
 const api = axios.create({
@@ -10,13 +11,10 @@ const api = axios.create({
 
 // Interceptor para añadir el token a las peticiones
 api.interceptors.request.use(config => {
-  // Obtener token de localStorage o sessionStorage
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  
+  const token = getToken(); // Obtener token
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  
   return config;
 }, error => {
   return Promise.reject(error);
@@ -30,13 +28,13 @@ api.interceptors.response.use(
     if (error.code === 'ERR_NETWORK') {
       console.error('Error de conexión al servidor. Verifica que el backend esté corriendo.');
     }
-    
+
     // Manejar error de autenticación (token expirado o inválido)
     if (error.response && error.response.status === 401) {
       // Limpiar tokens
       localStorage.removeItem('token');
       sessionStorage.removeItem('token');
-      
+
       // Redireccionar a login si no estamos ya en login
       if (window.location.pathname !== '/' && 
           window.location.pathname !== '/register' &&
@@ -44,6 +42,13 @@ api.interceptors.response.use(
           window.location.pathname !== '/recover-password') {
         window.location.href = '/';
       }
+    }
+    
+    // Si la respuesta tiene error, loggear más detalles para ayudar a debuggear
+    if (error.response) {
+      console.error(`Error ${error.response.status}:`, error.response.data);
+    } else {
+      console.error('Error desconocido en la respuesta:', error);
     }
     
     return Promise.reject(error);

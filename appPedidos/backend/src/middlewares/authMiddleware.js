@@ -1,5 +1,3 @@
-// Actualización de src/middlewares/authMiddleware.js
-
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
 
@@ -19,8 +17,8 @@ exports.authenticate = async (req, res, next) => {
     // Verificar token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Buscar usuario en base de datos
-    const user = await prisma.usuario.findUnique({
+    // Buscar usuario en base de datos - cambiado a usuarios (plural)
+    const user = await prisma.usuarios.findUnique({
       where: { id: decoded.userId },
     });
     

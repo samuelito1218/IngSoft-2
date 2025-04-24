@@ -1,6 +1,6 @@
-
 const jwt = require('jsonwebtoken');
 const {PrismaClient} = require('@prisma/client');
+const bcrypt = require('bcrypt');  // Añadida la importación de bcrypt
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
@@ -15,7 +15,8 @@ exports.register = async(req, res) => {
         console.log('Datos recibidos:', { nombreCompleto, email, telefono, cedula, direccion, comuna, rol, vehiculo });
 
         // Verificar si el usuario ya existe
-        const existingUser = await prisma.usuario.findUnique({
+        console.log('Verificando si el usuario existe...');
+        const existingUser = await prisma.Usuarios.findUnique({
             where: {
                 email: email,
             },
@@ -23,6 +24,7 @@ exports.register = async(req, res) => {
         if (existingUser) {
             return res.status(400).json({message: 'El correo ya se encuentra registrado'});
         }
+        console.log('Email disponible, continuando...');
 
         // Validar el rol
         const rolesValidos = ['Cliente', 'Repartidor', 'Admin'];
@@ -40,7 +42,9 @@ exports.register = async(req, res) => {
         }
 
         // Encriptar la contraseña
+        console.log('Encriptando contraseña...');
         const hashedPassword = await bcrypt.hash(password, saltRounds);
+        console.log('Contraseña encriptada correctamente');
         
         // Convertir telefono, cedula y comuna a números
         const telefonoNum = parseInt(telefono);
@@ -53,31 +57,31 @@ exports.register = async(req, res) => {
             });
         }
         
-        // Datos para crear el usuario
+        // Datos para crear el usuario - adaptado para MongoDB
+        console.log('Preparando datos de usuario...');
         const userData = {
             nombreCompleto,
             email,
-            contraseña: hashedPassword,
+            contrase_a: hashedPassword,
             telefono: telefonoNum,
             cedula: cedulaNum,
             direccion,
             rol,
-            vehiculo: rol === 'Repartidor' ? vehiculo : null, // Solo agregar vehículo para repartidores
-            historialDirecciones: {
-                set: [
-                    {
-                        comuna: comunaNum,
-                        barrio: direccion,
-                        direccionEspecifica: direccion
-                    }
-                ]
-            }
+            vehiculo: rol === 'Repartidor' ? vehiculo : null,
+            historialDirecciones: [  // Formato MongoDB
+                {
+                    comuna: comunaNum,
+                    barrio: direccion,
+                    direccionEspecifica: direccion
+                }
+            ]
         };
         
         console.log('Intentando crear usuario con datos:', JSON.stringify(userData, null, 2));
         
         // Crear el usuario en la base de datos
-        const newUser = await prisma.usuario.create({
+        console.log('Creando usuario en la base de datos...');
+        const newUser = await prisma.Usuarios.create({
             data: userData
         });
 
@@ -106,6 +110,7 @@ exports.register = async(req, res) => {
         });
     } catch (error) {
         console.error('Error al registrar el usuario:', error);
+        console.error('Detalles adicionales del error:', JSON.stringify(error, null, 2));
         
         // Proporcionar detalles del error para facilitar la depuración
         res.status(500).json({
@@ -125,8 +130,8 @@ exports.login = async(req, res) => {
     try {
         const {email, password} = req.body;
 
-        // Buscar el usuario en la base de datos
-        const user = await prisma.usuario.findUnique({
+        // Buscar el usuario en la base de datos - cambiado a usuarios (plural)
+        const user = await prisma.Usuarios.findUnique({
             where: {
                 email: email,
             },
@@ -135,8 +140,8 @@ exports.login = async(req, res) => {
             return res.status(401).json({message: 'Credenciales inválidas'});
         }
 
-        // Verificar la contraseña
-        const isPasswordValid = await bcrypt.compare(password, user.contraseña);
+        // Verificar la contraseña - cambiado de contraseña a contrase_a
+        const isPasswordValid = await bcrypt.compare(password, user.contrase_a);
         if (!isPasswordValid) {
             return res.status(401).json({message: 'Credenciales inválidas'});
         }
@@ -173,8 +178,8 @@ exports.requestPasswordReset = async(req, res) => {
     try {
         const {email} = req.body;
 
-        // Buscar el usuario en la base de datos
-        const user = await prisma.usuario.findUnique({
+        // Buscar el usuario en la base de datos - cambiado a usuarios (plural)
+        const user = await prisma.Usuarios.findUnique({
             where: {
                 email: email,
             },
@@ -188,8 +193,9 @@ exports.requestPasswordReset = async(req, res) => {
         const token = crypto.randomBytes(32).toString('hex');
         const expirationDate = new Date(Date.now() + 3600000); // 1 hora de validez
 
-        // Guardar token en bd
-        await prisma.usuario.update({
+        // Nota: Necesitas añadir los campos resetToken y resetTokenExpiry en tu esquema de Prisma
+        // Guardar token en bd - cambiado a usuarios (plural)
+        await prisma.Usuarios.update({
             where: {id: user.id},
             data: {
                 resetToken: token,
@@ -215,8 +221,8 @@ exports.resetPassword = async (req, res) => {
     try {
         const { token, newPassword } = req.body;
   
-        // Buscar usuario por token
-        const user = await prisma.usuario.findFirst({
+        // Buscar usuario por token - cambiado a usuarios (plural)
+        const user = await prisma.Usuarios.findFirst({
             where: {
                 resetToken: token,
                 resetTokenExpiry: {
@@ -232,11 +238,11 @@ exports.resetPassword = async (req, res) => {
         // Encriptar nueva contraseña
         const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
   
-        // Actualizar contraseña y eliminar token
-        await prisma.usuario.update({
+        // Actualizar contraseña y eliminar token - cambiado de contraseña a contrase_a
+        await prisma.Usuarios.update({
             where: { id: user.id },
             data: {
-                contraseña: hashedPassword,
+                contrase_a: hashedPassword,
                 resetToken: null,
                 resetTokenExpiry: null,
             },
