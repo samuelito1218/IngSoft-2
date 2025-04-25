@@ -1,8 +1,7 @@
-// RecoverPassword.jsx mejorado visualmente
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import '../styles/Login.css';
+import '../styles/RecoverPassword.css';
 
 function RecoverPassword() {
   const navigate = useNavigate();
@@ -12,7 +11,6 @@ function RecoverPassword() {
   const [error, setError] = useState('');
   const [animateForm, setAnimateForm] = useState(false);
 
-  // Añadir animación después de que el componente se monte
   useEffect(() => {
     setAnimateForm(true);
   }, []);
@@ -24,19 +22,15 @@ function RecoverPassword() {
       setIsLoading(true);
       setError('');
       
-      // Llamada real a la API para solicitar recuperación
       await api.post('/auth/forgot-password', { email });
       
-      // Mostrar mensaje de éxito (incluso si el correo no existe por seguridad)
       setMessage('Hemos enviado un correo de recuperación a tu dirección de email si existe en nuestra base de datos.');
     } catch (error) {
       console.error('Error al solicitar recuperación:', error);
       
-      // Solo mostrar errores de servidor, no de usuario no encontrado (por seguridad)
       if (error.response && error.response.status !== 404) {
         setError('Ha ocurrido un error al procesar tu solicitud. Intenta nuevamente más tarde.');
       } else {
-        // Aún mostrar el mensaje de éxito para evitar enumerar usuarios
         setMessage('Hemos enviado un correo de recuperación a tu dirección de email si existe en nuestra base de datos.');
       }
     } finally {
@@ -45,15 +39,22 @@ function RecoverPassword() {
   };
 
   return (
-    <div className="login-container">
-      <div className={`login-card ${animateForm ? 'animate-fade-in' : ''}`}>
-        <h2 className="login-title">Recuperar contraseña</h2>
+    <div className="recover-container">
+      <div className={`recover-card ${animateForm ? 'animate-fade-in' : ''}`}>
+        <div className="card-header">
+          <div className="logo-container">
+            <span className="logo-icon">🍔</span>
+            <h1 className="logo-text">FastFood</h1>
+          </div>
+          <h2 className="recover-title">Recuperar contraseña</h2>
+        </div>
         
         {message ? (
           <div className="success-message">
+            <div className="success-icon">✅</div>
             <p>{message}</p>
             <button 
-              className="login-button" 
+              className="primary-button" 
               onClick={() => navigate('/')}
             >
               Volver al inicio de sesión
@@ -65,8 +66,11 @@ function RecoverPassword() {
               <p>¿Olvidaste tu contraseña? No te preocupes, te ayudaremos a recuperarla</p>
             </div>
             
-            <form onSubmit={handleSubmit}>
-              <p className="input-label">Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña</p>
+            <form onSubmit={handleSubmit} className="recover-form">
+              <div className="form-description">
+                <span className="info-icon">ℹ️</span>
+                <p>Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña</p>
+              </div>
               
               <div className="input-group">
                 <div className="input-container">
@@ -85,18 +89,23 @@ function RecoverPassword() {
               
               <button 
                 type="submit" 
-                className="login-button" 
+                className="primary-button" 
                 disabled={isLoading}
               >
-                {isLoading ? 'Enviando...' : 'Recuperar contraseña'}
+                {isLoading ? (
+                  <span className="loading-text">
+                    <span className="loading-spinner"></span>
+                    Enviando...
+                  </span>
+                ) : 'Recuperar contraseña'}
               </button>
             </form>
             
-            <div className="register-option">
+            <div className="redirect-option">
               <p>¿Recordaste tu contraseña?</p>
               <button 
                 type="button" 
-                className="register-link" 
+                className="text-link" 
                 onClick={() => navigate('/')}
               >
                 Volver al inicio de sesión

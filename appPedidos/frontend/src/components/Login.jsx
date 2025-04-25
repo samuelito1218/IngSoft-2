@@ -1,4 +1,3 @@
-// Login mejorado visualmente
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -17,7 +16,6 @@ function Login() {
   const [error, setError] = useState('');
   const [animateForm, setAnimateForm] = useState(false);
 
-  // Añadir animación después de que el componente se monte
   useEffect(() => {
     setAnimateForm(true);
   }, []);
@@ -55,7 +53,6 @@ function Login() {
     } catch (error) {
       console.error('Error de inicio de sesión:', error);
       
-      // Mejora en el manejo de errores
       if (error.code === 'ERR_NETWORK') {
         setError('No se pudo conectar al servidor. Verifica que el backend esté funcionando.');
       } else if (error.response && error.response.data) {
@@ -71,14 +68,16 @@ function Login() {
   return (
     <div className="login-container">
       <div className={`login-card ${animateForm ? 'animate-fade-in' : ''}`}>
-        <h2 className="login-title">FastFood</h2>
-        
-        <div className="welcome-message">
-          <p>¡Hola, bienvenido de nuevo! 👋</p>
+        <div className="card-header">
+          <h2 className="login-title">FastFood</h2>
+          
+          <div className="welcome-message">
+            <p>¡Hola, bienvenido de nuevo! 👋</p>
+          </div>
         </div>
         
-        <form onSubmit={handleSubmit}>
-          <p className="input-label">Ingresa tu correo y contraseña</p>
+        <form onSubmit={handleSubmit} className="login-form">
+          <div className="form-label">Ingresa tu correo y contraseña</div>
           
           <div className="input-group">
             <div className="input-container">
@@ -105,6 +104,7 @@ function Login() {
                 type="button" 
                 className="toggle-password"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
               >
                 {showPassword ? "👁️" : "👁️‍🗨️"}
               </button>
@@ -137,7 +137,12 @@ function Login() {
             className="login-button" 
             disabled={isLoading}
           >
-            {isLoading ? 'Cargando...' : 'Iniciar sesión'}
+            {isLoading ? (
+              <span className="loading-text">
+                <span className="loading-spinner"></span>
+                Cargando...
+              </span>
+            ) : 'Ingresar'}
           </button>
         </form>
         
