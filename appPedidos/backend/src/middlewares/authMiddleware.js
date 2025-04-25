@@ -47,14 +47,12 @@ exports.authenticate = async (req, res, next) => {
 // Middleware para verificar roles
 exports.authorize = (...roles) => {
   return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ message: 'No autorizado' });
-    }
-    
+    console.log(' authorize permite:', roles);
+    console.log(' req.user.rol ===', req.user?.rol);
+    if (!req.user) return res.status(401).json({ message: 'No autorizado' });
     if (!roles.includes(req.user.rol)) {
       return res.status(403).json({ message: 'No tienes permiso para acceder a este recurso' });
     }
-    
     next();
   };
 };
