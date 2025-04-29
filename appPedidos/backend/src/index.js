@@ -5,6 +5,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
 const pedidoRoutes = require("./routes/pedidosRoutes"); //Nueva importación
+const calificacionesRoutes = require("./routes/calificacionesRoutes"); //Nueva importación
 
 // Cargar variables de entorno
 dotenv.config();
@@ -22,6 +23,7 @@ app.use(express.json());
 // Rutas
 app.use('/api/auth', authRoutes);
 app.use("/api/pedidos", pedidoRoutes); //esto es nuevo
+app.use("/api/calificaciones", calificacionesRoutes); //Nuevo
 
 // Ruta de prueba
 app.get('/', (req, res) => {

@@ -8,4 +8,23 @@ router.post('/crear',
     authorize('Cliente','cliente'),
     pedidosController.crearPedido
   );
-  module.exports = router;
+
+router.put('/asignar/:pedidoId', authenticate, authorize('Repartidor'), pedidosController.asignarPedido);
+
+router.put(
+  '/en-camino/:pedidoId',
+  authenticate,
+  authorize('Repartidor'),
+  pedidosController.marcarEnCamino
+);
+
+router.put(
+  '/entregar/:pedidoId',
+  authenticate,
+  authorize('Repartidor'),
+  pedidosController.marcarEntregado
+);
+
+
+module.exports = router;
+
