@@ -1,0 +1,515 @@
+/* Layout.css - Estilos compartidos para los diferentes layouts */
+
+:root {
+    --primary-color: #ff4b2b;
+    --primary-hover: #ff6b3d;
+    --secondary-color: #ffc72c;
+    --text-dark: #333333;
+    --text-light: #666666;
+    --text-lighter: #999999;
+    --bg-light: #f9f9f9;
+    --bg-white: #ffffff;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --shadow-small: 0 2px 6px rgba(0, 0, 0, 0.08);
+    --radius: 12px;
+    --radius-small: 8px;
+    --transition: all 0.3s ease;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --info-color: #3498db;
+  }
+  
+  /* Estilos base */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+  
+  body {
+    background-color: #f6f7f9;
+  }
+  
+  .app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    position: relative;
+  }
+  
+  /* ---- CLIENTE LAYOUT ---- */
+  
+  /* Header */
+  .app-header {
+    background-color: var(--bg-white);
+    padding: 15px 20px;
+    box-shadow: var(--shadow-small);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--text-dark);
+  }
+  
+  .logo-icon {
+    font-size: 24px;
+  }
+  
+  .logo-text {
+    font-weight: 700;
+    font-size: 20px;
+  }
+  
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .cart-button {
+    background-color: var(--bg-light);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: var(--transition);
+  }
+  
+  .cart-button:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .profile-button {
+    background-color: var(--bg-light);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  
+  .profile-button:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .user-menu {
+    position: relative;
+  }
+  
+  .menu-dropdown {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    background-color: var(--bg-white);
+    border-radius: var(--radius-small);
+    box-shadow: var(--shadow);
+    width: 250px;
+    padding: 10px 0;
+    z-index: 1000;
+  }
+  
+  .user-info {
+    padding: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .user-name {
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+  
+  .user-email {
+    font-size: 12px;
+    color: var(--text-lighter);
+  }
+  
+  .menu-options {
+    padding: 10px 0;
+  }
+  
+  .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    text-decoration: none;
+    color: var(--text-dark);
+    transition: var(--transition);
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-size: 14px;
+  }
+  
+  .menu-item:hover {
+    background-color: #f9f9f9;
+  }
+  
+  .menu-icon {
+    font-size: 16px;
+  }
+  
+  .logout {
+    color: var(--danger-color);
+  }
+  
+  /* Contenido principal */
+  .app-content {
+    flex: 1;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    padding-bottom: 70px; /* Espacio para la navegación */
+  }
+  
+  /* Barra de navegación inferior */
+  .app-navigation {
+    background-color: var(--bg-white);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    z-index: 100;
+  }
+  
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--text-lighter);
+    transition: var(--transition);
+    padding: 8px 20px;
+    width: 25%;
+  }
+  
+  .nav-item.active {
+    color: var(--primary-color);
+  }
+  
+  .nav-icon {
+    font-size: 20px;
+    margin-bottom: 2px;
+  }
+  
+  .nav-text {
+    font-size: 12px;
+    font-weight: 500;
+  }
+  
+  /* ---- RESTAURANTE LAYOUT ---- */
+  
+  .app-container.restaurant {
+    display: flex;
+    flex-direction: row;
+  }
+  
+  /* Sidebar */
+  .sidebar {
+    background-color: var(--bg-white);
+    width: 250px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-small);
+    transition: var(--transition);
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1000;
+  }
+  
+  .sidebar.hide {
+    width: 70px;
+  }
+  
+  .sidebar-header {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .sidebar.hide .logo-text,
+  .sidebar.hide .restaurant-details,
+  .sidebar.hide .nav-text,
+  .sidebar.hide .logout-text {
+    display: none;
+  }
+  
+  .toggle-sidebar {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-lighter);
+  }
+  
+  .sidebar-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px 0;
+    overflow-y: auto;
+  }
+  
+  .restaurant-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 20px;
+  }
+  
+  .restaurant-avatar {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-light);
+    border-radius: 50%;
+    font-size: 20px;
+  }
+  
+  .restaurant-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  
+  .restaurant-name {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 14px;
+  }
+  
+  .restaurant-status {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .restaurant-status.online {
+    color: var(--success-color);
+  }
+  
+  .restaurant-status.offline {
+    color: var(--text-lighter);
+  }
+  
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .sidebar .nav-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 12px 20px;
+    width: 100%;
+  }
+  
+  .sidebar.hide .nav-item {
+    justify-content: center;
+  }
+  
+  .sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid #f0f0f0;
+  }
+  
+  .logout-button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: none;
+    border: none;
+    color: var(--danger-color);
+    font-weight: 500;
+    cursor: pointer;
+    padding: 10px;
+    width: 100%;
+    transition: var(--transition);
+    border-radius: var(--radius-small);
+  }
+  
+  .logout-button:hover {
+    background-color: #fff2f2;
+  }
+  
+  .sidebar.hide .logout-button {
+    justify-content: center;
+  }
+  
+  /* Contenido principal restaurante */
+  .main-content {
+    flex: 1;
+    margin-left: 250px;
+    transition: var(--transition);
+  }
+  
+  .sidebar.hide + .main-content {
+    margin-left: 70px;
+  }
+  
+  .restaurant-header {
+    background-color: var(--bg-white);
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-small);
+    position: sticky;
+    top: 0;
+    z-index: 90;
+  }
+  
+  .page-title {
+    font-weight: 600;
+    font-size: 18px;
+  }
+  
+  .notification-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    font-size: 22px;
+  }
+  
+  .badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: var(--danger-color);
+    color: white;
+    font-size: 10px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .restaurant-header .user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: none;
+    padding: 0;
+  }
+  
+  .restaurant-header .user-icon {
+    font-size: 18px;
+  }
+  
+  .restaurant-content {
+    padding: 20px;
+  }
+  
+  /* Delivery.css */
+
+.delivery-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .delivery-header {
+    background-color: #00b894; /* verde suave */
+    color: white;
+    padding: 1rem 2rem;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .delivery-main {
+    flex: 1;
+    display: flex;
+    padding: 1rem;
+    background-color: #f8f9fa; /* gris claro */
+  }
+  
+  .delivery-sidebar {
+    width: 250px;
+    background-color: #ffffff;
+    border-right: 1px solid #ddd;
+    padding: 1rem;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+  }
+  
+  .delivery-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .delivery-sidebar li {
+    margin-bottom: 1rem;
+  }
+  
+  .delivery-sidebar a {
+    text-decoration: none;
+    color: #2d3436;
+    font-weight: 500;
+    transition: color 0.2s ease;
+  }
+  
+  .delivery-sidebar a:hover {
+    color: #00b894;
+  }
+  
+  .delivery-content {
+    flex: 1;
+    padding: 1rem 2rem;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.03);
+  }
+  
