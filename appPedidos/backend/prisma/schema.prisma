@@ -47,10 +47,11 @@ model Pedidos {
   total            Float                   @db.Double
   usuario_id       String                  @db.ObjectId
   direccionEntrega PedidosDireccionEntrega
-  repartidor_Id    String                  @db.ObjectId
+  repartidor_Id    String?                  @db.ObjectId
   fechaDeCreacion  DateTime                @db.Date
   productos        PedidosProductos[]
   mensajes         String[]                @db.ObjectId // Correcto como array de ObjectIds
+  calificaciones  Calificaciones[]
 }
 
 enum EstadoPedido {
@@ -88,5 +89,15 @@ type HistorialDireccion {
   comuna              Int
   barrio              String
   direccionEspecifica String
+}
+
+model Calificaciones {
+  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+  calificacionRepartidor Int      @db.Int
+  calificacionPedido     Int      @db.Int
+  comentarios            String?  // Comentario opcional
+  pedidoId               String   @db.ObjectId
+
+  pedido                 Pedidos  @relation(fields: [pedidoId], references: [id])
 }
 

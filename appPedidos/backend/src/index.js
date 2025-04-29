@@ -4,6 +4,8 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
+const pedidoRoutes = require("./routes/pedidosRoutes"); //Nueva importación
+const calificacionesRoutes = require("./routes/calificacionesRoutes"); //Nueva importación
 
 // Cargar variables de entorno
 dotenv.config();
@@ -20,6 +22,8 @@ app.use(express.json());
 
 // Rutas
 app.use('/api/auth', authRoutes);
+app.use("/api/pedidos", pedidoRoutes); //esto es nuevo
+app.use("/api/calificaciones", calificacionesRoutes); //Nuevo
 
 // Ruta de prueba
 app.get('/', (req, res) => {
@@ -39,3 +43,4 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
+
