@@ -10,7 +10,7 @@ import RecoverPassword from './components/RecoverPassword';
 import ResetPassword from './components/ResetPassword';
 
 // Componentes de Cliente
-//import ClientHome from './components/client/ClientHome';
+import ClientHome from './components/client/ClientHome';
 //import RestaurantDetails from './components/client/RestaurantDetails';
 //import ProductDetails from './components/client/ProductDetails';
 //import Cart from './components/client/Cart';
@@ -22,7 +22,7 @@ import ResetPassword from './components/ResetPassword';
 //import OrderManagement from './components/restaurant/OrderManagement';
 
 // Componentes de Repartidor
-//import DeliveryDashboard from './components/delivery/DeliveryDashboard';
+//imposrt DeliveryDashboard from './components/delivery/DeliveryDashboard';
 //import ActiveOrders from './components/delivery/ActiveOrders';
 //import DeliveryHistory from './components/delivery/DeliveryHistory';
 
@@ -75,7 +75,7 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['Cliente']}>
               <ClientLayout>
-                {/*<ClientHome />*/}
+                <ClientHome />
               </ClientLayout>
             </ProtectedRoute>
           } 

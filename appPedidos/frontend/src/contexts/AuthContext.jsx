@@ -12,6 +12,7 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Verificar si el usuario está autenticado al cargar la aplicación
+  // En AuthContext.jsx, en el useEffect de checkAuthStatus
   useEffect(() => {
     const checkAuthStatus = async () => {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -35,10 +36,15 @@ export const AuthProvider = ({ children }) => {
           // Si hay error, limpiar tokens
           localStorage.removeItem('token');
           sessionStorage.removeItem('token');
+          setUser(null);  // Asegúrate de establecer el usuario como null
+          setIsAuthenticated(false);  // Y establecer isAuthenticated en false
         }
+      } else {
+        setUser(null);  // Asegúrate de establecer el usuario como null si no hay token
+        setIsAuthenticated(false);  // Y establecer isAuthenticated en false
       }
       
-      setLoading(false);
+      setLoading(false);  // Siempre terminar la carga
     };
     
     checkAuthStatus();
