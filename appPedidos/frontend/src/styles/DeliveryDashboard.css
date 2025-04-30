@@ -1,4 +1,5 @@
 /* DeliveryDashboard.css */
+
 .delivery-dashboard {
   padding: 20px 0;
 }
@@ -462,23 +463,37 @@ input:checked + .toggle-slider:before {
   transform: translateY(-2px);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .stats-row {
-    grid-template-columns: repeat(2, 1fr);
+/* Revisar y ampliar las media queries existentes */
+@media (max-width: 1024px) {
+    .stats-row {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+    
+    .reviews-list {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
   }
   
-  .reviews-list {
-    grid-template-columns: 1fr;
+  @media (max-width: 768px) {
+    .stats-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .reviews-list {
+      grid-template-columns: 1fr;
+    }
+    
+    .deliveries-table {
+      min-width: 650px;
+    }
+    
+    .chart-container {
+      height: 250px;
+    }
   }
-}
-
-@media (max-width: 480px) {
-  .status-banner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }}
+  
   @media (max-width: 480px) {
     .status-banner {
       flex-direction: column;
@@ -495,8 +510,23 @@ input:checked + .toggle-slider:before {
       grid-template-columns: 1fr;
     }
     
+    .chart-container {
+      height: 200px;
+    }
+    
     .deliveries-table {
       display: block;
       overflow-x: auto;
     }
+    
+    .review-card {
+      padding: 12px;
+    }
+    
+    .reviewer-avatar {
+      width: 25px;
+      height: 25px;
+      font-size: 12px;
+    }
   }
+  

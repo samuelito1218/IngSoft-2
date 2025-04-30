@@ -1,4 +1,5 @@
 /* ProductDetails.css */
+
 .product-details {
     padding: 20px 0;
   }
@@ -234,3 +235,68 @@
       transform: scale(1.05);
     }
   }
+  /* Agregar o modificar las media queries */
+@media (max-width: 1024px) {
+  .product-card {
+    margin-bottom: 20px;
+  }
+  
+  .product-image {
+    height: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .product-image {
+    height: 180px;
+  }
+  
+  .product-name {
+    font-size: 20px;
+  }
+  
+  .product-description {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-image {
+    height: 160px;
+  }
+  
+  .product-info {
+    padding: 15px;
+  }
+  
+  .product-name {
+    font-size: 18px;
+  }
+  
+  .product-description {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  
+  .section-title {
+    font-size: 16px;
+  }
+  
+  .option-item {
+    flex-wrap: wrap;
+  }
+  
+  .option-price {
+    margin-left: 28px;
+    margin-top: 5px;
+  }
+  
+  .quantity-control {
+    gap: 10px;
+  }
+  
+  .quantity-button {
+    width: 32px;
+    height: 32px;
+  }
+}

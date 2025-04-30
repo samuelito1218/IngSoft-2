@@ -1,4 +1,5 @@
 /* OrderManagement.css */
+
 .order-management {
     padding: 20px;
   }
@@ -701,14 +702,35 @@
     max-width: 400px;
   }
   
-  /* Responsive */
+/* Actualizar las media queries existentes */
+@media (max-width: 1024px) {
+    .orders-grid {
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+    
+    .order-detail-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+  }
+  
   @media (max-width: 768px) {
     .orders-grid {
       grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
     }
     
     .order-detail-grid {
       grid-template-columns: 1fr;
+    }
+    
+    .order-actions {
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .modal-content {
+      width: 95%;
     }
   }
   
@@ -726,6 +748,7 @@
     .filter-options {
       width: 100%;
       flex-direction: column;
+      gap: 10px;
     }
     
     .search-container {
@@ -739,5 +762,28 @@
     .orders-tabs {
       overflow-x: auto;
       white-space: nowrap;
+      padding: 0 0 5px 0;
+    }
+    
+    .order-tab {
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+    
+    .order-header {
+      padding: 12px;
+    }
+    
+    .order-body {
+      padding: 12px;
+    }
+    
+    .customer-contact {
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .modal-content {
+      max-height: 95vh;
     }
   }

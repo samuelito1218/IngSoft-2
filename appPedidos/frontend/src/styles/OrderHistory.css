@@ -141,7 +141,7 @@
     background-color: #e3f2fd;
     color: #1565c0;
   }
-  
+
 .status-cancelled {
   background-color: #ffebee;
   color: #c62828;
@@ -291,25 +291,52 @@
   padding: 20px;
 }
 
-/* Responsive */
-@media (max-width: 480px) {
-  .order-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
+/* Actualizar las media queries existentes */
+@media (max-width: 1024px) {
+    .orders-list {
+      gap: 15px;
+    }
   }
   
-  .order-status {
-    align-self: flex-start;
+  @media (max-width: 768px) {
+    .order-header {
+      padding: 12px;
+    }
+    
+    .order-content {
+      padding: 12px;
+    }
   }
   
-  .order-actions {
-    flex-direction: column;
-    width: 100%;
+  @media (max-width: 480px) {
+    .tabs {
+      overflow-x: auto;
+      white-space: nowrap;
+      padding-bottom: 5px;
+    }
+    
+    .order-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    
+    .order-status {
+      align-self: flex-start;
+    }
+    
+    .order-actions {
+      flex-direction: column;
+      width: 100%;
+    }
+    
+    .order-button {
+      width: 100%;
+      text-align: center;
+    }
+    
+    .modal-content {
+      width: 95%;
+      max-height: 95vh;
+    }
   }
-  
-  .order-button {
-    width: 100%;
-    text-align: center;
-  }
-}

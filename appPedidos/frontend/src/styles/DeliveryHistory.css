@@ -1,4 +1,5 @@
 /* DeliveryHistory.css */
+
 .delivery-history {
     padding: 20px 0;
   }
@@ -579,7 +580,18 @@
     max-width: 400px;
   }
   
-  /* Responsive */
+/* Actualizar las media queries existentes */
+@media (max-width: 1024px) {
+    .earnings-details {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+    }
+    
+    .history-table {
+      min-width: 800px;
+    }
+  }
+  
   @media (max-width: 768px) {
     .earnings-details {
       grid-template-columns: repeat(2, 1fr);
@@ -592,6 +604,10 @@
     
     .history-container {
       overflow-x: auto;
+    }
+    
+    .modal-content {
+      width: 95%;
     }
   }
   
@@ -629,5 +645,9 @@
     .history-header {
       overflow-x: auto;
       white-space: nowrap;
+    }
+    
+    .modal-content {
+      max-height: 95vh;
     }
   }

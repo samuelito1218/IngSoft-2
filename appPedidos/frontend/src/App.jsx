@@ -11,19 +11,19 @@ import ResetPassword from './components/ResetPassword';
 
 // Componentes de Cliente
 import ClientHome from './components/client/ClientHome';
-//import RestaurantDetails from './components/client/RestaurantDetails';
-//import ProductDetails from './components/client/ProductDetails';
-//import Cart from './components/client/Cart';
-//import OrderHistory from './components/client/OrderHistory';
+import RestaurantDetails from './components/client/RestaurantDetails';
+import ProductDetails from './components/client/ProductDetails';
+import Cart from './components/client/Cart';
+import OrderHistory from './components/client/OrderHistory';
 
 // Componentes de Restaurante
-//import RestaurantDashboard from './components/restaurant/RestaurantDashboard';
+import RestaurantDashboard from './components/restaurant/RestaurantDashboard';
 //import MenuManagement from './components/restaurant/MenuManagement';
-//import OrderManagement from './components/restaurant/OrderManagement';
+import OrderManagement from './components/restaurant/OrderManagement';
 
 // Componentes de Repartidor
-//imposrt DeliveryDashboard from './components/delivery/DeliveryDashboard';
-//import ActiveOrders from './components/delivery/ActiveOrders';
+import DeliveryDashboard from './components/delivery/DeliveryDashboard';
+import ActiveOrders from './components/delivery/ActiveOrders';
 //import DeliveryHistory from './components/delivery/DeliveryHistory';
 
 // Layout components
@@ -85,7 +85,7 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['Cliente']}>
               <ClientLayout>
-                {/*<RestaurantDetails />*/}
+                <RestaurantDetails />
               </ClientLayout>
             </ProtectedRoute>
           } 
@@ -95,7 +95,7 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['Cliente']}>
               <ClientLayout>
-                {/*<ProductDetails />*/}
+                <ProductDetails />
               </ClientLayout>
             </ProtectedRoute>
           } 
@@ -105,7 +105,7 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['Cliente']}>
               <ClientLayout>
-                {/*<Cart />*/}
+                <Cart />
               </ClientLayout>
             </ProtectedRoute>
           } 
@@ -115,7 +115,7 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['Cliente']}>
               <ClientLayout>
-                {/*<OrderHistory />*/}
+                <OrderHistory />
               </ClientLayout>
             </ProtectedRoute>
           } 
@@ -127,7 +127,7 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['Restaurante']}>
               <RestaurantLayout>
-                {/*<RestaurantDashboard />*/}
+                <RestaurantDashboard />
               </RestaurantLayout>
             </ProtectedRoute>
           } 
@@ -147,7 +147,7 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['Restaurante']}>
               <RestaurantLayout>
-                {/*<OrderManagement />*/}
+                <OrderManagement />
               </RestaurantLayout>
             </ProtectedRoute>
           } 
@@ -159,7 +159,7 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['Repartidor']}>
               <DeliveryLayout>
-                {/*<DeliveryDashboard />*/}
+                <DeliveryDashboard />
               </DeliveryLayout>
             </ProtectedRoute>
           } 
@@ -169,7 +169,7 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['Repartidor']}>
               <DeliveryLayout>
-                {/*<ActiveOrders />*/}
+                <ActiveOrders />
               </DeliveryLayout>
             </ProtectedRoute>
           } 

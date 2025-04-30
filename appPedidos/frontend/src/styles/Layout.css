@@ -1,5 +1,6 @@
 /* Layout.css - Estilos compartidos para los diferentes layouts */
 
+
 :root {
     --primary-color: #ff4b2b;
     --primary-hover: #ff6b3d;
@@ -18,6 +19,9 @@
     --warning-color: #f39c12;
     --danger-color: #e74c3c;
     --info-color: #3498db;
+    --container-width-laptop: 90%;
+    --container-width-tablet: 95%;
+    --container-width-mobile: 98%;
   }
   
   /* Estilos base */
@@ -513,3 +517,72 @@
     box-shadow: 0 0 10px rgba(0,0,0,0.03);
   }
   
+  /* Agrega después de los estilos base */
+@media (max-width: 1024px) {
+  .app-content {
+    max-width: var(--container-width-laptop);
+  }
+  
+  .sidebar.hide + .main-content {
+    margin-left: 60px;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-content {
+    max-width: var(--container-width-tablet);
+    padding: 15px;
+    padding-bottom: 70px;
+  }
+  
+  .app-container.restaurant {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+  }
+  
+  .sidebar-content {
+    display: none;
+  }
+  
+  .sidebar.mobile-open .sidebar-content {
+    display: flex;
+  }
+  
+  .main-content {
+    margin-left: 0;
+  }
+  
+  .sidebar.hide + .main-content {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-content {
+    max-width: var(--container-width-mobile);
+    padding: 10px;
+    padding-bottom: 70px;
+  }
+  
+  .logo-text {
+    font-size: 18px;
+  }
+  
+  .header-actions {
+    gap: 10px;
+  }
+  
+  .cart-button, .profile-button {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .nav-item {
+    padding: 8px 10px;
+  }
+}

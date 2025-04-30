@@ -1,4 +1,5 @@
 /* RestaurantDashboard.css */
+
 .restaurant-dashboard {
     padding: 20px;
   }
@@ -311,10 +312,21 @@
     grid-column: span 2;
   }
   
-  /* Responsive */
+/* Actualizar las media queries existentes */
+@media (max-width: 1024px) {
+    .dashboard-grid {
+      gap: 20px;
+    }
+    
+    .chart-container {
+      height: 220px;
+    }
+  }
+  
   @media (max-width: 768px) {
     .dashboard-grid {
       grid-template-columns: 1fr;
+      gap: 15px;
     }
     
     .full-width {
@@ -324,6 +336,10 @@
     .stats-container {
       grid-template-columns: repeat(2, 1fr);
     }
+    
+    .chart-container {
+      height: 200px;
+    }
   }
   
   @media (max-width: 480px) {
@@ -332,7 +348,7 @@
     }
     
     .chart-container {
-      height: 200px;
+      height: 180px;
     }
     
     .order-card {
@@ -343,5 +359,16 @@
     
     .order-actions {
       align-self: flex-end;
+    }
+    
+    .item-card {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .item-image {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
     }
   }

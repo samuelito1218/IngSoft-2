@@ -1,13 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import '../../styles/Layout.css';
 
 function ClientLayout({ children }) {
-  const { logout, user } = useAuth();
+  const { logout, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [showMenu, setShowMenu] = useState(false);
+
+  // Efecto para verificar la autenticación
+  useEffect(() => {
+    if (!isAuthenticated) {
+      console.log("Usuario no autenticado en ClientLayout, redirigiendo a login");
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Efecto para verificar el rol
+  useEffect(() => {
+    if (user && user.rol && user.rol !== 'Cliente' && user.rol !== 'cliente') {
+      console.log(`Rol incorrecto en ClientLayout: ${user.rol}, redirigiendo a la página correspondiente`);
+      
+      // Redirigir al layout correcto según el rol
+      if (user.rol === 'Repartidor' || user.rol === 'repartidor') {
+        navigate('/repartidor');
+      } else if (user.rol === 'Restaurante' || user.rol === 'restaurante') {
+        navigate('/restaurante');
+      }
+    }
+  }, [user, navigate]);
 
   const handleLogout = () => {
     logout();
@@ -17,6 +39,11 @@ function ClientLayout({ children }) {
   const closeMenu = () => {
     setShowMenu(false);
   };
+
+  // Si no hay usuario, mostrar un mensaje de carga
+  if (!user) {
+    return <div className="loading-container">Cargando...</div>;
+  }
 
   return (
     <div className="app-container">
@@ -43,8 +70,8 @@ function ClientLayout({ children }) {
               {showMenu && (
                 <div className="menu-dropdown">
                   <div className="user-info">
-                    <span className="user-name">{user.nombre}</span>
-                    <span className="user-email">{user.email}</span>
+                    <span className="user-name">{user.nombreCompleto || "Usuario"}</span>
+                    <span className="user-email">{user.email || "email@example.com"}</span>
                   </div>
                   
                   <div className="menu-options">

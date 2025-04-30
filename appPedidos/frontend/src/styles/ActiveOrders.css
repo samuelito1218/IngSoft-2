@@ -1,4 +1,4 @@
-/* ActiveOrders.css */
+
 .active-orders {
     padding: 20px 0;
   }
@@ -547,14 +547,28 @@
     transform: translateY(-2px);
   }
   
-  /* Responsive */
+/* Agregar o modificar las media queries */
+@media (max-width: 1024px) {
+    .orders-grid {
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+  }
+  
   @media (max-width: 768px) {
     .orders-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+    
+    .map-container {
+      height: 300px;
     }
   }
   
   @media (max-width: 480px) {
+    .orders-grid {
+      grid-template-columns: 1fr;
+    }
+    
     .page-header {
       flex-direction: column;
       align-items: flex-start;
@@ -570,5 +584,19 @@
     
     .order-actions {
       flex-direction: column;
+      width: 100%;
+    }
+    
+    .action-button {
+      width: 100%;
+    }
+    
+    .map-container {
+      height: 250px;
+    }
+    
+    .modal-content {
+      width: 95%;
+      max-height: 95vh;
     }
   }

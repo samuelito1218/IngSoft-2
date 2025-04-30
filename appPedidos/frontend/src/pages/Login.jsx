@@ -41,13 +41,17 @@ function Login() {
       
       // Actualizar estado de autenticación en el contexto
       login(user, token);
-      
+      console.log("Login exitoso. Usuario:", user, "Token:", token);
       // Redireccionar según el rol
       if (user.rol === 'Admin') {
         navigate('/admin');
       } else if (user.rol === 'Repartidor') {
         navigate('/repartidor');
+      } else if (user.rol === 'Cliente') {
+        console.log("Redirigiendo a /cliente");
+        navigate('/cliente');
       } else {
+        console.log("Rol no manejado:", user.rol, "redirigiendo a /dashboard");
         navigate('/dashboard');
       }
     } catch (error) {
