@@ -1,0 +1,70 @@
+/* src/styles/DeliveryTracking.css */
+.delivery-tracking {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .tracking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  
+  .pendiente {
+    background-color: #ffc107;
+    color: #333;
+  }
+  
+  .en_camino {
+    background-color: #2196f3;
+    color: white;
+  }
+  
+  .entregado {
+    background-color: #4caf50;
+    color: white;
+  }
+  
+  .tracking-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .delivery-info {
+    background-color: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .map-section, .chat-section {
+    margin-top: 20px;
+  }
+  
+  .no-repartidor {
+    background-color: white;
+    padding: 40px 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  @media (min-width: 768px) {
+    .tracking-content {
+      grid-template-columns: 1fr 1fr;
+    }
+    
+    .delivery-info {
+      grid-column: span 2;
+    }
+  }

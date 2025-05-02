@@ -38,6 +38,14 @@ model Mensajes {
   usuarioReceptor String   @db.ObjectId
   texto           String
   fechaEnvio      DateTime @db.Date
+  leido      Boolean  @default(false)
+}
+
+type UbicacionRepartidor {
+  lat         Float   @db.Double
+  lng         Float   @db.Double
+  heading     Float?  @db.Double
+  timestamp   DateTime @db.Date
 }
 
 /// This collection uses a JSON Schema defined in the database, which requires additional setup for migrations. Visit https://pris.ly/d/mongodb-json-schema for more info.
@@ -52,6 +60,7 @@ model Pedidos {
   productos        PedidosProductos[]
   mensajes         String[]                @db.ObjectId // Correcto como array de ObjectIds
   calificaciones  Calificaciones[]
+  UbicacionRepartidor UbicacionRepartidor?
 }
 
 enum EstadoPedido {

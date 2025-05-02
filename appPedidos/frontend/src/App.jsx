@@ -15,6 +15,7 @@ import RestaurantDetails from './components/client/RestaurantDetails';
 import ProductDetails from './components/client/ProductDetails';
 import Cart from './components/client/Cart';
 import OrderHistory from './components/client/OrderHistory';
+import DeliveryTracking from './components/client/DeliveryTracking';
 
 // Componentes de Restaurante
 import RestaurantDashboard from './components/restaurant/RestaurantDashboard';
@@ -24,12 +25,17 @@ import OrderManagement from './components/restaurant/OrderManagement';
 // Componentes de Repartidor
 import DeliveryDashboard from './components/delivery/DeliveryDashboard';
 import ActiveOrders from './components/delivery/ActiveOrders';
+import DeliveryNavigation from './components/delivery/DeliveryNavigation';
 //import DeliveryHistory from './components/delivery/DeliveryHistory';
 
 // Layout components
 import ClientLayout from './components/layouts/ClientLayout';
 import RestaurantLayout from './components/layouts/RestaurantLayout';
 import DeliveryLayout from './components/layouts/DeliveryLayout';
+
+import ChatComponent from './components/shared/ChatComponent';
+import MapComponent from './components/shared/MapComponent';
+
 
 // Componente para rutas protegidas con verificación de rol
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -76,6 +82,9 @@ function App() {
             <ProtectedRoute allowedRoles={['Cliente']}>
               <ClientLayout>
                 <ClientHome />
+                <ChatComponent />
+                <MapComponent />
+                <DeliveryTracking />
               </ClientLayout>
             </ProtectedRoute>
           } 
@@ -180,6 +189,7 @@ function App() {
             <ProtectedRoute allowedRoles={['Repartidor']}>
               <DeliveryLayout>
                 {/*<DeliveryHistory />*/}
+                <DeliveryNavigation />  
               </DeliveryLayout>
             </ProtectedRoute>
           } 

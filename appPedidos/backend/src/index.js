@@ -4,8 +4,10 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
-const pedidoRoutes = require("./routes/pedidosRoutes"); //Nueva importación
-const calificacionesRoutes = require("./routes/calificacionesRoutes"); //Nueva importación
+const pedidoRoutes = require("./routes/pedidosRoutes"); 
+const mensajesRoutes = require("./routes/mensajesRoutes"); 
+const ubicacionRoutes = require("./routes/ubicacionRoutes"); 
+const calificacionesRoutes = require("./routes/calificacionesRoutes"); 
 
 // Cargar variables de entorno
 dotenv.config();
@@ -22,8 +24,10 @@ app.use(express.json());
 
 // Rutas
 app.use('/api/auth', authRoutes);
-app.use("/api/pedidos", pedidoRoutes); //esto es nuevo
-app.use("/api/calificaciones", calificacionesRoutes); //Nuevo
+app.use("/api/pedidos", pedidoRoutes);
+app.use("/api/calificaciones", calificacionesRoutes);
+app.use('/api/mensajes', mensajesRoutes);        
+app.use('/api/ubicacion', ubicacionRoutes);      
 
 // Ruta de prueba
 app.get('/', (req, res) => {
