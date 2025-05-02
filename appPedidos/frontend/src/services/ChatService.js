@@ -1,42 +1,104 @@
 // src/services/ChatService.js
 import { ref, push, set, onValue, query, orderByChild } from 'firebase/database';
 import { db } from '../firebase/config';
-import api from './api'; // Tu servicio API existente
+import api from './api';
 
 class ChatService {
-  // Enviar un mensaje
+  // Send a message
   sendMessage = async (pedidoId, texto, receptorId) => {
     try {
-      // 1. Enviar mensaje al backend
-      const response = await api.post(`/api/mensajes/${pedidoId}`, {
+      if (!pedidoId || !texto || !receptorId) {
+        console.error('Missing required parameters for sending message');
+        return null;
+      }
+      
+      console.log('Sending message to backend API');
+      
+      // 1. Send message to backend
+      const response = await api.post(`/mensajes/enviar/${pedidoId}`, {
         texto,
         usuarioReceptorId: receptorId
       });
       
-      // 2. Guardar en Firebase para tiempo real
-      const messageRef = ref(db, `chats/${pedidoId}/messages/${response.data.id}`);
+      if (!response.data || !response.data.id) {
+        throw new Error('Failed to send message to backend');
+      }
+      
+      const messageData = response.data;
+      
+      // 2. Store in Firebase for real-time
+      console.log('Storing message in Firebase');
+      const messageRef = ref(db, `chats/${pedidoId}/messages/${messageData.id}`);
       await set(messageRef, {
-        id: response.data.id,
-        texto: response.data.texto,
-        emisorId: response.data.usuarioEmisor,
-        receptorId: response.data.usuarioReceptor,
-        timestamp: response.data.fechaEnvio,
+        id: messageData.id,
+        texto: messageData.texto,
+        emisorId: messageData.usuarioEmisor,
+        receptorId: messageData.usuarioReceptor,
+        timestamp: Date.now(),
         leido: false
       });
       
-      return response.data;
+      console.log('Message sent successfully');
+      return messageData;
     } catch (error) {
-      console.error('Error al enviar mensaje:', error);
+      console.error('Error sending message:', error);
       throw error;
     }
   };
   
-  // Suscribirse a mensajes en tiempo real
+  // Mark message as read
+  markAsRead = async (mensajeId) => {
+    try {
+      if (!mensajeId) {
+        console.error('Message ID is required');
+        return;
+      }
+      
+      // Call API to mark as read
+      await api.put(`/mensajes/marcar-leido/${mensajeId}`);
+      
+      // Update Firebase
+      // We need to find which chat this message belongs to
+      // This is a simplified approach - in a real app, you might want to store the chat ID with the message
+      const chatsRef = ref(db, 'chats');
+      const allChats = await onValue(chatsRef, (snapshot) => {
+        if (snapshot.exists()) {
+          snapshot.forEach((chatSnapshot) => {
+            const chatId = chatSnapshot.key;
+            const messageRef = ref(db, `chats/${chatId}/messages/${mensajeId}`);
+            
+            onValue(messageRef, (msgSnapshot) => {
+              if (msgSnapshot.exists()) {
+                // Update the message
+                set(messageRef, {
+                  ...msgSnapshot.val(),
+                  leido: true
+                });
+              }
+            }, { onlyOnce: true });
+          });
+        }
+      }, { onlyOnce: true });
+      
+      console.log('Message marked as read');
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+      throw error;
+    }
+  };
+  
+  // Subscribe to messages
   subscribeToMessages = (pedidoId, callback) => {
+    if (!pedidoId || typeof callback !== 'function') {
+      console.error('Invalid parameters for message subscription');
+      return () => {};
+    }
+    
+    console.log(`Subscribing to messages for pedido ${pedidoId}`);
     const messagesRef = ref(db, `chats/${pedidoId}/messages`);
     const messagesQuery = query(messagesRef, orderByChild('timestamp'));
     
-    return onValue(messagesQuery, (snapshot) => {
+    const unsubscribe = onValue(messagesQuery, (snapshot) => {
       const messages = [];
       if (snapshot.exists()) {
         snapshot.forEach((childSnapshot) => {
@@ -45,10 +107,20 @@ class ChatService {
             ...childSnapshot.val()
           });
         });
+        // Sort by timestamp
         messages.sort((a, b) => a.timestamp - b.timestamp);
+        console.log(`Received ${messages.length} messages`);
+        callback(messages);
+      } else {
+        console.log('No messages available');
+        callback([]);
       }
-      callback(messages);
+    }, (error) => {
+      console.error('Error in message subscription:', error);
     });
+    
+    // Return unsubscribe function to clean up
+    return unsubscribe;
   };
 }
 

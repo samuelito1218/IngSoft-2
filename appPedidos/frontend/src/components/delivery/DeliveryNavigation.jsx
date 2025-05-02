@@ -13,66 +13,112 @@ function DeliveryNavigation() {
   const { user } = useAuth();
   const [pedido, setPedido] = useState(null);
   const [cliente, setCliente] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [locationSharing, setLocationSharing] = useState(false);
   const [watchId, setWatchId] = useState(null);
   const [currentLocation, setCurrentLocation] = useState(null);
   
+  // Load order and customer data
   useEffect(() => {
-    // Cargar datos del pedido y cliente
     const loadData = async () => {
       try {
-        const pedidoRes = await api.get(`/api/pedidos/${pedidoId}`);
+        setLoading(true);
+        console.log(`Loading data for pedido ${pedidoId}`);
+        
+        // Get order details
+        const pedidoRes = await api.get(`/pedidos/${pedidoId}`);
         setPedido(pedidoRes.data);
         
-        const clienteRes = await api.get(`/api/usuarios/${pedidoRes.data.usuario_id}`);
+        // Get customer details
+        const clienteRes = await api.get(`/usuarios/${pedidoRes.data.usuario_id}`);
         setCliente(clienteRes.data);
+        
+        setLoading(false);
       } catch (error) {
-        console.error("Error al cargar datos:", error);
+        console.error("Error loading data:", error);
+        setError("No se pudieron cargar los datos del pedido");
+        setLoading(false);
       }
     };
     
-    loadData();
-    
-    // Limpiar al desmontar
+    if (pedidoId) {
+      loadData();
+    }
+  }, [pedidoId]);
+  
+  // Clean up location tracking when unmounting
+  useEffect(() => {
     return () => {
       if (watchId && navigator.geolocation) {
         navigator.geolocation.clearWatch(watchId);
       }
+      if (locationSharing) {
+        setLocationSharing(false);
+      }
     };
-  }, [pedidoId]);
+  }, [watchId, locationSharing]);
   
-  // Iniciar compartir ubicación
+  // Start sharing location
   const startLocationSharing = () => {
-    if (navigator.geolocation) {
-      const id = navigator.geolocation.watchPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const heading = position.coords.heading || 0;
-          
-          const locationData = {
-            lat: latitude,
-            lng: longitude,
-            heading
-          };
-          
-          // Actualizar estado local
-          setCurrentLocation(locationData);
-          
-          // Enviar ubicación
-          LocationService.updateLocation(pedidoId, locationData);
-        },
-        (error) => console.error("Error de ubicación:", error),
-        { enableHighAccuracy: true, maximumAge: 10000, timeout: 10000 }
-      );
-      
-      setWatchId(id);
-      setLocationSharing(true);
-    } else {
+    if (!navigator.geolocation) {
       alert("Tu navegador no soporta geolocalización");
+      return;
     }
+    
+    if (!pedidoId) {
+      alert("No hay pedido seleccionado");
+      return;
+    }
+    
+    // Request permission and start tracking
+    const id = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude, heading = 0 } = position.coords;
+        
+        const locationData = {
+          lat: latitude,
+          lng: longitude,
+          heading: heading
+        };
+        
+        // Update state for local display
+        setCurrentLocation(locationData);
+        
+        // Send to service for backend storage and Firebase
+        LocationService.updateLocation(pedidoId, locationData)
+          .catch(err => console.error("Error updating location:", err));
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            alert("Usuario denegó la solicitud de geolocalización.");
+            break;
+          case error.POSITION_UNAVAILABLE:
+            alert("Información de ubicación no disponible.");
+            break;
+          case error.TIMEOUT:
+            alert("Se agotó el tiempo de espera para obtener la ubicación.");
+            break;
+          default:
+            alert("Error desconocido al obtener ubicación.");
+            break;
+        }
+        setLocationSharing(false);
+      },
+      { 
+        enableHighAccuracy: true, 
+        maximumAge: 10000, 
+        timeout: 10000 
+      }
+    );
+    
+    setWatchId(id);
+    setLocationSharing(true);
   };
   
-  // Detener compartir ubicación
+  // Stop sharing location
   const stopLocationSharing = () => {
     if (watchId && navigator.geolocation) {
       navigator.geolocation.clearWatch(watchId);
@@ -81,8 +127,16 @@ function DeliveryNavigation() {
     }
   };
   
-  if (!pedido || !cliente) {
+  if (loading) {
     return <div className="loading">Cargando...</div>;
+  }
+  
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
+  
+  if (!pedido || !cliente) {
+    return <div className="error">No se encontraron datos del pedido</div>;
   }
   
   return (
@@ -105,6 +159,8 @@ function DeliveryNavigation() {
           <p><strong>Nombre:</strong> {cliente.nombreCompleto}</p>
           <p><strong>Teléfono:</strong> {cliente.telefono}</p>
           <p><strong>Dirección:</strong> {pedido.direccionEntrega.direccionEspecifica}</p>
+          <p><strong>Comuna:</strong> {pedido.direccionEntrega.comuna}</p>
+          <p><strong>Barrio:</strong> {pedido.direccionEntrega.barrio}</p>
         </div>
         
         <div className="map-section">

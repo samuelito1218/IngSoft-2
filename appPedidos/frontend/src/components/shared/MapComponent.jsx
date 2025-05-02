@@ -1,40 +1,48 @@
 // src/components/shared/MapComponent.jsx
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import '../../styles/Map.css';
 
 function MapComponent({ location, destination, isDelivery = false }) {
   const mapRef = useRef(null);
-  const mapInstance = useRef(null);
-  const marker = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const markerRef = useRef(null);
+  const directionsRendererRef = useRef(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
   
-  // Inicializar Google Maps
+  // Load Google Maps API
   useEffect(() => {
-    // Asegúrate de tener la API de Google Maps cargada
+    // Check if the Google Maps API is already loaded
+    if (window.google && window.google.maps) {
+      setMapLoaded(true);
+      return;
+    }
+    
+    // If not loaded, create and load the script
     const loadGoogleMaps = () => {
-      if (!window.google) {
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=TU_API_KEY&libraries=places`;
-        script.async = true;
-        script.defer = true;
-        script.onload = initializeMap;
-        document.head.appendChild(script);
-        return () => {
-          document.head.removeChild(script);
-        };
-      } else {
-        initializeMap();
-      }
+      const script = document.createElement('script');
+      // Replace YOUR_API_KEY with your actual Google Maps API key
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBK5LREFVqRD5QBOYBXEXikr6uBB7UiAgQ&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => setMapLoaded(true);
+      document.head.appendChild(script);
     };
     
     loadGoogleMaps();
+    
+    return () => {
+      // Clean up if needed
+    };
   }, []);
   
-  // Inicializar mapa
-  const initializeMap = () => {
-    if (!mapRef.current) return;
+  // Initialize map once loaded
+  useEffect(() => {
+    if (!mapLoaded || !mapRef.current) return;
     
-    // Coordenadas por defecto (puedes usar una ubicación en Colombia)
-    const defaultLocation = { lat: 3.45, lng: -76.53 }; // Cali, Colombia
+    console.log('Initializing map');
+    
+    // Default to Cali, Colombia
+    const defaultLocation = { lat: 3.45, lng: -76.53 };
     
     const mapOptions = {
       zoom: 15,
@@ -45,15 +53,16 @@ function MapComponent({ location, destination, isDelivery = false }) {
       zoomControl: true
     };
     
-    mapInstance.current = new window.google.maps.Map(
+    // Create map
+    mapInstanceRef.current = new window.google.maps.Map(
       mapRef.current,
       mapOptions
     );
     
-    // Crear marcador para el repartidor
-    marker.current = new window.google.maps.Marker({
+    // Create marker for delivery person
+    markerRef.current = new window.google.maps.Marker({
       position: defaultLocation,
-      map: mapInstance.current,
+      map: mapInstanceRef.current,
       icon: {
         path: window.google.maps.SymbolPath.CIRCLE,
         fillColor: '#4285F4',
@@ -63,50 +72,84 @@ function MapComponent({ location, destination, isDelivery = false }) {
         scale: 8
       }
     });
-  };
-  
-  // Actualizar ubicación del marcador cuando cambia
-  useEffect(() => {
-    if (!mapInstance.current || !marker.current || !location) return;
     
-    const position = new window.google.maps.LatLng(
-      location.lat,
-      location.lng
-    );
-    
-    marker.current.setPosition(position);
-    mapInstance.current.panTo(position);
-    
-    // Si hay una dirección de destino, mostrar ruta
-    if (destination && window.google) {
-      showRoute(position, destination);
-    }
-  }, [location, destination]);
-  
-  // Mostrar ruta entre origen y destino
-  const showRoute = (origin, destination) => {
-    const directionsService = new window.google.maps.DirectionsService();
-    const directionsRenderer = new window.google.maps.DirectionsRenderer({
-      map: mapInstance.current,
-      suppressMarkers: true // No mostrar marcadores A y B
+    // Create directions renderer
+    directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
+      map: mapInstanceRef.current,
+      suppressMarkers: true
     });
     
-    // Si destination es un objeto con latitud y longitud
-    const destPoint = destination.lat && destination.lng
-      ? new window.google.maps.LatLng(destination.lat, destination.lng)
-      : destination; // Si es una dirección como texto
+    // If we already have a location, update the map
+    if (location) {
+      updateMapWithLocation(location);
+    }
+  }, [mapLoaded]);
+  
+  // Update marker and map when location changes
+  useEffect(() => {
+    if (!mapLoaded || !mapInstanceRef.current || !markerRef.current || !location) return;
+    
+    updateMapWithLocation(location);
+  }, [location, mapLoaded]);
+  
+  // Function to update map when location changes
+  const updateMapWithLocation = (loc) => {
+    console.log('Updating map with location:', loc);
+    
+    const position = new window.google.maps.LatLng(
+      loc.lat,
+      loc.lng
+    );
+    
+    // Update marker position
+    markerRef.current.setPosition(position);
+    
+    // Center map on new position
+    mapInstanceRef.current.panTo(position);
+    
+    // If there's a destination and we're not already calculating route, show route
+    if (destination && directionsRendererRef.current) {
+      showRoute(position, destination);
+    }
+  };
+  
+  // Function to calculate and show route
+  const showRoute = (origin, dest) => {
+    console.log('Calculating route');
+    
+    const directionsService = new window.google.maps.DirectionsService();
+    
+    // If destination is a coordinate object
+    let destinationPoint;
+    if (dest.lat && dest.lng) {
+      destinationPoint = new window.google.maps.LatLng(dest.lat, dest.lng);
+    } 
+    // If destination is just text address, use geocoding
+    else if (dest.direccionEspecifica) {
+      destinationPoint = dest.direccionEspecifica;
+      if (dest.barrio) {
+        destinationPoint += `, ${dest.barrio}`;
+      }
+      if (dest.comuna) {
+        destinationPoint += `, comuna ${dest.comuna}`;
+      }
+      destinationPoint += ', Cali, Colombia';
+    } else {
+      destinationPoint = dest;
+    }
     
     directionsService.route(
       {
         origin: origin,
-        destination: destPoint,
+        destination: destinationPoint,
         travelMode: window.google.maps.TravelMode.DRIVING
       },
       (response, status) => {
         if (status === 'OK') {
-          directionsRenderer.setDirections(response);
+          directionsRendererRef.current.setDirections(response);
+          console.log('Route calculated successfully');
         } else {
-          console.error('Error al calcular ruta:', status);
+          console.error('Error calculating route:', status);
         }
       }
     );

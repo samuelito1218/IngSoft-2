@@ -6,6 +6,7 @@
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
   }
   
   .map-container {
@@ -26,4 +27,13 @@
     z-index: 10;
     text-align: center;
     color: #666;
+    font-size: 16px;
+  }
+  
+  .location-status {
+    text-align: center;
+    margin-top: -15px;
+    margin-bottom: 20px;
+    color: #666;
+    font-style: italic;
   }

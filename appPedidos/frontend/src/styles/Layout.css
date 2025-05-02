@@ -586,3 +586,86 @@
     padding: 8px 10px;
   }
 }
+/* Add these to your Layout.css file */
+
+/* Tracking button in client layout */
+.tracking-button {
+  background-color: var(--bg-light);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: var(--transition);
+  margin-right: 10px;
+}
+
+.tracking-button:hover {
+  background-color: #f0f0f0;
+  transform: scale(1.05);
+}
+
+/* Navigation button in delivery layout */
+.navigation-button {
+  background-color: var(--primary-color);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  margin-right: 15px;
+  transition: var(--transition);
+}
+
+.navigation-button:hover {
+  background-color: var(--primary-hover);
+  transform: scale(1.05);
+}
+
+/* Status toggle improvements */
+.status-button {
+  padding: 8px 16px;
+  border-radius: 30px;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: var(--transition);
+}
+
+.status-button.online {
+  background-color: rgba(76, 175, 80, 0.2);
+  color: #2e7d32;
+}
+
+.status-button.offline {
+  background-color: rgba(244, 67, 54, 0.2);
+  color: #c62828;
+}
+
+.status-button:hover {
+  filter: brightness(0.95);
+  transform: translateY(-2px);
+}
+
+/* Loading container */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 18px;
+  color: var(--text-dark);
+  font-weight: 600;    
+}

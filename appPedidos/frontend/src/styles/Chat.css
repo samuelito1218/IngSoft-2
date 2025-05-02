@@ -7,12 +7,14 @@
     overflow: hidden;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     background-color: white;
+    margin-bottom: 20px;
   }
   
   .chat-header {
     padding: 15px;
     background-color: #ff4b2b;
     color: white;
+    font-weight: bold;
   }
   
   .chat-header h3 {
@@ -73,6 +75,26 @@
     height: 100%;
     color: #999;
     font-size: 14px;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .loading-messages {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .error-message {
+    padding: 20px;
+    color: #e74c3c;
+    text-align: center;
+    background-color: rgba(231, 76, 60, 0.1);
+    border-radius: 8px;
+    margin: 10px;
   }
   
   .message-form {
@@ -104,4 +126,9 @@
   
   .message-form button:hover {
     background-color: #ff6b3d;
+  }
+  
+  .message-form button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
   }

@@ -1,3 +1,4 @@
+// src/components/layouts/ClientLayout.jsx (modified)
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -8,6 +9,7 @@ function ClientLayout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [showMenu, setShowMenu] = useState(false);
+  const [activePedido, setActivePedido] = useState(null);
 
   // Efecto para verificar la autenticación
   useEffect(() => {
@@ -30,6 +32,32 @@ function ClientLayout({ children }) {
       }
     }
   }, [user, navigate]);
+
+  // Cargar pedido activo
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const loadActivePedido = async () => {
+        try {
+          const response = await fetch(`http://localhost:5000/api/pedidos/cliente/activo`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data && data.pedido) {
+              setActivePedido(data.pedido);
+            }
+          }
+        } catch (error) {
+          console.error("Error al cargar el pedido activo:", error);
+        }
+      };
+      
+      loadActivePedido();
+    }
+  }, [isAuthenticated, user]);
 
   const handleLogout = () => {
     logout();
@@ -58,6 +86,17 @@ function ClientLayout({ children }) {
             <button className="cart-button" onClick={() => navigate('/cliente/carrito')}>
               <span className="icon">🛒</span>
             </button>
+            
+            {/* Botón de seguimiento de pedido si hay un pedido activo */}
+            {activePedido && (
+              <button 
+                className="tracking-button" 
+                onClick={() => navigate(`/cliente/delivery-tracking/${activePedido.id}`)}
+                title="Seguir mi pedido actual"
+              >
+                <span className="icon">🔍</span>
+              </button>
+            )}
             
             <div className="user-menu">
               <button 
