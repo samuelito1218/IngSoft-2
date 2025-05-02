@@ -1,11 +1,13 @@
-// src/controllers/pagos/PagosController.js
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+// appPedidos/backend/src/controllers/pagos/PagosController.js (refactorizado)
+const PagoRepository = require('../../repositories/PagoRepository');
+const PedidoRepository = require('../../repositories/PedidoRepository');
 const PaymentService = require('../../services/payment/PaymentService');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 class PagosController {
   constructor() {
+    this.pagoRepository = new PagoRepository();
+    this.pedidoRepository = new PedidoRepository();
     this.paymentService = new PaymentService();
   }
 
@@ -15,10 +17,8 @@ class PagosController {
       const { pedidoId } = req.params;
       const usuarioId = req.user.id;
 
-      // Verificar que existe el pedido y pertenece al usuario
-      const pedido = await prisma.pedidos.findUnique({
-        where: { id: pedidoId }
-      });
+      // Obtener el pedido y verificar permisos
+      const pedido = await this.pedidoRepository.getPedidoById(pedidoId);
 
       if (!pedido) {
         return res.status(404).json({ message: 'Pedido no encontrado' });
@@ -29,14 +29,9 @@ class PagosController {
       }
 
       // Verificar que el pedido no esté pagado ya
-      const pagoExistente = await prisma.pagos.findFirst({
-        where: {
-          pedido_Id: pedidoId,
-          estado: 'completado'
-        }
-      });
+      const pagoExistente = await this.pagoRepository.getPaymentsByPedidoAndStatus(pedidoId, 'completado');
 
-      if (pagoExistente) {
+      if (pagoExistente && pagoExistente.length > 0) {
         return res.status(400).json({ message: 'El pedido ya ha sido pagado' });
       }
 
@@ -51,14 +46,13 @@ class PagosController {
       });
 
       // Guardar referencia del pago en la base de datos
-      await prisma.pagos.create({
-        data: {
-          monto: pedido.total,
-          metodoPago: 'tarjeta',
-          pedido_Id: pedidoId,
-          estado: 'pendiente',
-          referenciaPago: paymentIntent.id
-        }
+      await this.pagoRepository.createPayment({
+        monto: pedido.total,
+        metodoPago: 'tarjeta',
+        pedido_Id: pedidoId,
+        estado: 'pendiente',
+        referenciaPago: paymentIntent.id,
+        fechaCreacion: new Date()
       });
 
       res.status(200).json({
@@ -76,22 +70,18 @@ class PagosController {
       const { paymentIntentId } = req.body;
       const usuarioId = req.user.id;
 
-      // Verificar el estado del paymentIntent
+      // Verificar el estado del paymentIntent en Stripe
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
       // Buscar el pago en la base de datos
-      const pago = await prisma.pagos.findFirst({
-        where: { referenciaPago: paymentIntentId }
-      });
+      const pago = await this.pagoRepository.getPaymentByReference(paymentIntentId);
 
       if (!pago) {
         return res.status(404).json({ message: 'Pago no encontrado' });
       }
 
       // Verificar que el pedido pertenece al usuario
-      const pedido = await prisma.pedidos.findUnique({
-        where: { id: pago.pedido_Id }
-      });
+      const pedido = await this.pedidoRepository.getPedidoById(pago.pedido_Id);
 
       if (!pedido || pedido.usuario_id !== usuarioId) {
         return res.status(403).json({ message: 'No tienes permiso para confirmar este pago' });
@@ -101,10 +91,12 @@ class PagosController {
       const nuevoEstado = paymentIntent.status === 'succeeded' ? 'completado' : 
                           paymentIntent.status === 'canceled' ? 'cancelado' : 'pendiente';
 
-      const pagoActualizado = await prisma.pagos.update({
-        where: { id: pago.id },
-        data: { estado: nuevoEstado }
-      });
+      const pagoActualizado = await this.pagoRepository.updatePaymentStatus(pago.id, nuevoEstado);
+
+      // Si el pago fue exitoso, actualizar el estado del pedido
+      if (nuevoEstado === 'completado') {
+        await this.pedidoRepository.updatePedido(pedido.id, { metodoPago: 'tarjeta' });
+      }
 
       res.status(200).json({
         success: true,
@@ -124,9 +116,7 @@ class PagosController {
       const usuarioId = req.user.id;
 
       // Verificar que existe el pedido y pertenece al usuario
-      const pedido = await prisma.pedidos.findUnique({
-        where: { id: pedidoId }
-      });
+      const pedido = await this.pedidoRepository.getPedidoById(pedidoId);
 
       if (!pedido) {
         return res.status(404).json({ message: 'Pedido no encontrado' });
@@ -137,14 +127,9 @@ class PagosController {
       }
 
       // Verificar que el pedido no esté pagado ya
-      const pagoExistente = await prisma.pagos.findFirst({
-        where: {
-          pedido_Id: pedidoId,
-          estado: 'completado'
-        }
-      });
+      const pagoExistente = await this.pagoRepository.getPaymentsByPedidoAndStatus(pedidoId, 'completado');
 
-      if (pagoExistente) {
+      if (pagoExistente && pagoExistente.length > 0) {
         return res.status(400).json({ message: 'El pedido ya ha sido pagado' });
       }
 
@@ -159,10 +144,7 @@ class PagosController {
       const resultado = await this.paymentService.processPayment(pedido.total, paymentInfo);
 
       // Actualizar el método de pago en el pedido
-      await prisma.pedidos.update({
-        where: { id: pedidoId },
-        data: { metodoPago }
-      });
+      await this.pedidoRepository.updatePedido(pedidoId, { metodoPago });
 
       res.status(200).json(resultado);
     } catch (error) {
@@ -177,52 +159,9 @@ class PagosController {
       const usuarioId = req.user.id;
       const { page = 1, limit = 10 } = req.query;
 
-      const skip = (page - 1) * parseInt(limit);
-
-      // Buscar los pedidos del usuario
-      const pedidos = await prisma.pedidos.findMany({
-        where: { usuario_id: usuarioId },
-        select: { id: true }
-      });
-
-      const pedidosIds = pedidos.map(p => p.id);
-
-      // Buscar los pagos relacionados con esos pedidos
-      const pagos = await prisma.pagos.findMany({
-        where: {
-          pedido_Id: { in: pedidosIds }
-        },
-        skip,
-        take: parseInt(limit),
-        orderBy: {
-          fechaCreacion: 'desc'
-        },
-        include: {
-          pedido: {
-            select: {
-              estado: true,
-              fechaDeCreacion: true
-            }
-          }
-        }
-      });
-
-      // Contar total de registros para paginación
-      const total = await prisma.pagos.count({
-        where: {
-          pedido_Id: { in: pedidosIds }
-        }
-      });
-
-      res.status(200).json({
-        data: pagos,
-        pagination: {
-          total,
-          page: parseInt(page),
-          limit: parseInt(limit),
-          totalPages: Math.ceil(total / parseInt(limit))
-        }
-      });
+      const resultado = await this.pagoRepository.getPaymentsByUser(usuarioId, page, limit);
+      
+      res.status(200).json(resultado);
     } catch (error) {
       console.error('Error al obtener historial de pagos:', error);
       res.status(500).json({ message: 'Error al obtener historial de pagos', error: error.message });
@@ -237,19 +176,16 @@ class PagosController {
       const usuarioId = req.user.id;
 
       // Buscar el pago
-      const pago = await prisma.pagos.findUnique({
-        where: { id: pagoId },
-        include: {
-          pedido: true
-        }
-      });
+      const pago = await this.pagoRepository.getPaymentById(pagoId);
 
       if (!pago) {
         return res.status(404).json({ message: 'Pago no encontrado' });
       }
 
       // Verificar que el pedido pertenece al usuario
-      if (pago.pedido.usuario_id !== usuarioId) {
+      const pedido = await this.pedidoRepository.getPedidoById(pago.pedido_Id);
+      
+      if (!pedido || pedido.usuario_id !== usuarioId) {
         return res.status(403).json({ message: 'No tienes permiso para solicitar este reembolso' });
       }
 
@@ -262,13 +198,11 @@ class PagosController {
       const resultado = await this.paymentService.refundPayment(pagoId, pago.metodoPago);
 
       // Registrar la solicitud de reembolso
-      await prisma.reembolsos.create({
-        data: {
-          pago_Id: pagoId,
-          motivo,
-          estado: 'procesado',
-          fechaSolicitud: new Date()
-        }
+      await this.pagoRepository.createRefund({
+        pago_Id: pagoId,
+        motivo,
+        estado: 'procesado',
+        fechaSolicitud: new Date()
       });
 
       res.status(200).json(resultado);
@@ -316,9 +250,8 @@ class PagosController {
   async _handlePaymentIntentSucceeded(paymentIntent) {
     try {
       // Actualizar el estado del pago en la base de datos
-      await prisma.pagos.updateMany({
-        where: { referenciaPago: paymentIntent.id },
-        data: { estado: 'completado' }
+      await this.pagoRepository.updatePaymentsByReference(paymentIntent.id, { 
+        estado: 'completado' 
       });
 
       console.log(`Pago ${paymentIntent.id} completado correctamente`);
@@ -330,9 +263,8 @@ class PagosController {
   async _handlePaymentIntentFailed(paymentIntent) {
     try {
       // Actualizar el estado del pago en la base de datos
-      await prisma.pagos.updateMany({
-        where: { referenciaPago: paymentIntent.id },
-        data: { estado: 'fallido' }
+      await this.pagoRepository.updatePaymentsByReference(paymentIntent.id, { 
+        estado: 'fallido' 
       });
 
       console.log(`Pago ${paymentIntent.id} fallido`);
@@ -344,17 +276,11 @@ class PagosController {
   async _handleChargeRefunded(charge) {
     try {
       // Buscar el pago por la referencia
-      const pago = await prisma.pagos.findFirst({
-        where: { referenciaPago: charge.payment_intent }
-      });
+      const pago = await this.pagoRepository.getPaymentByReference(charge.payment_intent);
 
       if (pago) {
         // Actualizar el estado del pago
-        await prisma.pagos.update({
-          where: { id: pago.id },
-          data: { estado: 'reembolsado' }
-        });
-
+        await this.pagoRepository.updatePaymentStatus(pago.id, 'reembolsado');
         console.log(`Pago ${pago.id} reembolsado correctamente`);
       }
     } catch (error) {

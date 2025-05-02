@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import '../../styles/Layout.css';
+import { ShoppingCart, User, MapPin, Home, Search, ShoppingBag, Heart } from "lucide-react";
 
 function ClientLayout({ children }) {
   const { logout, user, isAuthenticated } = useAuth();
@@ -84,7 +85,7 @@ function ClientLayout({ children }) {
           
           <div className="header-actions">
             <button className="cart-button" onClick={() => navigate('/cliente/carrito')}>
-              <span className="icon">🛒</span>
+              <ShoppingCart size={20} />
             </button>
             
             {/* Botón de seguimiento de pedido si hay un pedido activo */}
@@ -94,7 +95,7 @@ function ClientLayout({ children }) {
                 onClick={() => navigate(`/cliente/delivery-tracking/${activePedido.id}`)}
                 title="Seguir mi pedido actual"
               >
-                <span className="icon">🔍</span>
+                <MapPin size={20} />
               </button>
             )}
             
@@ -103,7 +104,7 @@ function ClientLayout({ children }) {
                 className="profile-button" 
                 onClick={() => setShowMenu(!showMenu)}
               >
-                <span className="profile-icon">👤</span>
+                <User size={20} />
               </button>
               
               {showMenu && (
@@ -145,7 +146,7 @@ function ClientLayout({ children }) {
           to="/cliente" 
           className={`nav-item ${location.pathname === '/cliente' ? 'active' : ''}`}
         >
-          <span className="nav-icon">🏠</span>
+          <Home size={20} />
           <span className="nav-text">Inicio</span>
         </Link>
         
@@ -153,7 +154,7 @@ function ClientLayout({ children }) {
           to="/cliente/buscar" 
           className={`nav-item ${location.pathname === '/cliente/buscar' ? 'active' : ''}`}
         >
-          <span className="nav-icon">🔍</span>
+          <Search size={20} />
           <span className="nav-text">Buscar</span>
         </Link>
         
@@ -161,7 +162,7 @@ function ClientLayout({ children }) {
           to="/cliente/pedidos" 
           className={`nav-item ${location.pathname === '/cliente/pedidos' ? 'active' : ''}`}
         >
-          <span className="nav-icon">📋</span>
+          <ShoppingBag size={20} />
           <span className="nav-text">Pedidos</span>
         </Link>
         
@@ -169,7 +170,7 @@ function ClientLayout({ children }) {
           to="/cliente/favoritos" 
           className={`nav-item ${location.pathname === '/cliente/favoritos' ? 'active' : ''}`}
         >
-          <span className="nav-icon">❤️</span>
+          <Heart size={20} />
           <span className="nav-text">Favoritos</span>
         </Link>
       </footer>
