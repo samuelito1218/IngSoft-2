@@ -2,7 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 //const { ObjectId } = require('mongodb');
 
 const prisma = new PrismaClient();
-
+//Método para crear pedido
 exports.crearPedido = async (req, res) => {
   try {
     const { direccionEntrega, productos } = req.body;
@@ -49,6 +49,10 @@ exports.crearPedido = async (req, res) => {
 
     let total = 0;
     const productosFinal = productos.map(p => {
+      if (p.cantidad<=0){
+        throw new Error(`La cantidad para el producto ${p.productoId} debe ser mayor que cero.`);
+      }
+      
       const productoEncontrado = productosDB.find(db => db.id === p.productoId);
       if (!productoEncontrado) {
         throw new Error(`Producto con ID ${p.productoId} no encontrado.`);
@@ -200,5 +204,138 @@ exports.marcarEntregado = async (req,res)=>{
   } catch (error){
     console.error("Error al marcar como Entregado: ", error);
     res.status(500).json({message: "Error al cambair estado a Entregado", error: error.message});
+  }
+};
+
+//Método para eliminar pedido (solamente por el usuario que creo el pedido) Nota: Si ya se asigno un repartidor no se peude eliminar
+exports.eliminarPedido = async (req,res)=>{
+  try{
+    const { pedidoId } = req.params;
+    const clienteId = req.user.id;
+
+    //Buscar el pedido
+    const pedido = await prisma.pedidos.findUnique({
+      where: { id: pedidoId},
+    });
+
+    if (!pedido){
+      return res.status(404).json({
+        message: "Pedido no encontrado"
+      });
+    }
+    //Se verifica que el pedido pertenezca al cliente autenticado
+    if (pedido.usuario_id !== clienteId){
+      return res.status(403).json({
+        message: "No tienes permiso para eliminar este pedido"
+      });
+    }
+    //Se verifica que el pedido no tenga repartidor asignado
+
+    if (pedido.repartidor_Id !== null){
+      return res.status(400).json({
+        message: "No puedes eliminar un pedido con repartidor asignado"
+      });
+    }
+    //Eliminar pedido
+
+    await prisma.pedidos.delete({
+      where: { id: pedidoId},
+    });
+
+    res.json({
+      message: "Pedido eliminado exitosamente"
+    });
+  } catch (error){
+    console.error("Error al eliminar pedido: ", error);
+    res.status(500).json({
+      message: "Error interno al eliminar pedido"
+    });
+  }
+};
+
+//Método para editar pedido (solamente si no hay repartidor asignado) Nota: los productos asociados siguen perteneciendo al restaurante del pedido original
+
+exports.editarPedido = async (req, res) =>{
+  try{
+    const { pedidoId } = req.params;
+    const { productos } = req.body; // productos: [{productoId, cantidad}]
+    const clienteId = req.user.id;
+
+    //Buscar el pedido
+
+    const pedido = await prisma.pedidos.findUnique({
+      where: { id: pedidoId },
+      include: { productos: true},
+    });
+
+    if (!pedido){
+      return res.status(404).json({
+        message: "Pedido no encontrado"
+      });
+    }
+    //Validar si el pedido pertenece al usuario y el estado del mismo:
+    if (pedido.usuario_id !==clienteId){
+      return res.status(403).json({
+        message: "No tienes permiso para editar este pedido"
+      });
+    }
+
+    if (pedido.estado !== "Pendiente"){
+      return res.status(400).json({
+        message: "Solo se pueden editar pedidos pendientes"
+      });
+    }
+    //Se obtiene el restaurante original mediante el primer producto
+
+    const productoOriginal = await prisma.productos.findUnique({
+      where: { id: pedido.productos[0].productoId },
+    });
+    const restauranteOriginalId = productoOriginal.restaurante_Id;
+
+    let total=0;
+    //Se valida que todos los nuevos productos pertenezcan al mismo restaurante
+
+    for (const item of productos){
+      if (item.cantidad<=0){
+        return res.status(400).json({
+          message: `La cantidad para el producto ${item.productoId} debe ser mayor que cero.`
+        });
+      }
+      const producto = await prisma.productos.findUnique({
+        where: { id: item.productoId },
+      });
+
+      if (!producto){
+        return res.status(400).json({
+          message: `Producto no encontrado: ${item.productoId}`
+        });
+      }
+      if (producto.restaurante_Id !== restauranteOriginalId){
+        return res.status(400).json({
+          message: "Todos los productos deben pertener al mismo restaurante que el pedido original, en todo caso, elimine el pedido y cree uno nuevo"
+        });
+      }
+      total += producto.precio * item.cantidad;
+    }
+    //Actualizar los productos del pedido
+
+    await prisma.pedidos.update({
+      where: { id: pedidoId},
+      data: {
+        productos: {
+          set: productos, //Se reemplazan completamente los productos
+        },
+        total
+      },
+    });
+
+    res.status(200).json({
+      message: "Pedido actualizado correctamente"
+    });
+  } catch (error){
+    console.error("Error al editar el pedido: ", error);
+    res.status(500).json({
+      message: "Error al editar el pedido", error: error.message
+    });
   }
 };
