@@ -96,10 +96,11 @@ model Usuarios {
   direccion           String
   rol                 String
   vehiculo            String?
+  imageUrl            String?             // Nuevo campo para imagen de perfil
   historialDirecciones HistorialDireccion[]
   resetToken          String?             @db.String
   resetTokenExpiry    String?             @db.String
-  restaurantes        Restaurantes[] //Relación nueva añadida
+  restaurantes        Restaurantes[]
 }
 
 type HistorialDireccion {
