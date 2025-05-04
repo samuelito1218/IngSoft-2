@@ -8,11 +8,9 @@ class ChatService {
   async sendMessage(pedidoId, texto, receptorId) {
     try {
       if (!pedidoId || !texto || !receptorId) {
-        console.error('Missing required parameters for sending message');
-        return null;
+        console.error('Faltan parámetros requeridos para enviar mensaje');
+        throw new Error('Parámetros incorrectos');
       }
-      
-      console.log('Sending message to backend API');
       
       // 1. Enviar mensaje al backend
       const response = await api.post(`/mensajes/enviar/${pedidoId}`, {
@@ -21,13 +19,12 @@ class ChatService {
       });
       
       if (!response.data || !response.data.id) {
-        throw new Error('Failed to send message to backend');
+        throw new Error('Error al enviar mensaje al backend');
       }
       
       const messageData = response.data;
       
       // 2. Almacenar en Firebase para tiempo real
-      console.log('Storing message in Firebase');
       const messageRef = ref(db, `chats/${pedidoId}/messages/${messageData.id}`);
       await set(messageRef, {
         id: messageData.id,
@@ -38,91 +35,126 @@ class ChatService {
         leido: false
       });
       
-      console.log('Message sent successfully');
       return messageData;
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error al enviar mensaje:', error);
       throw error;
     }
   }
   
-  // Marcar mensaje como leído - exactamente igual que tu implementación
-  markAsRead = async (mensajeId) => {
+  // Marcar mensaje como leído
+  async markAsRead(mensajeId) {
     try {
       if (!mensajeId) {
-        console.error('Message ID is required');
+        console.error('ID de mensaje requerido');
         return;
       }
       
-      // Call API to mark as read
+      // Llamar a la API para marcar como leído
       await api.put(`/mensajes/marcar-leido/${mensajeId}`);
       
-      // Update Firebase
-      // We need to find which chat this message belongs to
-      // This is a simplified approach - in a real app, you might want to store the chat ID with the message
+      // Actualizar Firebase
+      // Buscar en qué chat está este mensaje
       const chatsRef = ref(db, 'chats');
-      const allChats = await onValue(chatsRef, (snapshot) => {
-        if (snapshot.exists()) {
-          snapshot.forEach((chatSnapshot) => {
-            const chatId = chatSnapshot.key;
-            const messageRef = ref(db, `chats/${chatId}/messages/${mensajeId}`);
-            
-            onValue(messageRef, (msgSnapshot) => {
-              if (msgSnapshot.exists()) {
-                // Update the message
-                set(messageRef, {
-                  ...msgSnapshot.val(),
-                  leido: true
-                });
-              }
-            }, { onlyOnce: true });
-          });
-        }
-      }, { onlyOnce: true });
       
-      console.log('Message marked as read');
+      // Recorrer los chats para encontrar el mensaje
+      const snapshot = await get(chatsRef);
+      if (snapshot.exists()) {
+        snapshot.forEach((chatSnapshot) => {
+          const chatId = chatSnapshot.key;
+          const messageRef = ref(db, `chats/${chatId}/messages/${mensajeId}`);
+          
+          get(messageRef).then((msgSnapshot) => {
+            if (msgSnapshot.exists()) {
+              set(messageRef, {
+                ...msgSnapshot.val(),
+                leido: true
+              });
+            }
+          });
+        });
+      }
     } catch (error) {
-      console.error('Error marking message as read:', error);
+      console.error('Error al marcar mensaje como leído:', error);
       throw error;
     }
-  };
+  }
   
-  // Subscribe to messages
-  subscribeToMessages = (pedidoId, callback) => {
+  // Suscribirse a mensajes de un chat
+  subscribeToMessages(pedidoId, callback) {
     if (!pedidoId || typeof callback !== 'function') {
-      console.error('Invalid parameters for message subscription');
+      console.error('Parámetros inválidos para suscripción de mensajes');
       return () => {};
     }
     
-    console.log(`Subscribing to messages for pedido ${pedidoId}`);
-    const messagesRef = ref(db, `chats/${pedidoId}/messages`);
-    const messagesQuery = query(messagesRef, orderByChild('timestamp'));
-    
-    const unsubscribe = onValue(messagesQuery, (snapshot) => {
-      const messages = [];
-      if (snapshot.exists()) {
-        snapshot.forEach((childSnapshot) => {
-          messages.push({
-            id: childSnapshot.key,
-            ...childSnapshot.val()
+    try {
+      const messagesRef = ref(db, `chats/${pedidoId}/messages`);
+      const messagesQuery = query(messagesRef, orderByChild('timestamp'));
+      
+      const unsubscribe = onValue(messagesQuery, (snapshot) => {
+        const messages = [];
+        if (snapshot.exists()) {
+          snapshot.forEach((childSnapshot) => {
+            messages.push({
+              id: childSnapshot.key,
+              ...childSnapshot.val()
+            });
           });
+          
+          // Ordenar por timestamp
+          messages.sort((a, b) => a.timestamp - b.timestamp);
+          callback(messages);
+        } else {
+          callback([]);
+        }
+      }, (error) => {
+        console.error('Error en la suscripción de mensajes:', error);
+      });
+      
+      return unsubscribe;
+    } catch (error) {
+      console.error('Error al suscribirse a mensajes:', error);
+      return () => {};
+    }
+  }
+  
+  // Obtener historial de mensajes (fallback al método de API)
+  async getMessageHistory(pedidoId) {
+    try {
+      const response = await api.get(`/mensajes/${pedidoId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener historial de mensajes:', error);
+      return [];
+    }
+  }
+  
+  // Verificar si hay mensajes no leídos
+  async hasUnreadMessages(pedidoId, usuarioId) {
+    try {
+      // Intentar verificar en Firebase primero
+      const messagesRef = ref(db, `chats/${pedidoId}/messages`);
+      const snapshot = await get(messagesRef);
+      
+      if (snapshot.exists()) {
+        let hasUnread = false;
+        snapshot.forEach((childSnapshot) => {
+          const message = childSnapshot.val();
+          if (message.receptorId === usuarioId && !message.leido) {
+            hasUnread = true;
+          }
         });
-        // Sort by timestamp
-        messages.sort((a, b) => a.timestamp - b.timestamp);
-        console.log(`Received ${messages.length} messages`);
-        callback(messages);
-      } else {
-        console.log('No messages available');
-        callback([]);
+        return hasUnread;
       }
-    }, (error) => {
-      console.error('Error in message subscription:', error);
-    });
-    
-    // Return unsubscribe function to clean up
-    return unsubscribe;
-  };
+      
+      // Fallback a la API
+      const response = await api.get(`/mensajes/${pedidoId}/no-leidos`);
+      return response.data.tieneNoLeidos || false;
+    } catch (error) {
+      console.error('Error al verificar mensajes no leídos:', error);
+      return false;
+    }
+  }
 }
 
 export default new ChatService();
-  

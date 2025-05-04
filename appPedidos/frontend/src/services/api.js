@@ -1,3 +1,4 @@
+// src/services/api.js - Servicio mejorado
 import axios from 'axios';
 
 // Función para obtener el token del almacenamiento
@@ -13,10 +14,7 @@ const api = axios.create({
 api.interceptors.request.use(config => {
   const token = getToken(); // Obtener token
   if (token) {
-    console.log("Añadiendo token a la solicitud:", config.url);
     config.headers.Authorization = `Bearer ${token}`;
-  } else {
-    console.log("No hay token disponible para la solicitud:", config.url);
   }
   return config;
 }, error => {
@@ -27,8 +25,6 @@ api.interceptors.request.use(config => {
 // Interceptor para manejar errores de respuesta
 api.interceptors.response.use(
   response => {
-    // Opcionalmente, puedes registrar las respuestas exitosas
-    console.log(`Respuesta exitosa de ${response.config.url}:`, response.status);
     return response;
   },
   error => {
@@ -51,7 +47,6 @@ api.interceptors.response.use(
           window.location.pathname !== '/register' &&
           !window.location.pathname.startsWith('/reset-password') &&
           window.location.pathname !== '/recover-password') {
-        console.log("Redirigiendo a la página de login");
         window.location.href = '/';
       }
     }
