@@ -25,12 +25,29 @@ router.put(
   pedidosController.marcarEntregado
 );
 
+<<<<<<< HEAD
 router.get(
   '/cliente/activo',
   authenticate,
   authorize('Cliente', 'cliente'),
   pedidosController.getPedidoActivo
 );
+=======
+router.delete(
+  "/eliminar/:pedidoId",
+  authenticate,
+  authorize("Cliente", "cliente"),
+  pedidosController.eliminarPedido
+);
+
+router.put(
+  "/editar/:pedidoId",
+  authenticate,
+  authorize("Cliente", "cliente"),
+  pedidosController.editarPedido
+);
+
+>>>>>>> 2aba3ca5746de5e21a48e45ff21097ca2129b131
 
 module.exports = router;
 

@@ -21,10 +21,10 @@ type PedidosProductos {
 
 /// This collection uses a JSON Schema defined in the database, which requires additional setup for migrations. Visit https://pris.ly/d/mongodb-json-schema for more info.
 model Restaurantes {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
-  // Agrega aquí tus otros campos
+  id          String                      @id @default(auto()) @map("_id") @db.ObjectId
+  nombre      String
   ubicaciones RestaurantesUbicaciones[]
-  productos   Productos[]
+  productos   Productos[]                 @relation(fields: [id], references: [restaurante_Id])
 }
 
 type RestaurantesUbicaciones {
@@ -81,8 +81,9 @@ model Productos {
   nombre           String
   precio           Int
   restaurante_Id   String       @db.ObjectId
-  restaurante      Restaurantes @relation(fields: [restaurante_Id], references: [id])
+  restaurante      Restaurantes @relation("RestaurantesProductos", fields: [restaurante_Id], references: [id])
 }
+
 
 /// This collection uses a JSON Schema defined in the database, which requires additional setup for migrations. Visit https://pris.ly/d/mongodb-json-schema for more info.
 model Usuarios {
@@ -98,6 +99,7 @@ model Usuarios {
   historialDirecciones HistorialDireccion[]
   resetToken          String?             @db.String
   resetTokenExpiry    String?             @db.String
+  restaurantes        Restaurantes[] //Relación nueva añadida
 }
 
 type HistorialDireccion {
