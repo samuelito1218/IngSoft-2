@@ -1,11 +1,11 @@
 // src/services/ChatService.js
-import { ref, push, set, onValue, query, orderByChild } from 'firebase/database';
-import { db } from '../firebase/config';
 import api from './api';
+import { ref, push, set, onValue, query, orderByChild, get } from 'firebase/database';
+import { db } from '../firebase/config';
 
 class ChatService {
-  // Send a message
-  sendMessage = async (pedidoId, texto, receptorId) => {
+  // Enviar un mensaje
+  async sendMessage(pedidoId, texto, receptorId) {
     try {
       if (!pedidoId || !texto || !receptorId) {
         console.error('Missing required parameters for sending message');
@@ -14,7 +14,7 @@ class ChatService {
       
       console.log('Sending message to backend API');
       
-      // 1. Send message to backend
+      // 1. Enviar mensaje al backend
       const response = await api.post(`/mensajes/enviar/${pedidoId}`, {
         texto,
         usuarioReceptorId: receptorId
@@ -26,7 +26,7 @@ class ChatService {
       
       const messageData = response.data;
       
-      // 2. Store in Firebase for real-time
+      // 2. Almacenar en Firebase para tiempo real
       console.log('Storing message in Firebase');
       const messageRef = ref(db, `chats/${pedidoId}/messages/${messageData.id}`);
       await set(messageRef, {
@@ -44,9 +44,9 @@ class ChatService {
       console.error('Error sending message:', error);
       throw error;
     }
-  };
+  }
   
-  // Mark message as read
+  // Marcar mensaje como leído - exactamente igual que tu implementación
   markAsRead = async (mensajeId) => {
     try {
       if (!mensajeId) {
@@ -125,3 +125,4 @@ class ChatService {
 }
 
 export default new ChatService();
+  

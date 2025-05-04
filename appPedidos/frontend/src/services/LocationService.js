@@ -1,54 +1,22 @@
 // src/services/LocationService.js
-import { ref, set, onValue } from 'firebase/database';
-import { db } from '../firebase/config';
 import api from './api';
+import { ref, onValue, set } from 'firebase/database';
+import { db } from '../firebase/config';
 
 class LocationService {
-  // Update location
-  updateLocation = async (pedidoId, { lat, lng, heading }) => {
-    try {
-      if (!pedidoId || !lat || !lng) {
-        console.error('Missing required parameters for location update');
-        return;
-      }
-      
-      // 1. Send to backend API
-      await api.put(`/ubicacion/pedido/${pedidoId}`, {
-        latitud: lat,
-        longitud: lng,
-        heading: heading || 0
-      });
-      
-      // 2. Update in Firebase for real-time
-      const locationRef = ref(db, `deliveries/${pedidoId}/location`);
-      await set(locationRef, {
-        lat: parseFloat(lat),
-        lng: parseFloat(lng),
-        heading: heading ? parseFloat(heading) : 0,
-        timestamp: Date.now()
-      });
-      
-      console.log('Location updated successfully');
-    } catch (error) {
-      console.error('Error updating location:', error);
-      throw error;
-    }
-  };
-  
-  // Subscribe to location changes
-  subscribeToLocation = (pedidoId, callback) => {
-    if (!pedidoId || typeof callback !== 'function') {
-      console.error('Invalid parameters for location subscription');
+  // Suscribirse a actualizaciones de ubicación en tiempo real
+  subscribeToLocation(pedidoId, callback) {
+    if (!pedidoId) {
+      console.error('pedidoId is required');
       return () => {};
     }
     
     console.log(`Subscribing to location updates for pedido ${pedidoId}`);
-    const locationRef = ref(db, `deliveries/${pedidoId}/location`);
+    const locationRef = ref(db, `ubicaciones/${pedidoId}`);
     
     const unsubscribe = onValue(locationRef, (snapshot) => {
       if (snapshot.exists()) {
         const locationData = snapshot.val();
-        console.log('Received location update:', locationData);
         callback(locationData);
       } else {
         console.log('No location data available');
@@ -58,9 +26,28 @@ class LocationService {
       console.error('Error in location subscription:', error);
     });
     
-    // Return unsubscribe function to clean up
     return unsubscribe;
-  };
+  }
+  
+  // Para repartidores: actualizar su ubicación
+  async updateLocation(pedidoId, locationData) {
+    try {
+      // 1. Actualizar en el backend
+      await api.put(`/ubicacion/pedido/${pedidoId}`, locationData);
+      
+      // 2. Actualizar en Firebase para tiempo real
+      const locationRef = ref(db, `ubicaciones/${pedidoId}`);
+      await set(locationRef, {
+        ...locationData,
+        timestamp: Date.now()
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating location:', error);
+      throw error;
+    }
+  }
 }
 
 export default new LocationService();

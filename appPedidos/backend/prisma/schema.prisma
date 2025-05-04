@@ -21,10 +21,10 @@ type PedidosProductos {
 
 /// This collection uses a JSON Schema defined in the database, which requires additional setup for migrations. Visit https://pris.ly/d/mongodb-json-schema for more info.
 model Restaurantes {
-  id          String                      @id @default(auto()) @map("_id") @db.ObjectId
-  nombre      String
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  // Agrega aquí tus otros campos
   ubicaciones RestaurantesUbicaciones[]
-  productos   Productos[]                 @relation(fields: [id], references: [restaurante_Id])
+  productos   Productos[]
 }
 
 type RestaurantesUbicaciones {

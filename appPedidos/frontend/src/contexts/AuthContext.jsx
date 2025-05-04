@@ -1,109 +1,105 @@
+// src/contexts/AuthContext.jsx
 import React, { createContext, useState, useEffect } from 'react';
 import api from '../services/api';
 
-// Crear contexto
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  // Verificar si el usuario está autenticado al cargar la aplicación
+  
+  // Verificar token al cargar
   useEffect(() => {
-    const checkAuthStatus = async () => {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const verifyToken = async () => {
+      const token = localStorage.getItem('token');
       
-      if (token) {
-        try {
-          console.log("Token encontrado, verificando autenticación...");
-          
-          // Configurar el token para esta petición específica
-          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          
-          // Verificar token llamando al endpoint /me
-          const response = await api.get('/auth/me');
-          console.log("Verificación exitosa, datos del usuario:", response.data.user);
-          
-          setUser(response.data.user);
-          setIsAuthenticated(true);
-        } catch (error) {
-          console.error('Error al verificar autenticación:', error);
-          // Si hay error, limpiar tokens
-          localStorage.removeItem('token');
-          sessionStorage.removeItem('token');
-          delete api.defaults.headers.common['Authorization'];
-          setUser(null);
-          setIsAuthenticated(false);
-        }
-      } else {
-        console.log("No hay token almacenado");
-        setUser(null);
-        setIsAuthenticated(false);
+      if (!token) {
+        setLoading(false);
+        return;
       }
       
-      setLoading(false);
+      console.log('Token encontrado, verificando autenticación...');
+      
+      try {
+        const response = await api.get('/auth/me');
+        
+        if (response.status === 200) {
+          console.log('Verificación exitosa, datos del usuario:', response.data.user);
+          setUser(response.data.user);
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        console.error('Error de verificación:', error);
+        localStorage.removeItem('token');
+      } finally {
+        setLoading(false);
+      }
     };
     
-    checkAuthStatus();
+    verifyToken();
   }, []);
-
-  // Función para iniciar sesión
-  const login = async (userData, token) => {
-    console.log("login() llamado con:", userData);
-    
-    if (!userData || !userData.rol) {
-      console.error("Datos de usuario incompletos:", userData);
-      return false;
-    }
-    
+  
+  // Iniciar sesión
+  const login = async (credentials) => {
     try {
-      // Guardar el token en localStorage o sessionStorage
-      localStorage.setItem('token', token);
+      const response = await api.post('/auth/login', credentials);
       
-      // Configurar el token para futuras peticiones
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
-      setUser(userData);
-      setIsAuthenticated(true);
-      
-      console.log("Usuario autenticado correctamente:", userData);
-      return true;
+      if (response.status === 200) {
+        const { token, user } = response.data;
+        localStorage.setItem('token', token);
+        setUser(user);
+        setIsAuthenticated(true);
+        return { success: true };
+      }
     } catch (error) {
-      console.error("Error en la función login:", error);
-      return false;
+      console.error('Error de inicio de sesión:', error);
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Error al iniciar sesión' 
+      };
     }
   };
-
-  // Función para cerrar sesión
+  
+  // Cerrar sesión
   const logout = () => {
-    console.log("logout() llamado");
-    
-    // Eliminar el token
     localStorage.removeItem('token');
-    sessionStorage.removeItem('token');
-    
-    // Eliminar el token de los headers
-    delete api.defaults.headers.common['Authorization'];
-    
-    // Actualizar el estado
     setUser(null);
     setIsAuthenticated(false);
-    
-    console.log("Sesión cerrada correctamente");
   };
-
-  // Valor del contexto
-  const contextValue = {
+  
+  // Registro de usuario
+  const register = async (userData) => {
+    try {
+      const response = await api.post('/auth/register', userData);
+      
+      if (response.status === 201) {
+        const { token, user } = response.data;
+        localStorage.setItem('token', token);
+        setUser(user);
+        setIsAuthenticated(true);
+        return { success: true };
+      }
+    } catch (error) {
+      console.error('Error de registro:', error);
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Error al registrarse' 
+      };
+    }
+  };
+  
+  const value = {
     user,
     loading,
     isAuthenticated,
     login,
-    logout
+    logout,
+    register
   };
-
+  
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

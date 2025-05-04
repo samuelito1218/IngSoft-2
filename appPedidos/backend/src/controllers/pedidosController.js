@@ -88,6 +88,61 @@ exports.crearPedido = async (req, res) => {
   }
 };
 
+exports.getPedidoActivo = async (req, res) => {
+  try {
+    const usuario_id = req.user.id;
+    
+    // Buscar pedido activo
+    const pedidoActivo = await prisma.pedidos.findFirst({
+      where: {
+        usuario_id,
+        estado: {
+          in: ['Pendiente', 'En_Camino']
+        }
+      },
+      orderBy: {
+        fechaDeCreacion: 'desc'
+      }
+    });
+    
+    if (!pedidoActivo) {
+      return res.status(404).json({ message: 'No hay pedido activo' });
+    }
+    
+    // Si hay un repartidor asignado, obtener sus datos
+    let repartidor = null;
+    if (pedidoActivo.repartidor_Id) {
+      repartidor = await prisma.usuarios.findUnique({
+        where: { id: pedidoActivo.repartidor_Id },
+        select: {
+          id: true,
+          nombreCompleto: true,
+          telefono: true,
+          vehiculo: true
+        }
+      });
+    }
+    
+    // Obtener datos del cliente
+    const cliente = await prisma.usuarios.findUnique({
+      where: { id: usuario_id },
+      select: {
+        id: true,
+        nombreCompleto: true
+      }
+    });
+    
+    res.status(200).json({ 
+      pedido: pedidoActivo,
+      repartidor,
+      cliente
+    });
+  } catch (error) {
+    console.error('Error al obtener pedido activo:', error);
+    res.status(500).json({ message: 'Error al obtener pedido activo', error: error.message });
+  }
+};
+
 
 //Método para asignar un pedido a un repartidor, usando sesiones y el id del pedido
 exports.asignarPedido = async (req,res)=>{

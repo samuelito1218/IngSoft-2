@@ -25,6 +25,12 @@ router.put(
   pedidosController.marcarEntregado
 );
 
+router.get(
+  '/cliente/activo',
+  authenticate,
+  authorize('Cliente', 'cliente'),
+  pedidosController.getPedidoActivo
+);
 
 module.exports = router;
 
