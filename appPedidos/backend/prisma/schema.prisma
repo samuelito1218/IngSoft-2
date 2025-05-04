@@ -21,15 +21,22 @@ type PedidosProductos {
 
 /// This collection uses a JSON Schema defined in the database, which requires additional setup for migrations. Visit https://pris.ly/d/mongodb-json-schema for more info.
 model Restaurantes {
-  id          String                      @id @default(auto()) @map("_id") @db.ObjectId
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
   nombre      String
-  ubicaciones RestaurantesUbicaciones[]
-  productos   Productos[]                 @relation(fields: [id], references: [restaurante_Id])
+  descripcion String
+  sucursales  Sucursales[] @relation("RestaurantesSucursales")
+  productos   Productos[]  @relation("RestaurantesProductos")
+  ownerId     String       // Este es el campo nuevo para identificar al dueño del restaurante
+  owner       Usuarios     @relation(fields: [ownerId], references: [id]) // Relación con el usuario que es dueño
 }
 
-type RestaurantesUbicaciones {
-  sucursal_Id String @db.ObjectId
-  comuna      String
+model Sucursales {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  nombre         String
+  direccion      String
+  comuna         String
+  restaurante_Id String        @db.ObjectId
+  restaurante    Restaurantes  @relation("RestaurantesSucursales", fields: [restaurante_Id], references: [id])
 }
 
 /// This collection uses a JSON Schema defined in the database, which requires additional setup for migrations. Visit https://pris.ly/d/mongodb-json-schema for more info.
@@ -81,8 +88,9 @@ model Productos {
   nombre           String
   precio           Int
   restaurante_Id   String       @db.ObjectId
-  restaurante      Restaurantes @relation(fields: [restaurante_Id], references: [id])
+  restaurante      Restaurantes @relation("RestaurantesProductos", fields: [restaurante_Id], references: [id])
 }
+
 
 /// This collection uses a JSON Schema defined in the database, which requires additional setup for migrations. Visit https://pris.ly/d/mongodb-json-schema for more info.
 model Usuarios {
@@ -98,6 +106,7 @@ model Usuarios {
   historialDirecciones HistorialDireccion[]
   resetToken          String?             @db.String
   resetTokenExpiry    String?             @db.String
+  restaurantes        Restaurantes[] //Relación nueva añadida
 }
 
 type HistorialDireccion {

@@ -8,7 +8,7 @@ const pedidoRoutes = require("./routes/pedidosRoutes");
 const mensajesRoutes = require("./routes/mensajesRoutes"); 
 const ubicacionRoutes = require("./routes/ubicacionRoutes"); 
 const calificacionesRoutes = require("./routes/calificacionesRoutes"); 
-
+const restaurantesRoutes = require("./routes/restaurantesRoutes"); //NUEVO
 // Cargar variables de entorno
 dotenv.config();
 
@@ -27,7 +27,8 @@ app.use('/api/auth', authRoutes);
 app.use("/api/pedidos", pedidoRoutes);
 app.use("/api/calificaciones", calificacionesRoutes);
 app.use('/api/mensajes', mensajesRoutes);        
-app.use('/api/ubicacion', ubicacionRoutes);      
+app.use('/api/ubicacion', ubicacionRoutes);    
+app.use("/api/restaurantes",restaurantesRoutes); //NUevo
 
 // Ruta de prueba
 app.get('/', (req, res) => {
