@@ -51,6 +51,7 @@ exports.getUserProfile = async (req, res) => {
   }
 };
 
+
 exports.updateUserProfile = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -59,6 +60,14 @@ exports.updateUserProfile = async (req, res) => {
     // Validar datos
     if (!nombreCompleto || !telefono || !direccion || !comuna) {
       return res.status(400).json({ message: 'Faltan campos requeridos' });
+    }
+    
+    // Convertir a los tipos correctos
+    const telefonoNum = parseInt(telefono);
+    const comunaNum = parseInt(comuna);
+    
+    if (isNaN(telefonoNum) || isNaN(comunaNum)) {
+      return res.status(400).json({ message: 'Teléfono y comuna deben ser valores numéricos' });
     }
     
     // Primero, buscar el usuario actual para obtener su cédula
@@ -70,15 +79,22 @@ exports.updateUserProfile = async (req, res) => {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
     
-    // Actualizar usuario incluyendo la cédula actual
+    // Actualizar usuario con todos los campos necesarios
     const usuarioActualizado = await prisma.usuarios.update({
       where: { id: userId },
       data: {
         nombreCompleto,
-        telefono: parseInt(telefono),
+        telefono: telefonoNum,
         direccion,
-        comuna: parseInt(comuna),
-        cedula: usuarioActual.cedula // Incluir la cédula actual
+        cedula: usuarioActual.cedula, // Mantener la cédula actual
+        // Actualizar historialDirecciones con la nueva dirección
+        historialDirecciones: {
+          push: {
+            comuna: comunaNum,
+            barrio: direccion,
+            direccionEspecifica: direccion
+          }
+        }
       }
     });
     
@@ -93,7 +109,8 @@ exports.updateUserProfile = async (req, res) => {
         cedula: usuarioActualizado.cedula,
         rol: usuarioActualizado.rol,
         vehiculo: usuarioActualizado.vehiculo,
-        imageUrl: usuarioActualizado.imageUrl
+        imageUrl: usuarioActualizado.imageUrl,
+        historialDirecciones: usuarioActualizado.historialDirecciones
       }
     });
   } catch (error) {
@@ -126,6 +143,7 @@ exports.updateProfileImage = async (req, res) => {
     res.status(500).json({ message: 'Error al actualizar imagen de perfil', error: error.message });
   }
 };
+
 // Método para obtener direcciones guardadas del usuario
 exports.obtenerDirecciones = async (req, res) => {
   try {

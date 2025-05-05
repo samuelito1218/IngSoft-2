@@ -1,0 +1,422 @@
+/* RestaurantDetails.css */
+.restaurant-details-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Poppins', -apple-system, sans-serif;
+  }
+  
+  .order-alert {
+    margin-bottom: 20px;
+  }
+  
+  /* Estilos para el encabezado del restaurante */
+  .restaurant-header {
+    margin-bottom: 30px;
+  }
+  
+  .restaurant-banner {
+    position: relative;
+    height: 250px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .restaurant-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .back-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 40px;
+    height: 40px;
+    background-color: white;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s;
+    color: #333;
+    font-size: 18px;
+    z-index: 10;
+  }
+  
+  .back-button:hover {
+    background-color: #f9f9f9;
+    transform: scale(1.05);
+  }
+  
+  .restaurant-info-container {
+    background-color: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  .restaurant-name {
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 15px 0;
+  }
+  
+  .restaurant-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 15px;
+  }
+  
+  .meta-item {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .meta-icon {
+    margin-right: 8px;
+    font-size: 16px;
+    color: #666;
+  }
+  
+  .meta-icon.star {
+    color: #ffc107;
+  }
+  
+  .meta-count {
+    margin-left: 5px;
+    font-size: 13px;
+    color: #999;
+  }
+  
+  .restaurant-description {
+    margin: 15px 0 0 0;
+    line-height: 1.6;
+    color: #666;
+    font-size: 15px;
+  }
+  
+  /* Layout principal de productos */
+  .products-main-container {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 25px;
+  }
+  
+  /* Sidebar con categorías */
+  .products-sidebar {
+    background-color: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    height: fit-content;
+  }
+  
+  .categories-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin: 20px 0 15px 0;
+  }
+  
+  /* Buscador mejorado */
+  .products-search {
+    margin-bottom: 20px;
+  }
+  
+  .search-field {
+    position: relative;
+  }
+  
+  .search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+    font-size: 18px;
+  }
+  
+  .search-field input {
+    width: 100%;
+    padding: 12px 12px 12px 45px;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s;
+  }
+  
+  .search-field input:focus {
+    border-color: #ff4b2b;
+    box-shadow: 0 4px 12px rgba(255, 75, 43, 0.15);
+    outline: none;
+  }
+  
+  /* Categorías de productos mejoradas */
+  .product-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .category-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    background-color: white;
+    border: 1px solid #f0f0f0;
+  }
+  
+  .category-item:hover {
+    background-color: #f9f9f9;
+    transform: translateX(5px);
+  }
+  
+  .category-item.active {
+    background-color: rgba(255, 75, 43, 0.05);
+    border-color: #ff4b2b;
+    transform: translateX(5px);
+  }
+  
+  .category-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    background-color: white;
+    border-radius: 50%;
+    font-size: 18px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s;
+    color: #666;
+    border: 1px solid #f0f0f0;
+    flex-shrink: 0;
+  }
+  
+  .category-item.active .category-icon {
+    color: #ff4b2b;
+    box-shadow: 0 5px 15px rgba(255, 75, 43, 0.2);
+    border-color: rgba(255, 75, 43, 0.3);
+  }
+  
+  .category-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+    transition: all 0.3s;
+  }
+  
+  .category-item.active .category-name {
+    color: #ff4b2b;
+  }
+  
+  /* Contenido principal de productos */
+  .products-content {
+    background-color: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  .products-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 25px 0;
+    position: relative;
+    display: inline-block;
+  }
+  
+  .products-title::after {
+    content: '';
+    position: absolute;
+    height: 4px;
+    width: 40px;
+    left: 0;
+    bottom: -8px;
+    background-color: #ff4b2b;
+    border-radius: 2px;
+  }
+  
+  /* Grid de productos mejorado */
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+  }
+  
+  /* Mensaje de no productos */
+  .no-products {
+    text-align: center;
+    padding: 40px 20px;
+    background-color: #f9f9f9;
+    border-radius: 12px;
+  }
+  
+  .no-products p {
+    margin-bottom: 20px;
+    color: #666;
+  }
+  
+  .no-products button {
+    padding: 12px 25px;
+    background-color: #ff4b2b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .no-products button:hover {
+    background-color: #e63e1a;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(255, 75, 43, 0.15);
+  }
+  
+  /* Estilos de carga */
+  .restaurant-details-loading,
+  .restaurant-details-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top: 4px solid #ff4b2b;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .restaurant-details-error {
+    color: #d32f2f;
+    background-color: #ffebee;
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 500px;
+    margin: 40px auto;
+  }
+  
+  .restaurant-details-error button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+    margin: 10px 5px;
+  }
+  
+  .restaurant-details-error button:hover {
+    background-color: #b71c1c;
+    transform: translateY(-2px);
+  }
+  
+  .restaurant-details-error button.secondary {
+    background-color: transparent;
+    color: #d32f2f;
+    border: 1px solid #d32f2f;
+  }
+  
+  /* Media queries para responsividad */
+  @media (max-width: 992px) {
+    .products-main-container {
+      grid-template-columns: 1fr;
+    }
+    
+    .products-sidebar {
+      margin-bottom: 20px;
+    }
+    
+    .product-categories {
+      flex-direction: row;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 15px;
+    }
+    
+    .category-item {
+      flex-direction: column;
+      min-width: 100px;
+      text-align: center;
+    }
+    
+    .category-item:hover, 
+    .category-item.active {
+      transform: translateY(-5px);
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .restaurant-banner {
+      height: 200px;
+    }
+    
+    .restaurant-name {
+      font-size: 24px;
+    }
+    
+    .products-grid {
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 15px;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .restaurant-banner {
+      height: 160px;
+    }
+    
+    .restaurant-name {
+      font-size: 22px;
+    }
+    
+    .restaurant-meta {
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .products-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .products-grid {
+      grid-template-columns: 1fr;
+    }
+  }

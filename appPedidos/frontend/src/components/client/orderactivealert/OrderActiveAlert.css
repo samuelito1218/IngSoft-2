@@ -1,80 +1,340 @@
-/* src/components/client/OrderActiveAlert.css */
+/* Estilos para OrderActiveAlert */
 .order-active-alert {
-    background-color: #fff3e0;
-    border-left: 4px solid #ff9800;
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin-bottom: 25px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  .order-active-alert:hover {
-    background-color: #ffe0b2;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  }
-  
-  .alert-icon {
-    font-size: 24px;
-    margin-right: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    background-color: rgba(255, 152, 0, 0.15);
-    border-radius: 50%;
-  }
-  
-  .alert-content {
-    flex: 1;
-  }
-  
-  .alert-title {
-    margin: 0;
-    font-weight: 600;
-    font-size: 15px;
-    color: #333;
-  }
-  
-  .alert-subtitle {
-    margin: 3px 0 0 0;
-    font-size: 13px;
-    color: #888;
-  }
-  
-  .alert-action {
-    color: #ff9800;
-    font-size: 16px;
-    transition: transform 0.2s ease;
-  }
-  
-  .order-active-alert:hover .alert-action {
-    transform: translateX(3px);
-  }
-  
-  /* Responsive */
-  @media (max-width: 480px) {
-    .order-active-alert {
-      padding: 10px 12px;
-    }
-    
-    .alert-icon {
-      font-size: 20px;
-      width: 35px;
-      height: 35px;
-      margin-right: 10px;
-    }
-    
-    .alert-title {
-      font-size: 14px;
-    }
-    
-    .alert-subtitle {
-      font-size: 12px;
-    }
-  }
+  background-color: white;
+  border-left: 4px solid var(--warning);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: var(--transition-normal);
+  box-shadow: var(--shadow-md);
+}
+
+.order-active-alert:hover {
+  background-color: var(--gray-100);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.alert-icon {
+  font-size: 24px;
+  margin-right: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background-color: rgba(243, 156, 18, 0.1);
+  border-radius: var(--border-radius-round);
+  color: var(--warning);
+}
+
+.alert-content {
+  flex: 1;
+}
+
+.alert-title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--gray-900);
+}
+
+.alert-subtitle {
+  margin: 5px 0 0 0;
+  font-size: 14px;
+  color: var(--gray-600);
+}
+
+.alert-action {
+  color: var(--warning);
+  font-size: 18px;
+  transition: transform 0.3s ease;
+}
+
+.order-active-alert:hover .alert-action {
+  transform: translateX(5px);
+}
+
+/* Estilos para RestaurantCard */
+.restaurant-card {
+  background-color: white;
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition-normal);
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--gray-200);
+}
+
+.restaurant-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-light);
+}
+
+.restaurant-image {
+  height: 200px;
+  position: relative;
+  overflow: hidden;
+}
+
+.restaurant-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.restaurant-card:hover .restaurant-image img {
+  transform: scale(1.08);
+}
+
+.free-delivery-badge {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  background-color: var(--primary-color);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 20px;
+  box-shadow: var(--shadow-md);
+  z-index: 1;
+}
+
+.restaurant-info {
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.restaurant-name {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gray-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rating-time {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-md);
+}
+
+.rating, .delivery-time {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--gray-700);
+}
+
+.star-icon, .clock-icon {
+  margin-right: 5px;
+  font-size: 14px;
+}
+
+.star-icon {
+  color: var(--warning);
+}
+
+.clock-icon {
+  color: var(--gray-600);
+}
+
+.rating-count {
+  margin-left: 3px;
+  font-size: 12px;
+  color: var(--gray-500);
+}
+
+.restaurant-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--gray-600);
+  margin-top: auto;
+  padding-top: var(--spacing-sm);
+  border-top: 1px dashed var(--gray-200);
+}
+
+.restaurant-categories {
+  margin: 0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.location {
+  display: flex;
+  align-items: center;
+  margin-left: var(--spacing-sm);
+  background-color: var(--gray-100);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.location-icon {
+  margin-right: 5px;
+  color: var(--primary-color);
+  font-size: 12px;
+}
+
+/* Estilos para DeliveryTracking */
+.delivery-tracking {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+  font-family: var(--font-primary);
+}
+
+.delivery-tracking.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.loading-spinner {
+  border: 4px solid rgba(255, 107, 61, 0.1);
+  border-radius: 50%;
+  border-top: 4px solid var(--primary-color);
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin-bottom: var(--spacing-lg);
+}
+
+.delivery-tracking-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.back-button {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--gray-800);
+  margin-right: var(--spacing-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--border-radius-round);
+  transition: var(--transition-normal);
+  background-color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.back-button:hover {
+  background-color: var(--gray-100);
+  transform: translateX(-3px);
+}
+
+.delivery-tracking-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.delivery-status {
+  margin-bottom: var(--spacing-xl);
+}
+
+.status-steps {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.status-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 90px;
+  z-index: 1;
+}
+
+.step-icon {
+  width: 50px;
+  height: 50px;
+  background-color: var(--gray-200);
+  border-radius: var(--border-radius-round);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-600);
+  font-size: 20px;
+  transition: var(--transition-normal);
+  box-shadow: var(--shadow-sm);
+  border: 2px solid white;
+}
+
+.status-step.active .step-icon {
+  background-color: var(--primary-color);
+  color: white;
+  box-shadow: 0 0 0 5px rgba(255, 107, 61, 0.15);
+}
+
+.status-step.completed .step-icon {
+  background-color: var(--success);
+  color: white;
+}
+
+.status-step span {
+  font-size: 14px;
+  color: var(--gray-600);
+  text-align: center;
+  font-weight: 500;
+  transition: var(--transition-normal);
+}
+
+.status-step.active span {
+  color: var(--gray-900);
+  font-weight: 700;
+}
+
+.status-step.completed span {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.status-connector {
+  height: 3px;
+  flex-grow: 1;
+  background-color: var(--gray-200);
+  position: relative;
+  max-width: 80px;
+  z-index: 0;
+}
+
+.status-connector.active {
+  background-color: var(--primary-color);
+}
+
+.status-connector.completed {
+  background-color: var(--success);
+}

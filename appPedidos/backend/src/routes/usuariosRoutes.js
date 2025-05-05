@@ -1,4 +1,3 @@
-// appPedidos/backend/src/routes/usuariosRoutes.js
 const express = require('express');
 const router = express.Router();
 const usuariosController = require("../controllers/UsuariosController");
@@ -7,7 +6,7 @@ const { authenticate } = require('../middlewares/authMiddleware');
 // Rutas para el perfil de usuario
 router.get('/perfil', authenticate, usuariosController.getUserProfile);
 router.put('/perfil', authenticate, usuariosController.updateUserProfile);
-router.put('/perfil/imagen', authenticate, usuariosController.updateProfileImage);
+router.put('/perfil/imagen', authenticate, usuariosController.updateProfileImage);  // Corregido: usar /perfil/imagen
 
 // Rutas para direcciones de usuario
 router.get('/direcciones', authenticate, usuariosController.obtenerDirecciones);

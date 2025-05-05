@@ -3,7 +3,8 @@ import React from 'react';
 import '../../styles/ExploreMenu.css';
 import { 
   FaUtensils, FaPizzaSlice, FaHamburger, FaCoffee, 
-  FaFish, FaCarrot, FaIceCream, FaGlassCheers, FaFire
+  FaFish, FaCarrot, FaIceCream, FaGlassCheers, FaFire,
+  FaBirthdayCake, FaDrumstickBite, FaSeedling
 } from 'react-icons/fa';
 
 const ExploreMenu = ({ categories = [], selectedCategory = 'All', onCategoryChange }) => {
@@ -11,8 +12,10 @@ const ExploreMenu = ({ categories = [], selectedCategory = 'All', onCategoryChan
   const getCategoryIcon = (category) => {
     switch (category.toLowerCase()) {
       case 'all':
+      case 'todos':
         return <FaUtensils />;
       case 'pizza':
+      case 'pizzas':
         return <FaPizzaSlice />;
       case 'hamburguesas':
       case 'hamburguesa':
@@ -39,6 +42,18 @@ const ExploreMenu = ({ categories = [], selectedCategory = 'All', onCategoryChan
       case 'bebidas':
       case 'drinks':
         return <FaGlassCheers />;
+      case 'comida rápida':
+      case 'fast food':
+        return <FaFire />;
+      case 'pasteles':
+      case 'cakes':
+        return <FaBirthdayCake />;
+      case 'carnes':
+      case 'meats':
+        return <FaDrumstickBite />;
+      case 'ensaladas':
+      case 'salads':
+        return <FaSeedling />;
       default:
         return <FaFire />;
     }

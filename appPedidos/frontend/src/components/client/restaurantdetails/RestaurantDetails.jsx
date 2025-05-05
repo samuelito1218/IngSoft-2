@@ -210,11 +210,12 @@ const RestaurantDetails = () => {
   }
   
   return (
-    <div className="restaurant-details">
+    <div className="restaurant-details-wrapper">
       {activePedido && (
         <OrderActiveAlert 
           pedido={activePedido.pedido}
           onClick={goToActiveOrder}
+          className="order-alert"
         />
       )}
       
@@ -262,52 +263,61 @@ const RestaurantDetails = () => {
         </div>
       </div>
       
-      <div className="products-container">
-        <div className="products-search">
-          <div className="search-field">
-            <FaSearch className="search-icon" />
-            <input
-              type="text"
-              placeholder="Buscar productos..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-            />
-          </div>
-        </div>
-        
-        <div className="product-categories">
-          {productCategories.map(category => (
-            <div
-              key={category.id}
-              className={`category-item ${selectedCategory === category.id ? 'active' : ''}`}
-              onClick={() => handleCategoryChange(category.id)}
-            >
-              <div className="category-icon">
-                {category.icon}
-              </div>
-              <span>{category.name}</span>
-            </div>
-          ))}
-        </div>
-        
-        {filteredProducts.length === 0 ? (
-          <div className="no-products">
-            <p>No se encontraron productos con los criterios seleccionados.</p>
-            <button onClick={() => { setSelectedCategory('Todos'); setSearchTerm(''); }}>
-              Ver todos los productos
-            </button>
-          </div>
-        ) : (
-          <div className="products-grid">
-            {filteredProducts.map(product => (
-              <FoodItem
-                key={product.id}
-                product={product}
-                onClick={() => handleProductClick(product.id)}
+      <div className="products-main-container">
+        <aside className="products-sidebar">
+          <div className="products-search">
+            <div className="search-field">
+              <FaSearch className="search-icon" />
+              <input
+                type="text"
+                placeholder="Buscar productos..."
+                value={searchTerm}
+                onChange={handleSearchChange}
               />
+            </div>
+          </div>
+          
+          <h3 className="categories-title">Categorías</h3>
+          <div className="product-categories">
+            {productCategories.map(category => (
+              <div
+                key={category.id}
+                className={`category-item ${selectedCategory === category.id ? 'active' : ''}`}
+                onClick={() => handleCategoryChange(category.id)}
+              >
+                <div className="category-icon">
+                  {category.icon}
+                </div>
+                <span className="category-name">{category.name}</span>
+              </div>
             ))}
           </div>
-        )}
+        </aside>
+        
+        <main className="products-content">
+          <h2 className="products-title">
+            {selectedCategory === 'Todos' ? 'Todos los productos' : selectedCategory}
+          </h2>
+          
+          {filteredProducts.length === 0 ? (
+            <div className="no-products">
+              <p>No se encontraron productos con los criterios seleccionados.</p>
+              <button onClick={() => { setSelectedCategory('Todos'); setSearchTerm(''); }}>
+                Ver todos los productos
+              </button>
+            </div>
+          ) : (
+            <div className="products-grid">
+              {filteredProducts.map(product => (
+                <FoodItem
+                  key={product.id}
+                  product={product}
+                  onClick={() => handleProductClick(product.id)}
+                />
+              ))}
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import ProfileService from '../../services/ProfileService';
 import '../../styles/Profile.css';
+
 function Profile() {
   const { user, login } = useAuth();
   const [profile, setProfile] = useState(null);
@@ -34,11 +35,15 @@ function Profile() {
       setProfile(userData);
       
       // Inicializar formulario con datos actuales
+      // Si userData.historialDirecciones existe y tiene elementos, usar la comuna del último
+      const lastDireccion = userData.historialDirecciones && 
+                         userData.historialDirecciones.length > 0 ? 
+                         userData.historialDirecciones[userData.historialDirecciones.length - 1] : null;
       setFormData({
         nombreCompleto: userData.nombreCompleto || '',
         telefono: userData.telefono || '',
         direccion: userData.direccion || '',
-        comuna: userData.comuna || '',
+        comuna: lastDireccion ? lastDireccion.comuna : '',
         cedula: userData.cedula || '',
       });
       
@@ -314,7 +319,11 @@ function Profile() {
                 
                 <div className="info-row">
                   <span className="info-label">Comuna:</span>
-                  <span className="info-value">{profile?.comuna}</span>
+                  <span className="info-value">
+                    {profile?.historialDirecciones && profile.historialDirecciones.length > 0 
+                      ? profile.historialDirecciones[profile.historialDirecciones.length - 1].comuna 
+                      : 'No especificada'}
+                  </span>
                 </div>
               </div>
               

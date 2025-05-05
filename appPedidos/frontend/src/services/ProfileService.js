@@ -34,17 +34,21 @@ const ProfileService = {
   // Actualizar perfil del usuario
   async updateUserProfile(profileData) {
     try {
-      // Primero obtener el perfil actual
-      const currentProfile = await this.getUserProfile();
+      // Asegurarse de que todos los campos están presentes
+      if (!profileData.nombreCompleto || !profileData.telefono || 
+          !profileData.direccion || !profileData.comuna) {
+        throw new Error('Todos los campos son requeridos');
+      }
       
-      // Incluir la cédula actual
-      const dataToUpdate = {
+      // Convertir campos numéricos a números
+      const dataToSend = {
         ...profileData,
-        cedula: currentProfile.cedula
+        telefono: parseInt(profileData.telefono),
+        comuna: parseInt(profileData.comuna)
       };
       
-      const response = await ApiService.usuarios.actualizarPerfil(dataToUpdate);
-      return response.data;
+      const response = await ApiService.usuarios.actualizarPerfil(dataToSend);
+      return response.data.usuario || response.data;
     } catch (error) {
       console.error('Error al actualizar perfil:', error);
       throw error;

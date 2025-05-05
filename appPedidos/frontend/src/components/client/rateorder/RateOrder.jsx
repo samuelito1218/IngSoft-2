@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaStar, FaRegStar, FaClock, FaUser, FaMotorcycle } from 'react-icons/fa';
 import { useAuth } from '../../../hooks/useAuth';
-import api from '../../../services/api';
+import ApiService from '../../../services/api'; // Importamos ApiService correctamente
 import './RateOrder.css';
 
 const RateOrder = () => {
@@ -30,22 +30,14 @@ const RateOrder = () => {
         setLoading(true);
         setError(null);
         
-        // Obtener información del pedido
-        const response = await api.get(`/pedidos/${pedidoId}`);
+        // Obtener información del pedido usando ApiService
+        const responsePedido = await ApiService.pedidos.detalle(pedidoId);
         
-        if (!response.data || !response.data.pedido) {
+        if (!responsePedido.data || !responsePedido.data.pedido) {
           throw new Error('No se encontró información del pedido');
         }
         
-        const pedidoData = response.data.pedido;
-        
-        // Verificar si el pedido ya fue calificado
-        const calificacionesResponse = await api.get(`/calificaciones/pedido/${pedidoId}`);
-        if (calificacionesResponse.data && calificacionesResponse.data.calificado) {
-          setError('Este pedido ya ha sido calificado');
-          setLoading(false);
-          return;
-        }
+        const pedidoData = responsePedido.data.pedido;
         
         // Verificar que el pedido esté en estado Entregado
         if (pedidoData.estado !== 'Entregado') {
@@ -58,9 +50,22 @@ const RateOrder = () => {
         
         // Obtener información del repartidor si existe
         if (pedidoData.repartidor_Id) {
-          const repartidorResponse = await api.get(`/usuarios/${pedidoData.repartidor_Id}`);
-          if (repartidorResponse.data) {
-            setRepartidor(repartidorResponse.data);
+          try {
+            // Verificamos si la API tiene el método necesario
+            if (ApiService.pedidos && typeof ApiService.pedidos.detalle === 'function') {
+              // En lugar de hacer una llamada separada, usamos los datos del repartidor incluidos en el pedido
+              // O mostramos información básica sin hacer una llamada adicional
+              setRepartidor({
+                nombreCompleto: pedidoData.repartidorNombre || 'Repartidor asignado',
+                // Podemos añadir más campos si están disponibles en el pedido
+              });
+            }
+          } catch (repartidorError) {
+            console.error('Error al procesar información del repartidor:', repartidorError);
+            // Continuamos con la información básica
+            setRepartidor({
+              nombreCompleto: 'Repartidor #' + pedidoData.repartidor_Id.slice(-4)
+            });
           }
         }
         
@@ -128,8 +133,8 @@ const RateOrder = () => {
         comentarios: comentarios.trim()
       };
       
-      // Enviar calificación al backend
-      const response = await api.post(`/calificaciones/calificar/${pedidoId}`, calificacionData);
+      // Enviar calificación al backend usando ApiService
+      const response = await ApiService.pedidos.calificar(pedidoId, calificacionData);
       
       if (response.data && response.data.message) {
         setSuccess(true);

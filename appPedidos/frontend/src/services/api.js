@@ -75,11 +75,12 @@ const ApiService = {
   },
 
   usuarios: {
+    obtenerUsuario: (id) => api.get(`/usuarios/${id}`),
     direcciones: () => api.get('/usuarios/direcciones'),
     guardarDireccion: (data) => api.post('/usuarios/direcciones', data),
     perfil: () => api.get('/usuarios/perfil'),
     actualizarPerfil: (data) => api.put('/usuarios/perfil', data),
-    actualizarImagen: (data) => api.put('/usuarios/imagen', data)
+    actualizarImagen: (data) => api.put('/usuarios/perfil/imagen', data) // Corregida la ruta
   },
   // Métodos para pedidos
   pedidos: {
@@ -125,7 +126,11 @@ const ApiService = {
     detalle: (id) => api.get(`/productos/${id}`),
     listar: () => api.get('/productos'),
     porRestaurante: (restauranteId) => api.get(`/productos/restaurante/${restauranteId}`)
-  }
+  },
+  calificaciones: {
+    verificar: (pedidoId) => api.get(`/calificaciones/pedido/${pedidoId}`),
+    calificar: (pedidoId, data) => api.post(`/calificaciones/calificar/${pedidoId}`, data)
+  },
 };
 
 
