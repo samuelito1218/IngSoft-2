@@ -1,9 +1,11 @@
-// App.jsx
+// src/App.jsx
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'; 
 import { AuthProvider } from './contexts/AuthContext';
+import { CartProvider } from './contexts/CartContext';
 import { useAuth } from './hooks/useAuth';
 
+import MapTest from './components/client/MapTest';
 // Componentes de autenticación
 import Login from './pages/Login';
 import Register from './components/Register';
@@ -11,32 +13,34 @@ import RecoverPassword from './components/RecoverPassword';
 import ResetPassword from './components/ResetPassword';
 
 // Componentes de Cliente
-import ClientHome from './components/client/ClientHome';
-import RestaurantDetails from './components/client/RestaurantDetails';
-import ProductDetails from './components/client/ProductDetails';
-import Cart from './components/client/Cart';
-import OrderHistory from './components/client/OrderHistory';
-import DeliveryTracking from './components/client/DeliveryTracking';
+import ClientHome from './components/client/clienthome/ClientHome';
+import RestaurantDetails from './components/client/restaurantdetails/RestaurantDetails';
+import ProductDetails from './components/client/productdetails/ProductDetails';
+import Cart from './pages/Cart/Cart';
+import OrderHistory from './components/client/orderhistory/OrderHistory';
+import DeliveryTracking from './components/client/deliverytracking/DeliveryTracking';
+import Checkout from './components/client/checkout/Checkout';
+import RateOrder from './components/client/rateorder/RateOrder';
 
-// Componentes de Restaurante
-import RestaurantDashboard from './components/restaurant/RestaurantDashboard';
-import OrderManagement from './components/restaurant/OrderManagement';
+// Componentes de Restaurante - Comentados por ahora
+// import RestaurantDashboard from './components/restaurant/RestaurantDashboard';
+// import OrderManagement from './components/restaurant/OrderManagement';
 
-// Componentes de Repartidor
-import DeliveryDashboard from './components/delivery/DeliveryDashboard';
-import ActiveOrders from './components/delivery/ActiveOrders';
-import DeliveryNavigation from './components/delivery/DeliveryNavigation';
+// Componentes de Repartidor - Comentados por ahora
+// import DeliveryDashboard from './components/delivery/DeliveryDashboard';
+// import ActiveOrders from './components/delivery/ActiveOrders';
+// import DeliveryNavigation from './components/delivery/DeliveryNavigation';
 
 // Layout components
 import ClientLayout from './components/layouts/ClientLayout';
-import RestaurantLayout from './components/layouts/RestaurantLayout';
-import DeliveryLayout from './components/layouts/DeliveryLayout';
+// import RestaurantLayout from './components/layouts/RestaurantLayout';
+// import DeliveryLayout from './components/layouts/DeliveryLayout';
 
 // Shared components
 import ChatComponent from './components/shared/ChatComponent';
-import MapComponent from './components/shared/MapComponent';
+import MapComponent from './components/shared/LeafletMapComponent';
 
-// ChatIcon component (new)
+// ChatIcon component
 const ChatIcon = ({ onClick, hasUnreadMessages }) => {
   return (
     <div 
@@ -49,7 +53,7 @@ const ChatIcon = ({ onClick, hasUnreadMessages }) => {
   );
 };
 
-// Floating Chat component (new)
+// Floating Chat component
 const FloatingChat = ({ pedidoId, receptorId, receptorNombre, onClose }) => {
   if (!pedidoId || !receptorId) return null;
   
@@ -86,10 +90,6 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     // Redirigir según el rol del usuario
     if (user.rol === 'Cliente' || user.rol === 'cliente') {
       return <Navigate to="/cliente" />;
-    } else if (user.rol === 'Restaurante' || user.rol === 'restaurante') {
-      return <Navigate to="/restaurante" />;
-    } else if (user.rol === 'Repartidor' || user.rol === 'repartidor') {
-      return <Navigate to="/repartidor" />;
     } else {
       return <Navigate to="/" />;
     }
@@ -121,8 +121,6 @@ function AppContent() {
           
           if (user.rol === 'Cliente' || user.rol === 'cliente') {
             endpoint = '/pedidos/cliente/activo';
-          } else if (user.rol === 'Repartidor' || user.rol === 'repartidor') {
-            endpoint = '/pedidos/repartidor/activo';
           }
           
           if (endpoint) {
@@ -146,12 +144,6 @@ function AppContent() {
                       receptorNombre: data.repartidor?.nombreCompleto || "Repartidor"
                     });
                   }
-                } else if (user.rol === 'Repartidor' || user.rol === 'repartidor') {
-                  setChatInfo({
-                    pedidoId: data.pedido.id,
-                    receptorId: data.pedido.usuario_id,
-                    receptorNombre: data.cliente?.nombreCompleto || "Cliente"
-                  });
                 }
               }
             }
@@ -164,17 +156,15 @@ function AppContent() {
       loadActivePedido();
       
       // Verificar mensajes no leídos periódicamente
-      const checkUnreadMessages = () => {
-        // Implementar lógica para verificar mensajes no leídos
-        // Esto podría hacerse con Firebase o con una llamada a la API
-        // Por ahora lo simularemos
-        
-        if (activePedido && chatInfo.pedidoId) {
-          // Simulación de mensaje no leído
-          // En la implementación real, esto se haría con Firebase
-          setTimeout(() => {
-            setHasUnreadMessages(Math.random() > 0.7);
-          }, 10000);
+      const checkUnreadMessages = async () => {
+        if (chatInfo.pedidoId && chatInfo.receptorId) {
+          try {
+            // Usar el servicio de chat para verificar mensajes no leídos
+            const hasUnread = await ChatService.hasUnreadMessages(chatInfo.pedidoId, user.id);
+            setHasUnreadMessages(hasUnread);
+          } catch (error) {
+            console.error("Error al verificar mensajes no leídos:", error);
+          }
         }
       };
       
@@ -186,10 +176,7 @@ function AppContent() {
 
   // Ocultar el chat en ciertas rutas
   useEffect(() => {
-    if (
-      location.pathname.includes('/delivery-tracking') ||
-      location.pathname.includes('/repartidor/pedidos-activos/')
-    ) {
+    if (location.pathname.includes('/delivery-tracking')) {
       setShowChat(false);
     }
   }, [location.pathname]);
@@ -252,6 +239,16 @@ function AppContent() {
           } 
         />
         <Route 
+          path="/cliente/checkout" 
+          element={
+            <ProtectedRoute allowedRoles={['Cliente', 'cliente']}>
+              <ClientLayout>
+                <Checkout />
+              </ClientLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
           path="/cliente/pedidos" 
           element={
             <ProtectedRoute allowedRoles={['Cliente', 'cliente']}>
@@ -271,8 +268,28 @@ function AppContent() {
             </ProtectedRoute>
           } 
         />
+        <Route 
+          path="/cliente/calificar/:pedidoId" 
+          element={
+            <ProtectedRoute allowedRoles={['Cliente', 'cliente']}>
+              <ClientLayout>
+                <RateOrder />
+              </ClientLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/cliente/map-test" 
+          element={
+            <ProtectedRoute allowedRoles={['Cliente', 'cliente']}>
+              <ClientLayout>
+                <MapTest />
+              </ClientLayout>
+            </ProtectedRoute>
+          } 
+        />
         
-        {/* Rutas Restaurante */}
+        {/* Rutas Restaurante - Comentadas por ahora
         <Route 
           path="/restaurante" 
           element={
@@ -293,8 +310,9 @@ function AppContent() {
             </ProtectedRoute>
           } 
         />
+        */}
         
-        {/* Rutas Repartidor */}
+        {/* Rutas Repartidor - Comentadas por ahora
         <Route 
           path="/repartidor" 
           element={
@@ -325,6 +343,7 @@ function AppContent() {
             </ProtectedRoute>
           } 
         />
+        */}
         
         {/* Ruta para redireccionar rutas no encontradas */}
         <Route path="*" element={<Navigate to="/" />} />
@@ -335,8 +354,7 @@ function AppContent() {
        user && 
        chatInfo.pedidoId && 
        chatInfo.receptorId && 
-       !location.pathname.includes('/delivery-tracking') && 
-       !location.pathname.includes('/repartidor/pedidos-activos/') && (
+       !location.pathname.includes('/delivery-tracking') && (
         <ChatIcon 
           onClick={toggleChat} 
           hasUnreadMessages={hasUnreadMessages} 
@@ -359,7 +377,9 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <CartProvider>
+        <AppContent />
+      </CartProvider>
     </AuthProvider>
   );
 }

@@ -1,127 +1,190 @@
 // src/services/OrderService.js
 import api from './api';
 
-class OrderService {
-  // Crear un nuevo pedido
-  async createOrder(orderData) {
+const OrderService = {
+  /**
+   * Crear un nuevo pedido
+   * @param {Object} orderData - Datos del pedido
+   * @returns {Promise} - Respuesta con el pedido creado
+   */
+  createOrder: async (orderData) => {
     try {
       const response = await api.post('/pedidos/crear', orderData);
-      return response.data;
+      return {
+        success: true,
+        data: response.data
+      };
     } catch (error) {
       console.error('Error al crear pedido:', error);
-      throw error;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Error al crear el pedido',
+        error
+      };
     }
-  }
-
-  // Obtener los pedidos del cliente actual
-  async getClientOrders() {
-    try {
-      const response = await api.get('/pedidos/cliente');
-      return response.data;
-    } catch (error) {
-      console.error('Error al obtener pedidos del cliente:', error);
-      throw error;
-    }
-  }
-
-  // Obtener un pedido específico por ID
-  async getOrderById(id) {
-    try {
-      const response = await api.get(`/pedidos/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error(`Error al obtener pedido con ID ${id}:`, error);
-      throw error;
-    }
-  }
-
-  // Obtener el pedido activo del cliente (si existe)
-  async getActiveOrder() {
+  },
+  
+  /**
+   * Obtener el pedido activo del cliente
+   * @returns {Promise} - Pedido activo o null
+   */
+  getActiveOrder: async () => {
     try {
       const response = await api.get('/pedidos/cliente/activo');
-      return response.data;
+      return {
+        success: true,
+        data: response.data
+      };
     } catch (error) {
+      if (error.response && error.response.status === 404) {
+        // No hay pedido activo, esto no es un error
+        return {
+          success: true,
+          data: null
+        };
+      }
+      
       console.error('Error al obtener pedido activo:', error);
-      return null;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Error al obtener pedido activo',
+        error
+      };
     }
-  }
-
-  // Cancelar un pedido
-  async cancelOrder(id) {
+  },
+  
+  /**
+   * Obtener historial de pedidos del cliente
+   * @returns {Promise} - Lista de pedidos
+   */
+  getOrderHistory: async () => {
+    try {
+      const response = await api.get('/pedidos/cliente');
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('Error al obtener historial de pedidos:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Error al obtener historial de pedidos',
+        error
+      };
+    }
+  },
+  
+  /**
+   * Obtener detalle de un pedido
+   * @param {string} id - ID del pedido
+   * @returns {Promise} - Detalle del pedido
+   */
+  getOrderById: async (id) => {
+    try {
+      const response = await api.get(`/pedidos/${id}`);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error(`Error al obtener pedido con ID ${id}:`, error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Error al obtener el pedido',
+        error
+      };
+    }
+  },
+  
+  /**
+   * Cancelar un pedido
+   * @param {string} id - ID del pedido
+   * @returns {Promise} - Respuesta de la API
+   */
+  cancelOrder: async (id) => {
     try {
       const response = await api.delete(`/pedidos/eliminar/${id}`);
-      return response.data;
+      return {
+        success: true,
+        data: response.data
+      };
     } catch (error) {
       console.error(`Error al cancelar pedido con ID ${id}:`, error);
-      throw error;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Error al cancelar el pedido',
+        error
+      };
     }
-  }
-
-  // Editar un pedido (solo si está en estado Pendiente)
-  async editOrder(id, orderData) {
-    try {
-      const response = await api.put(`/pedidos/editar/${id}`, orderData);
-      return response.data;
-    } catch (error) {
-      console.error(`Error al editar pedido con ID ${id}:`, error);
-      throw error;
-    }
-  }
-
-  // Calificar un pedido
-  async rateOrder(id, ratingData) {
+  },
+  
+  /**
+   * Calificar un pedido entregado
+   * @param {string} id - ID del pedido
+   * @param {Object} ratingData - Datos de calificación
+   * @returns {Promise} - Respuesta de la API
+   */
+  rateOrder: async (id, ratingData) => {
     try {
       const response = await api.post(`/calificaciones/calificar/${id}`, ratingData);
-      return response.data;
+      return {
+        success: true,
+        data: response.data
+      };
     } catch (error) {
       console.error(`Error al calificar pedido con ID ${id}:`, error);
-      throw error;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Error al calificar el pedido',
+        error
+      };
     }
-  }
-
-  // Obtener el estado de un pedido (tracking)
-  async getOrderStatus(id) {
-    try {
-      const response = await api.get(`/pedidos/${id}/estado`);
-      return response.data;
-    } catch (error) {
-      console.error(`Error al obtener estado del pedido con ID ${id}:`, error);
-      throw error;
-    }
-  }
-
-  // Procesar un pago para un pedido
-  async processPayment(orderId, paymentData) {
+  },
+  
+  /**
+   * Procesar pago de un pedido
+   * @param {string} orderId - ID del pedido
+   * @param {Object} paymentData - Datos del pago
+   * @returns {Promise} - Respuesta de la API
+   */
+  processPayment: async (orderId, paymentData) => {
     try {
       const response = await api.post(`/pagos/${orderId}/procesar`, paymentData);
-      return response.data;
+      return {
+        success: true,
+        data: response.data
+      };
     } catch (error) {
-      console.error(`Error al procesar pago para pedido ${orderId}:`, error);
-      throw error;
+      console.error(`Error al procesar pago para el pedido ${orderId}:`, error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Error al procesar el pago',
+        error
+      };
     }
-  }
-
-  // Crear intención de pago con tarjeta
-  async createPaymentIntent(orderId) {
+  },
+  
+  /**
+   * Obtener ubicación del repartidor para un pedido
+   * @param {string} orderId - ID del pedido
+   * @returns {Promise} - Ubicación del repartidor
+   */
+  getDeliveryLocation: async (orderId) => {
     try {
-      const response = await api.post(`/pagos/${orderId}/crear-intencion`);
-      return response.data;
+      const response = await api.get(`/ubicacion/pedido/${orderId}`);
+      return {
+        success: true,
+        data: response.data
+      };
     } catch (error) {
-      console.error(`Error al crear intención de pago para pedido ${orderId}:`, error);
-      throw error;
+      console.error(`Error al obtener ubicación del repartidor para el pedido ${orderId}:`, error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Error al obtener ubicación del repartidor',
+        error
+      };
     }
   }
+};
 
-  // Confirmar pago con tarjeta
-  async confirmPayment(paymentIntentId) {
-    try {
-      const response = await api.post(`/pagos/confirmar`, { paymentIntentId });
-      return response.data;
-    } catch (error) {
-      console.error(`Error al confirmar pago ${paymentIntentId}:`, error);
-      throw error;
-    }
-  }
-}
-
-export default new OrderService();
+export default OrderService;

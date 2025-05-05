@@ -2,6 +2,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+// appPedidos/backend/src/controllers/usuariosController.js
 exports.getUserProfile = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -18,7 +19,8 @@ exports.getUserProfile = async (req, res) => {
         rol: true,
         vehiculo: true,
         imageUrl: true,
-        historialDirecciones: true
+        historialDirecciones: true,
+        restaurantesIds: true
       }
     });
     
@@ -26,7 +28,23 @@ exports.getUserProfile = async (req, res) => {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
     
-    res.status(200).json(usuario);
+    // Si el usuario es Admin, obtener información de sus restaurantes
+    let restaurantes = [];
+    if (usuario.rol === 'Admin' && usuario.restaurantesIds && usuario.restaurantesIds.length > 0) {
+      restaurantes = await prisma.restaurantes.findMany({
+        where: {
+          id: { in: usuario.restaurantesIds }
+        }
+      });
+    }
+    
+    // Agregar la información de restaurantes a la respuesta
+    const respuesta = {
+      ...usuario,
+      restaurantes: usuario.rol === 'Admin' ? restaurantes : undefined
+    };
+    
+    res.status(200).json(respuesta);
   } catch (error) {
     console.error('Error al obtener perfil de usuario:', error);
     res.status(500).json({ message: 'Error al obtener perfil de usuario', error: error.message });
@@ -95,5 +113,57 @@ exports.updateProfileImage = async (req, res) => {
   } catch (error) {
     console.error('Error al actualizar imagen de perfil:', error);
     res.status(500).json({ message: 'Error al actualizar imagen de perfil', error: error.message });
+  }
+};
+// Método para obtener direcciones guardadas del usuario
+exports.obtenerDirecciones = async (req, res) => {
+  try {
+    const usuario = await prisma.usuarios.findUnique({
+      where: { id: req.user.id }
+    });
+    
+    if (!usuario) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+    
+    res.status(200).json(usuario.historialDirecciones || []);
+  } catch (error) {
+    console.error("Error al obtener direcciones:", error);
+    res.status(500).json({
+      message: "Error al obtener direcciones",
+      error: error.message
+    });
+  }
+};
+
+// Método para guardar una nueva dirección
+exports.guardarDireccion = async (req, res) => {
+  try {
+    const { direccion } = req.body;
+    
+    if (!direccion || !direccion.barrio || !direccion.comuna || !direccion.direccionEspecifica) {
+      return res.status(400).json({ message: "Datos de dirección incompletos" });
+    }
+    
+    // Actualizar usuario
+    const usuario = await prisma.usuarios.update({
+      where: { id: req.user.id },
+      data: {
+        historialDirecciones: {
+          push: direccion
+        }
+      }
+    });
+    
+    res.status(200).json({ 
+      message: "Dirección guardada correctamente",
+      direcciones: usuario.historialDirecciones
+    });
+  } catch (error) {
+    console.error("Error al guardar dirección:", error);
+    res.status(500).json({
+      message: "Error al guardar dirección",
+      error: error.message
+    });
   }
 };

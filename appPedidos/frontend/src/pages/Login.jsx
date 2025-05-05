@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import api from '../services/api';
+import ApiService from '../services/api';
 import '../styles/Login.css';
 
 function Login() {
@@ -27,40 +27,43 @@ function Login() {
       setIsLoading(true);
       setError('');
       
-      // Llamada a la API para iniciar sesión
-      const response = await api.post('/auth/login', { email, password });
+      // Llamada al login del contexto
+      const result = await login({ email, password });
       
-      // Guardar token según la preferencia del usuario
-      const { token, user } = response.data;
-      
-      if (rememberMe) {
-        localStorage.setItem('token', token);
+      if (result.success) {
+        // Guardar token según la preferencia del usuario
+        if (rememberMe) {
+          localStorage.setItem('token', result.token);
+        } else {
+          sessionStorage.setItem('token', result.token);
+        }
+        
+        console.log("Login exitoso. Usuario:", result.user, "Token:", result.token);
+        
+        // Redireccionar según el rol
+        if (result.user.rol === 'Admin') {
+          navigate('/admin');
+        } else if (result.user.rol === 'Repartidor') {
+          navigate('/repartidor');
+        } else if (result.user.rol === 'Cliente') {
+          console.log("Redirigiendo a /cliente");
+          navigate('/cliente');
+        } else {
+          console.log("Rol no manejado:", result.user.rol, "redirigiendo a /dashboard");
+          navigate('/dashboard');
+        }
       } else {
-        sessionStorage.setItem('token', token);
-      }
-      
-      // Actualizar estado de autenticación en el contexto
-      login(user, token);
-      console.log("Login exitoso. Usuario:", user, "Token:", token);
-      // Redireccionar según el rol
-      if (user.rol === 'Admin') {
-        navigate('/admin');
-      } else if (user.rol === 'Repartidor') {
-        navigate('/repartidor');
-      } else if (user.rol === 'Cliente') {
-        console.log("Redirigiendo a /cliente");
-        navigate('/cliente');
-      } else {
-        console.log("Rol no manejado:", user.rol, "redirigiendo a /dashboard");
-        navigate('/dashboard');
+        // Si el login no fue exitoso, mostrar el mensaje de error
+        setError(result.message);
       }
     } catch (error) {
       console.error('Error de inicio de sesión:', error);
       
-      if (error.code === 'ERR_NETWORK') {
+      // Esta parte maneja errores generales
+      if (error.message && error.message.includes('network')) {
         setError('No se pudo conectar al servidor. Verifica que el backend esté funcionando.');
-      } else if (error.response && error.response.data) {
-        setError(error.response.data.message || 'Credenciales inválidas');
+      } else if (error.message) {
+        setError(error.message);
       } else {
         setError('Error al conectar con el servidor. Intenta de nuevo más tarde.');
       }

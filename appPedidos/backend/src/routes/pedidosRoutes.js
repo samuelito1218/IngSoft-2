@@ -3,6 +3,14 @@ const router = express.Router();
 const pedidosController = require('../controllers/pedidosController');
 const { authenticate, authorize } = require('../middlewares/authMiddleware');
 
+// Ruta para obtener historial de pedidos de un cliente
+router.get(
+  "/cliente",
+  authenticate,
+  authorize("Cliente", "cliente"),
+  pedidosController.getPedidosCliente  // Necesitarás implementar este método
+);
+
 router.post('/crear',
     authenticate,
     authorize('Cliente','cliente'),
@@ -25,14 +33,13 @@ router.put(
   pedidosController.marcarEntregado
 );
 
-<<<<<<< HEAD
 router.get(
   '/cliente/activo',
   authenticate,
   authorize('Cliente', 'cliente'),
   pedidosController.getPedidoActivo
 );
-=======
+
 router.delete(
   "/eliminar/:pedidoId",
   authenticate,
@@ -46,8 +53,15 @@ router.put(
   authorize("Cliente", "cliente"),
   pedidosController.editarPedido
 );
-
->>>>>>> 2aba3ca5746de5e21a48e45ff21097ca2129b131
-
+// Ruta para obtener detalles de un pedido específico
+router.get(
+  "/:pedidoId",
+  authenticate,
+  pedidosController.getPedidoDetalle  
+);
+router.get(
+  "/cliente/activo",
+  authenticate,
+  pedidosController.getPedidoActivo  
+);
 module.exports = router;
-

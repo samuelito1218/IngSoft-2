@@ -1,25 +1,82 @@
-import React from 'react'
-import './ExploreMenu.css'
-import { menu_list } from '../../assets/assets'
+// src/components/client/ExploreMenu.jsx
+import React from 'react';
+import '../../styles/ExploreMenu.css';
+import { 
+  FaUtensils, FaPizzaSlice, FaHamburger, FaCoffee, 
+  FaFish, FaCarrot, FaIceCream, FaGlassCheers, FaFire
+} from 'react-icons/fa';
 
-const ExploreMenu = ({category, setCategory}) => {
+const ExploreMenu = ({ categories = [], selectedCategory = 'All', onCategoryChange }) => {
+  // Iconos para categorías comunes
+  const getCategoryIcon = (category) => {
+    switch (category.toLowerCase()) {
+      case 'all':
+        return <FaUtensils />;
+      case 'pizza':
+        return <FaPizzaSlice />;
+      case 'hamburguesas':
+      case 'hamburguesa':
+      case 'burger':
+      case 'burgers':
+        return <FaHamburger />;
+      case 'café':
+      case 'cafe':
+      case 'cafetería':
+      case 'cafeteria':
+        return <FaCoffee />;
+      case 'mariscos':
+      case 'pescado':
+      case 'seafood':
+        return <FaFish />;
+      case 'vegetariano':
+      case 'vegano':
+      case 'vegetarian':
+      case 'vegan':
+        return <FaCarrot />;
+      case 'postres':
+      case 'desserts':
+        return <FaIceCream />;
+      case 'bebidas':
+      case 'drinks':
+        return <FaGlassCheers />;
+      default:
+        return <FaFire />;
+    }
+  };
+  
+  const handleCategoryClick = (category) => {
+    if (onCategoryChange) {
+      onCategoryChange(category);
+    }
+  };
+  
+  // Si no hay categorías, mostrar categorías por defecto
+  const displayCategories = categories.length > 0 
+    ? categories 
+    : ['All', 'Pizza', 'Hamburguesas', 'Café', 'Mariscos', 'Vegetariano'];
+  
   return (
-    <div className='explore-menu' id='explore-menu'> 
-    <h1>Explora Nuestro Menu</h1>
-    <p className='explore-menu-text'>Elija entre un menú variado que incluye una deliciosa variedad de platos elaborados con los mejores ingredientes y nuestra experiencia culinaria. Nuestra misión es satisfacer sus antojos y mejorar su experiencia gastronómica, una deliciosa comida a la vez.</p>
-    <div className="explore-menu-list">
-        {menu_list.map((item,index)=>{
-            return (
-                <div onClick={()=> setCategory(prev => prev === item.menu_name? "All": item.menu_name)} key={index} className='explore-menu-list-item'>
-                    <img className={category === item.menu_name?'active':''} src={item.menu_image} alt="" />
-                    <p>{item.menu_name}</p>
-                </div>
-            )
-        })}
+    <div className="explore-menu">
+      <div className="explore-title">
+        <h2>Explora Categorías</h2>
+      </div>
+      
+      <div className="categories-list">
+        {displayCategories.map((category, index) => (
+          <div 
+            key={index}
+            className={`category-item ${selectedCategory === category ? 'active' : ''}`}
+            onClick={() => handleCategoryClick(category)}
+          >
+            <div className="category-icon">
+              {getCategoryIcon(category)}
+            </div>
+            <span className="category-name">{category}</span>
+          </div>
+        ))}
+      </div>
     </div>
-    <hr />
-    </div>
-  )
-}
+  );
+};
 
-export default ExploreMenu
+export default ExploreMenu;

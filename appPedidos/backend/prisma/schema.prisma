@@ -1,4 +1,4 @@
-// appPedidos/backend/prisma/schema.prisma (actualizado)
+// appPedidos/backend/prisma/schema.prisma (corregido)
 generator client {
   provider = "prisma-client-js"
 }
@@ -24,7 +24,8 @@ model Restaurantes {
   id          String                      @id @default(auto()) @map("_id") @db.ObjectId
   nombre      String
   ubicaciones RestaurantesUbicaciones[]
-  productos   Productos[]                 @relation(fields: [id], references: [restaurante_Id])
+  productos   Productos[]                 @relation("RestaurantesProductos")
+  usuariosIds String[]                    @db.ObjectId
 }
 
 type RestaurantesUbicaciones {
@@ -52,19 +53,20 @@ type UbicacionRepartidor {
 
 /// This collection uses a JSON Schema defined in the database, which requires additional setup for migrations. Visit https://pris.ly/d/mongodb-json-schema for more info.
 model Pedidos {
-  id               String                  @id @default(auto()) @map("_id") @db.ObjectId
-  estado           EstadoPedido
-  total            Float                   @db.Double
-  usuario_id       String                  @db.ObjectId
-  direccionEntrega PedidosDireccionEntrega
-  repartidor_Id    String?                 @db.ObjectId
-  fechaDeCreacion  DateTime                @db.Date
-  productos        PedidosProductos[]
-  mensajes         String[]                @db.ObjectId // Array de ObjectIds
-  calificaciones   Calificaciones[]
+  id                  String                  @id @default(auto()) @map("_id") @db.ObjectId
+  estado              EstadoPedido
+  total               Float                   @db.Double
+  usuario_id          String                  @db.ObjectId
+  direccionEntrega    PedidosDireccionEntrega
+  repartidor_Id       String?                 @db.ObjectId
+  fechaDeCreacion     DateTime                @db.Date
+  productos           PedidosProductos[]
+  mensajes            String[]                @db.ObjectId // Array de ObjectIds
+  calificaciones      Calificaciones[]
   UbicacionRepartidor UbicacionRepartidor?
-  metodoPago       String?                 // nuevo campo
-  pagos            Pagos[]
+  metodoPago          String?                 // nuevo campo
+  pagos               Pagos[]
+  ubicacion           Ubicacion?
 }
 
 enum EstadoPedido {
@@ -87,20 +89,20 @@ model Productos {
 
 /// This collection uses a JSON Schema defined in the database, which requires additional setup for migrations. Visit https://pris.ly/d/mongodb-json-schema for more info.
 model Usuarios {
-  id                  String              @id @default(auto()) @map("_id") @db.ObjectId
-  nombreCompleto      String
-  email               String              @unique
-  contrase_a          String
-  telefono            Int
-  cedula              Int
-  direccion           String
-  rol                 String
-  vehiculo            String?
-  imageUrl            String?             // Nuevo campo para imagen de perfil
+  id                   String               @id @default(auto()) @map("_id") @db.ObjectId
+  nombreCompleto       String
+  email                String               @unique
+  contrase_a           String
+  telefono             Int
+  cedula               Int
+  direccion            String
+  rol                  String
+  vehiculo             String?
+  imageUrl             String?              // Nuevo campo para imagen de perfil
   historialDirecciones HistorialDireccion[]
-  resetToken          String?             @db.String
-  resetTokenExpiry    String?             @db.String
-  restaurantes        Restaurantes[]
+  resetToken           String?              @db.String
+  resetTokenExpiry     String?              @db.String
+  restaurantesIds      String[]             @db.ObjectId
 }
 
 type HistorialDireccion {
@@ -110,7 +112,7 @@ type HistorialDireccion {
 }
 
 model Calificaciones {
-  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  id                     String   @id @default(auto()) @map("_id") @db.ObjectId
   calificacionRepartidor Int      @db.Int
   calificacionPedido     Int      @db.Int
   comentarios            String?
@@ -119,27 +121,27 @@ model Calificaciones {
 }
 
 model Pagos {
-  id              String    @id @default(auto()) @map("_id") @db.ObjectId
-  monto           Float     @db.Double
-  metodoPago      String    // "tarjeta" o "efectivo"
-  pedido_Id       String    @db.ObjectId
-  pedido          Pedidos   @relation(fields: [pedido_Id], references: [id])
-  estado          String    // "pendiente", "completado", "fallido", "reembolsado"
-  referenciaPago  String?   // ID de referencia de Stripe
-  fechaCreacion   DateTime  @default(now())
-  fechaActualizacion DateTime @updatedAt
-  reembolsos      Reembolsos[]
+  id                   String       @id @default(auto()) @map("_id") @db.ObjectId
+  monto                Float        @db.Double
+  metodoPago           String       // "tarjeta" o "efectivo"
+  pedido_Id            String       @db.ObjectId
+  pedido               Pedidos      @relation(fields: [pedido_Id], references: [id])
+  estado               String       // "pendiente", "completado", "fallido", "reembolsado"
+  referenciaPago       String?      // ID de referencia de Stripe
+  fechaCreacion        DateTime     @default(now())
+  fechaActualizacion   DateTime     @updatedAt
+  reembolsos           Reembolsos[]
 }
 
 model Reembolsos {
-  id              String    @id @default(auto()) @map("_id") @db.ObjectId
-  pago_Id         String    @db.ObjectId
-  pago            Pagos     @relation(fields: [pago_Id], references: [id])
-  motivo          String
-  estado          String    // "procesado", "rechazado", "pendiente"
-  fechaSolicitud  DateTime  @default(now())
-  fechaProcesado  DateTime? 
-  montoReembolsado Float?    @db.Double
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  pago_Id           String    @db.ObjectId
+  pago              Pagos     @relation(fields: [pago_Id], references: [id])
+  motivo            String
+  estado            String    // "procesado", "rechazado", "pendiente"
+  fechaSolicitud    DateTime  @default(now())
+  fechaProcesado    DateTime? 
+  montoReembolsado  Float?    @db.Double
 }
 
 model Ubicacion {
@@ -149,4 +151,5 @@ model Ubicacion {
   latitud            Float     @db.Double
   longitud           Float     @db.Double
   fechaActualizacion DateTime  @default(now())
+  pedido             Pedidos?  @relation(fields: [pedidoId], references: [id])
 }

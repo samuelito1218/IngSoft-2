@@ -1,0 +1,411 @@
+/* src/components/client/DeliveryTracking.css */
+.delivery-tracking {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Poppins', -apple-system, sans-serif;
+  }
+  
+  .delivery-tracking.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+  }
+  
+  .loading-spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top: 4px solid #ff4b2b;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .delivery-tracking-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .back-button {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #333;
+    margin-right: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+  }
+  
+  .back-button:hover {
+    background-color: #f3f3f3;
+  }
+  
+  .delivery-tracking-header h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .delivery-status {
+    margin-bottom: 25px;
+  }
+  
+  .status-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  
+  .status-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 80px;
+  }
+  
+  .step-icon {
+    width: 40px;
+    height: 40px;
+    background-color: #e0e0e0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    font-size: 16px;
+    transition: all 0.3s ease;
+  }
+  
+  .status-step.active .step-icon {
+    background-color: #ff4b2b;
+    color: white;
+  }
+  
+  .status-step.completed .step-icon {
+    background-color: #4CAF50;
+    color: white;
+  }
+  
+  .status-step span {
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+  }
+  
+  .status-step.active span {
+    color: #333;
+    font-weight: 500;
+  }
+  
+  .status-connector {
+    height: 3px;
+    flex-grow: 1;
+    background-color: #e0e0e0;
+    position: relative;
+    max-width: 60px;
+  }
+  
+  .order-summary {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 25px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  @media (min-width: 768px) {
+    .order-summary {
+      grid-template-columns: 3fr 2fr;
+    }
+  }
+  
+  .order-info {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+  
+  .order-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .order-id {
+    font-size: 14px;
+    color: #666;
+    background-color: #f5f5f5;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+  
+  .order-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+  }
+  
+  .detail-label {
+    color: #666;
+    font-weight: 500;
+  }
+  
+  .detail-value {
+    color: #333;
+  }
+  
+  .status-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+  
+  .status-badge.pendiente {
+    background-color: #FFF3E0;
+    color: #FB8C00;
+  }
+  
+  .status-badge.en_camino {
+    background-color: #E3F2FD;
+    color: #2196F3;
+  }
+  
+  .status-badge.entregado {
+    background-color: #E8F5E9;
+    color: #4CAF50;
+  }
+  
+  .status-badge.cancelado {
+    background-color: #FFEBEE;
+    color: #F44336;
+  }
+  
+  .delivery-person-info {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .delivery-person-info h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .delivery-person {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+  }
+  
+  .delivery-person-avatar {
+    width: 50px;
+    height: 50px;
+    background-color: #ff4b2b;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 600;
+  }
+  
+  .delivery-person-details {
+    flex-grow: 1;
+  }
+  
+  .delivery-person-name {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+  }
+  
+  .delivery-person-vehicle {
+    font-size: 13px;
+    color: #666;
+  }
+  
+  .call-button {
+    width: 40px;
+    height: 40px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .call-button:hover {
+    background-color: #388E3C;
+    transform: scale(1.05);
+  }
+  
+  .call-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  
+  .tab-navigation {
+    display: flex;
+    margin-bottom: 15px;
+    gap: 10px;
+  }
+  
+  .tab-button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  
+  .tab-button:hover:not(:disabled) {
+    background-color: #e5e5e5;
+  }
+  
+  .tab-button.active {
+    background-color: #ff4b2b;
+    color: white;
+  }
+  
+  .tab-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .tab-content {
+    margin-bottom: 25px;
+    min-height: 350px;
+  }
+  
+  .no-location-info,
+  .no-chat-info {
+    padding: 30px;
+    text-align: center;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    color: #666;
+  }
+  
+  .no-location-info p,
+  .no-chat-info p {
+    margin: 8px 0;
+  }
+  
+  .map-tab,
+  .chat-tab {
+    height: 100%;
+  }
+  
+  .order-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  
+  .rate-button {
+    padding: 12px 24px;
+    background-color: #ff4b2b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  
+  .rate-button:hover {
+    background-color: #e63e1a;
+    transform: translateY(-2px);
+  }
+  
+  .error-container {
+    text-align: center;
+    padding: 40px 20px;
+    background-color: #FFEBEE;
+    border-radius: 8px;
+    color: #D32F2F;
+    margin-top: 20px;
+  }
+  
+  .error-container p {
+    margin-bottom: 20px;
+  }
+  
+  .error-container button {
+    padding: 10px 20px;
+    background-color: #D32F2F;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 0 10px;
+  }
+  
+  .error-container button.secondary {
+    background-color: transparent;
+    color: #D32F2F;
+    border: 1px solid #D32F2F;
+  }

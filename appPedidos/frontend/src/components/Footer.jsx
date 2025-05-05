@@ -1,6 +1,6 @@
 import React from 'react'
-import './Footer.css'
-import { assets } from '../../assets/assets'
+import '../styles/Footer.css'
+//import { assets } from '../../assets/assets'
 
 const Footer = () => {
   return (
@@ -28,12 +28,12 @@ const Footer = () => {
                 <h2>GET IN TOUCH</h2>
                 <ul>
                     <li>+57 314 432 2345</li>
-                    <li>contact@FoodFast.com</li>
+                    <li>contact@FastFood.com</li>
                 </ul>
             </div>
         </div>
         <hr />
-        <p className='footer-copyright'>Copyright 2025 © FoodFast.com - All Right Reserved.</p>
+        <p className='footer-copyright'>Copyright 2025 © FastFood.com - All Right Reserved.</p>
     </div>
   )
 }

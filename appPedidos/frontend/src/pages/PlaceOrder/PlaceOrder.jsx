@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react'
 import './PlaceOrder.css'
-import { StoreContext } from '../../context/StoreContext'
+import { StoreContext } from '../../contexts/StoreContext'
 import axios from 'axios';
 
 

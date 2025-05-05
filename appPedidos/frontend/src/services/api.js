@@ -1,4 +1,4 @@
-// src/services/api.js - Servicio mejorado
+// src/services/api.js
 import axios from 'axios';
 
 // Función para obtener el token del almacenamiento
@@ -63,4 +63,71 @@ api.interceptors.response.use(
   }
 );
 
-export default api;
+// Exportar los métodos del servicio API
+const ApiService = {
+  // Métodos de autenticación
+  auth: {
+    login: (credentials) => api.post('/auth/login', credentials),
+    register: (userData) => api.post('/auth/register', userData),
+    recoverPassword: (email) => api.post('/auth/forgot-password', { email }),
+    resetPassword: (token, newPassword) => api.post('/auth/reset-password', { token, newPassword }),
+    verify: () => api.get('/auth/me')
+  },
+
+  usuarios: {
+    direcciones: () => api.get('/usuarios/direcciones'),
+    guardarDireccion: (data) => api.post('/usuarios/direcciones', data),
+    perfil: () => api.get('/usuarios/perfil'),
+    actualizarPerfil: (data) => api.put('/usuarios/perfil', data),
+    actualizarImagen: (data) => api.put('/usuarios/imagen', data)
+  },
+  // Métodos para pedidos
+  pedidos: {
+    crear: (pedidoData) => api.post('/pedidos/crear', pedidoData),
+    activo: () => api.get('/pedidos/cliente/activo'),
+    historial: () => api.get('/pedidos/cliente'),
+    detalle: (id) => api.get(`/pedidos/${id}`),
+    cancelar: (id) => api.delete(`/pedidos/eliminar/${id}`),
+    editar: (id, data) => api.put(`/pedidos/editar/${id}`, data),
+    calificar: (id, data) => api.post(`/calificaciones/calificar/${id}`, data)
+  },
+  
+  // Métodos para restaurantes y productos
+  restaurantes: {
+    listar: () => api.get('/restaurantes'),
+    buscar: (query) => api.get(`/restaurantes?search=${query}`),
+    detalle: (id) => api.get(`/restaurantes/${id}`),
+    productos: (restauranteId) => api.get(`/restaurantes/${restauranteId}/productos`)
+  },
+  
+  // Métodos para mensajes
+  mensajes: {
+    enviar: (pedidoId, texto, usuarioReceptorId) => 
+      api.post(`/mensajes/enviar/${pedidoId}`, { texto, usuarioReceptorId }),
+    obtener: (pedidoId) => api.get(`/mensajes/${pedidoId}`),
+    marcarLeido: (mensajeId) => api.put(`/mensajes/marcar-leido/${mensajeId}`)
+  },
+  
+  // Métodos para pagos
+  pagos: {
+    crearIntencion: (pedidoId) => api.post(`/pagos/${pedidoId}/crear-intencion`),
+    confirmar: (paymentIntentId) => api.post('/pagos/confirmar', { paymentIntentId }),
+    procesar: (pedidoId, data) => api.post(`/pagos/${pedidoId}/procesar`, data)
+  },
+  
+  // Métodos para ubicación
+  ubicacion: {
+    actualizar: (pedidoId, latitud, longitud) => 
+      api.put(`/ubicacion/pedido/${pedidoId}`, { latitud, longitud }),
+    obtener: (pedidoId) => api.get(`/ubicacion/pedido/${pedidoId}`)
+  },
+  productos: {
+    detalle: (id) => api.get(`/productos/${id}`),
+    listar: () => api.get('/productos'),
+    porRestaurante: (restauranteId) => api.get(`/productos/restaurante/${restauranteId}`)
+  }
+};
+
+
+export { api };
+export default ApiService;

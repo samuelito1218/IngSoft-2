@@ -10,6 +10,7 @@ const ubicacionRoutes = require("./routes/ubicacionRoutes");
 const calificacionesRoutes = require("./routes/calificacionesRoutes"); 
 const restaurantesRoutes = require("./routes/restaurantesRoutes");
 const usuariosRoutes = require('./routes/usuariosRoutes');
+const productosRoutes = require('./routes/productosRoutes');
 // Cargar variables de entorno
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use('/api/mensajes', mensajesRoutes);
 app.use('/api/ubicacion', ubicacionRoutes);    
 app.use("/api/restaurantes",restaurantesRoutes); 
 app.use('/api/usuarios', usuariosRoutes); 
+app.use('/api/productos', productosRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {

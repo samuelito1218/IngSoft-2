@@ -1,39 +1,218 @@
-/* src/styles/Map.css */
+/* src/styles/Map.css - Versión mejorada */
 .map-wrapper {
-    position: relative;
-    width: 100%;
-    height: 350px;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
+  position: relative;
+  width: 100%;
+  height: 350px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  background-color: #f5f5f5;
+  font-family: 'Poppins', -apple-system, sans-serif;
+}
+
+.map-container {
+  width: 100%;
+  height: 100%;
+}
+
+.map-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  text-align: center;
+  color: #666;
+  font-size: 16px;
+}
+
+.loading-location {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.pulsating-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: rgba(255, 75, 43, 0.7);
+  position: relative;
+  animation: pulse-ring 1.5s infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+}
+
+.map-error {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  padding: 20px;
+  text-align: center;
+}
+
+.map-error p {
+  color: #e74c3c;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.map-error button {
+  background-color: #ff4b2b;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.map-error button:hover {
+  background-color: #e63e1a;
+}
+
+.map-controls {
+  position: absolute;
+  bottom: 20px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 10;
+}
+
+.map-control-button {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background-color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #333;
+}
+
+.map-control-button:hover {
+  background-color: #f8f8f8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.map-control-button.tracking-button {
+  width: auto;
+  border-radius: 20px;
+  padding: 0 15px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.map-control-button.tracking-button.active {
+  background-color: #ff4b2b;
+  color: white;
+}
+
+.map-info {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: white;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  max-width: 200px;
+}
+
+.location-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-icon {
+  font-size: 14px;
+}
+
+.info-icon.current {
+  color: #4285F4;
+}
+
+.info-icon.destination {
+  color: #ff4b2b;
+}
+
+.location-status {
+  text-align: center;
+  padding: 8px;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-top: 10px;
+  color: #666;
+}
+
+.location-status.success {
+  color: #27ae60;
+  background-color: rgba(39, 174, 96, 0.1);
+}
+
+.location-status.error {
+  color: #e74c3c;
+  background-color: rgba(231, 76, 60, 0.1);
+}
+
+/* Estilo para mobile */
+@media (max-width: 768px) {
+  .map-wrapper {
+    height: 300px;
   }
   
-  .map-container {
-    width: 100%;
-    height: 100%;
+  .map-info {
+    max-width: 150px;
   }
   
-  .map-placeholder {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #f0f0f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    text-align: center;
-    color: #666;
-    font-size: 16px;
+  .info-item {
+    font-size: 11px;
   }
-  
-  .location-status {
-    text-align: center;
-    margin-top: -15px;
-    margin-bottom: 20px;
-    color: #666;
-    font-style: italic;
-  }
+}

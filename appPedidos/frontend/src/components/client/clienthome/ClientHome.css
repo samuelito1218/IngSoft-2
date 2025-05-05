@@ -1,0 +1,199 @@
+/* src/components/client/ClientHome.css */
+.client-home {
+    font-family: 'Poppins', -apple-system, sans-serif;
+  }
+  
+  .client-home-loading,
+  .client-home-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top: 4px solid #ff4b2b;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .client-home-error {
+    color: #d32f2f;
+    background-color: #ffebee;
+    border-radius: 8px;
+    padding: 30px;
+    max-width: 500px;
+    margin: 40px auto;
+  }
+  
+  .client-home-error button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  
+  .client-home-error button:hover {
+    background-color: #b71c1c;
+  }
+  
+  .hero-section {
+    height: 300px;
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+                url('/images/food-banner.jpg') no-repeat center center;
+    background-size: cover;
+    position: relative;
+    margin-bottom: 30px;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  
+  .hero-content {
+    position: absolute;
+    top: 50%;
+    left: 50px;
+    transform: translateY(-50%);
+    color: white;
+    max-width: 600px;
+  }
+  
+  .hero-content h1 {
+    font-size: 38px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+  }
+  
+  .hero-content p {
+    font-size: 16px;
+    margin-bottom: 25px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  
+  .search-container {
+    position: relative;
+    max-width: 400px;
+  }
+  
+  .search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+  }
+  
+  .search-container input {
+    width: 100%;
+    padding: 14px 14px 14px 45px;
+    border: none;
+    border-radius: 30px;
+    font-size: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    outline: none;
+    transition: all 0.3s;
+  }
+  
+  .search-container input:focus {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  }
+  
+  .content-container {
+    padding: 0 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .restaurants-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+    margin-bottom: 50px;
+  }
+  
+  .no-results {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 20px;
+    text-align: center;
+    color: #666;
+  }
+  
+  .no-results-icon {
+    font-size: 50px;
+    color: #ccc;
+    margin-bottom: 20px;
+  }
+  
+  .no-results h3 {
+    font-size: 20px;
+    margin-bottom: 10px;
+    color: #333;
+  }
+  
+  .no-results p {
+    color: #888;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .hero-section {
+      height: 250px;
+    }
+    
+    .hero-content {
+      left: 20px;
+      right: 20px;
+      text-align: center;
+    }
+    
+    .hero-content h1 {
+      font-size: 30px;
+    }
+    
+    .search-container {
+      max-width: 100%;
+    }
+    
+    .restaurants-grid {
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .hero-section {
+      height: 220px;
+    }
+    
+    .hero-content h1 {
+      font-size: 26px;
+    }
+    
+    .hero-content p {
+      font-size: 14px;
+    }
+    
+    .restaurants-grid {
+      grid-template-columns: 1fr;
+    }
+  }

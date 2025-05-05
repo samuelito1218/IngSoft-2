@@ -2,6 +2,76 @@ const { PrismaClient } = require('@prisma/client');
 //const { ObjectId } = require('mongodb');
 
 const prisma = new PrismaClient();
+// Método para obtener el historial de pedidos de un cliente
+exports.getPedidosCliente = async (req, res) => {
+  try {
+    const usuario_id = req.user.id;
+    
+    // Buscar todos los pedidos del usuario
+    const pedidos = await prisma.pedidos.findMany({
+      where: {
+        usuario_id
+      },
+      orderBy: {
+        fechaDeCreacion: 'desc'
+      }
+    });
+    
+    res.status(200).json(pedidos);
+  } catch (error) {
+    console.error('Error al obtener historial de pedidos:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener historial de pedidos', 
+      error: error.message 
+    });
+  }
+};
+// Método para obtener detalles de un pedido específico
+exports.getPedidoDetalle = async (req, res) => {
+  try {
+    const { pedidoId } = req.params;
+    const usuario_id = req.user.id;
+    
+    // Buscar el pedido
+    const pedido = await prisma.pedidos.findUnique({
+      where: { id: pedidoId }
+    });
+    
+    if (!pedido) {
+      return res.status(404).json({ message: 'Pedido no encontrado' });
+    }
+    
+    // Verificar permisos (solo cliente del pedido o repartidor asignado)
+    if (pedido.usuario_id !== usuario_id && pedido.repartidor_Id !== usuario_id) {
+      return res.status(403).json({ message: 'No tienes permiso para ver este pedido' });
+    }
+    
+    // Si hay un repartidor asignado, obtener sus datos
+    let repartidor = null;
+    if (pedido.repartidor_Id) {
+      repartidor = await prisma.usuarios.findUnique({
+        where: { id: pedido.repartidor_Id },
+        select: {
+          id: true,
+          nombreCompleto: true,
+          telefono: true,
+          vehiculo: true
+        }
+      });
+    }
+    
+    res.status(200).json({ 
+      pedido,
+      repartidor
+    });
+  } catch (error) {
+    console.error('Error al obtener detalles del pedido:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener detalles del pedido', 
+      error: error.message 
+    });
+  }
+};
 //Método para crear pedido
 exports.crearPedido = async (req, res) => {
   try {
@@ -109,8 +179,12 @@ exports.getPedidoActivo = async (req, res) => {
       }
     });
     
+    // Si no hay pedido activo, devolver un objeto vacío con código 200, no 404
     if (!pedidoActivo) {
-      return res.status(404).json({ message: 'No hay pedido activo' });
+      return res.status(200).json({ 
+        message: 'No hay pedido activo',
+        pedido: null
+      });
     }
     
     // Si hay un repartidor asignado, obtener sus datos
