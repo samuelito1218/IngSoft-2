@@ -61,14 +61,24 @@ exports.updateUserProfile = async (req, res) => {
       return res.status(400).json({ message: 'Faltan campos requeridos' });
     }
     
-    // Actualizar usuario
+    // Primero, buscar el usuario actual para obtener su cédula
+    const usuarioActual = await prisma.usuarios.findUnique({
+      where: { id: userId }
+    });
+    
+    if (!usuarioActual) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    
+    // Actualizar usuario incluyendo la cédula actual
     const usuarioActualizado = await prisma.usuarios.update({
       where: { id: userId },
       data: {
         nombreCompleto,
         telefono: parseInt(telefono),
         direccion,
-        comuna: parseInt(comuna)
+        comuna: parseInt(comuna),
+        cedula: usuarioActual.cedula // Incluir la cédula actual
       }
     });
     
@@ -80,6 +90,7 @@ exports.updateUserProfile = async (req, res) => {
         email: usuarioActualizado.email,
         telefono: usuarioActualizado.telefono,
         direccion: usuarioActualizado.direccion,
+        cedula: usuarioActualizado.cedula,
         rol: usuarioActualizado.rol,
         vehiculo: usuarioActualizado.vehiculo,
         imageUrl: usuarioActualizado.imageUrl

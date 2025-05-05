@@ -42,13 +42,13 @@ const ProductDetails = () => {
         
         // Obtener información del restaurante
         if (productData.restaurante_Id) {
-          const restaurantResponse = await api.get(`/restaurantes/${productData.restaurante_Id}`);
+          const restaurantResponse = await ApiService.restaurantes.detalle(productData.restaurante_Id);
           if (restaurantResponse.data) {
             setRestaurant(restaurantResponse.data);
           }
           
           // Obtener productos relacionados
-          const relatedResponse = await api.get(`/productos/restaurante/${productData.restaurante_Id}?limit=4`);
+          const relatedResponse = await ApiService.productos.porRestaurante(productData.restaurante_Id);
           if (relatedResponse.data && Array.isArray(relatedResponse.data)) {
             // Filtrar el producto actual
             const filtered = relatedResponse.data.filter(item => item.id !== id);

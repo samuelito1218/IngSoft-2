@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Register from './components/Register';
 import RecoverPassword from './components/RecoverPassword';
 import ResetPassword from './components/ResetPassword';
+import Profile from './components/client/Profile';
 
 // Componentes de Cliente
 import ClientHome from './components/client/clienthome/ClientHome';
@@ -207,6 +208,15 @@ function AppContent() {
               </ClientLayout>
             </ProtectedRoute>
           } 
+        />
+        <Route 
+          path="/cliente/perfil" element={
+          <ProtectedRoute allowedRoles={['Cliente', 'cliente']}>
+            <ClientLayout>
+              <Profile />
+            </ClientLayout>
+          </ProtectedRoute>
+        } 
         />
         <Route 
           path="/cliente/restaurante/:id" 

@@ -129,14 +129,20 @@ const ClientLayout = ({ children }) => {
             </nav>
             
             <div className="user-section">
-              <div className="user-info">
-                <div className="user-avatar">
-                  {user?.nombreCompleto?.charAt(0) || 'U'}
+              <Link 
+                to="/cliente/perfil" 
+                className={isActive('/cliente/perfil') ? 'active' : ''}
+                onClick={closeMenu}
+              >
+                <div className="user-info">
+                  <div className="user-avatar">
+                    {user?.nombreCompleto?.charAt(0) || 'U'}
+                  </div>
+                  <div className="user-name">
+                    {user?.nombreCompleto || 'Usuario'}
+                  </div>
                 </div>
-                <div className="user-name">
-                  {user?.nombreCompleto || 'Usuario'}
-                </div>
-              </div>
+              </Link>
               
               <button className="logout-button" onClick={handleLogout}>
                 <FaSignOutAlt />

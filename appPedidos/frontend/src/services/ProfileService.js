@@ -1,58 +1,55 @@
 // src/services/ProfileService.js
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../firebase/config';
-import api from './api';
+import ApiService from './api';
+import CloudinaryService from './CloudinaryService';
 
-class ProfileService {
-  // Subir imagen de perfil
+const ProfileService = {
+  // Subir imagen de perfil usando Cloudinary
   async uploadProfileImage(userId, file) {
     try {
-      if (!file || !userId) {
-        throw new Error('Se requiere un archivo y un ID de usuario');
+      if (!file) {
+        throw new Error('Se requiere un archivo');
       }
-
-      // Crear referencia en Firebase Storage
-      const storageRef = ref(storage, `profile-images/${userId}/${Date.now()}_${file.name}`);
       
-      // Subir imagen
-      const snapshot = await uploadBytes(storageRef, file);
+      // Usar el servicio de Cloudinary para subir la imagen
+      const imageUrl = await CloudinaryService.uploadProfileImage(file);
       
-      // Obtener URL de descarga
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      
-      // Actualizar perfil en el backend
-      await api.put('/usuarios/perfil/imagen', {
-        imageUrl: downloadURL
-      });
-      
-      return downloadURL;
+      return imageUrl;
     } catch (error) {
       console.error('Error al subir imagen de perfil:', error);
       throw error;
     }
-  }
+  },
 
   // Obtener perfil del usuario
   async getUserProfile() {
     try {
-      const response = await api.get('/usuarios/perfil');
+      const response = await ApiService.usuarios.perfil();
       return response.data;
     } catch (error) {
       console.error('Error al obtener perfil:', error);
       throw error;
     }
-  }
+  },
 
   // Actualizar perfil del usuario
   async updateUserProfile(profileData) {
     try {
-      const response = await api.put('/usuarios/perfil', profileData);
+      // Primero obtener el perfil actual
+      const currentProfile = await this.getUserProfile();
+      
+      // Incluir la cédula actual
+      const dataToUpdate = {
+        ...profileData,
+        cedula: currentProfile.cedula
+      };
+      
+      const response = await ApiService.usuarios.actualizarPerfil(dataToUpdate);
       return response.data;
     } catch (error) {
       console.error('Error al actualizar perfil:', error);
       throw error;
     }
   }
-}
+};
 
-export default new ProfileService();
+export default ProfileService;

@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import ProfileService from '../../services/ProfileService';
 import '../../styles/Profile.css';
-
 function Profile() {
   const { user, login } = useAuth();
   const [profile, setProfile] = useState(null);
@@ -40,6 +39,7 @@ function Profile() {
         telefono: userData.telefono || '',
         direccion: userData.direccion || '',
         comuna: userData.comuna || '',
+        cedula: userData.cedula || '',
       });
       
     } catch (error) {
