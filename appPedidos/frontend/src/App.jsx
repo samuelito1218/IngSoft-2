@@ -4,7 +4,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { useAuth } from './hooks/useAuth';
-
+import ChatService from './services/chatService';
 import MapTest from './components/client/MapTest';
 // Componentes de autenticación
 import Login from './pages/Login';
@@ -158,14 +158,13 @@ function AppContent() {
       
       // Verificar mensajes no leídos periódicamente
       const checkUnreadMessages = async () => {
-        if (chatInfo.pedidoId && chatInfo.receptorId) {
-          try {
-            // Usar el servicio de chat para verificar mensajes no leídos
-            const hasUnread = await ChatService.hasUnreadMessages(chatInfo.pedidoId, user.id);
-            setHasUnreadMessages(hasUnread);
-          } catch (error) {
-            console.error("Error al verificar mensajes no leídos:", error);
+        try {
+          if (user) {
+            const count = await ChatService.checkUnreadMessages(user.id);
+            setHasUnreadMessages(count > 0); 
           }
+        } catch (error) {
+          console.error('Error al verificar mensajes no leídos:', error);
         }
       };
       

@@ -27,6 +27,7 @@ exports.getPedidosCliente = async (req, res) => {
   }
 };
 // Método para obtener detalles de un pedido específico
+// Método para obtener detalles de un pedido específico
 exports.getPedidoDetalle = async (req, res) => {
   try {
     const { pedidoId } = req.params;
@@ -55,7 +56,8 @@ exports.getPedidoDetalle = async (req, res) => {
           id: true,
           nombreCompleto: true,
           telefono: true,
-          vehiculo: true
+          vehiculo: true,
+          imageUrl: true
         }
       });
     }

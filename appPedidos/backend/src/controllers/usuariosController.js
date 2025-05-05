@@ -51,6 +51,35 @@ exports.getUserProfile = async (req, res) => {
   }
 };
 
+// NUEVO ENDPOINT - Obtener usuario por ID
+exports.getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Buscar usuario por ID
+    const usuario = await prisma.usuarios.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        nombreCompleto: true,
+        telefono: true,
+        vehiculo: true,
+        rol: true,
+        imageUrl: true
+      }
+    });
+    
+    if (!usuario) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    
+    // Devolver información limitada del usuario (por seguridad)
+    res.status(200).json(usuario);
+  } catch (error) {
+    console.error('Error al obtener información del usuario:', error);
+    res.status(500).json({ message: 'Error al obtener información del usuario', error: error.message });
+  }
+};
 
 exports.updateUserProfile = async (req, res) => {
   try {

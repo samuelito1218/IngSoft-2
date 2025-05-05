@@ -6,7 +6,10 @@ const { authenticate } = require('../middlewares/authMiddleware');
 // Rutas para el perfil de usuario
 router.get('/perfil', authenticate, usuariosController.getUserProfile);
 router.put('/perfil', authenticate, usuariosController.updateUserProfile);
-router.put('/perfil/imagen', authenticate, usuariosController.updateProfileImage);  // Corregido: usar /perfil/imagen
+router.put('/perfil/imagen', authenticate, usuariosController.updateProfileImage);
+
+// NUEVA RUTA - Obtener usuario por ID
+router.get('/:id', authenticate, usuariosController.getUserById);
 
 // Rutas para direcciones de usuario
 router.get('/direcciones', authenticate, usuariosController.obtenerDirecciones);

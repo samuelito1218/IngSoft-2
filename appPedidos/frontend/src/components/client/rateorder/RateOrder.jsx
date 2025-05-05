@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaStar, FaRegStar, FaClock, FaUser, FaMotorcycle } from 'react-icons/fa';
 import { useAuth } from '../../../hooks/useAuth';
-import ApiService from '../../../services/api'; // Importamos ApiService correctamente
+import ApiService from '../../../services/api';
 import './RateOrder.css';
 
 const RateOrder = () => {
@@ -51,18 +51,14 @@ const RateOrder = () => {
         // Obtener información del repartidor si existe
         if (pedidoData.repartidor_Id) {
           try {
-            // Verificamos si la API tiene el método necesario
-            if (ApiService.pedidos && typeof ApiService.pedidos.detalle === 'function') {
-              // En lugar de hacer una llamada separada, usamos los datos del repartidor incluidos en el pedido
-              // O mostramos información básica sin hacer una llamada adicional
-              setRepartidor({
-                nombreCompleto: pedidoData.repartidorNombre || 'Repartidor asignado',
-                // Podemos añadir más campos si están disponibles en el pedido
-              });
+            // Usamos el nuevo endpoint para obtener información del repartidor
+            const repartidorResponse = await ApiService.usuarios.obtenerUsuario(pedidoData.repartidor_Id);
+            if (repartidorResponse.data) {
+              setRepartidor(repartidorResponse.data);
             }
           } catch (repartidorError) {
-            console.error('Error al procesar información del repartidor:', repartidorError);
-            // Continuamos con la información básica
+            console.error('Error al obtener información del repartidor:', repartidorError);
+            // Si falla, mostrar información básica
             setRepartidor({
               nombreCompleto: 'Repartidor #' + pedidoData.repartidor_Id.slice(-4)
             });
@@ -257,6 +253,11 @@ const RateOrder = () => {
             <div className="repartidor-details">
               <h3>Repartidor</h3>
               <p>{repartidor.nombreCompleto}</p>
+              {repartidor.vehiculo && (
+                <p className="repartidor-vehiculo">
+                  <small>Vehículo: {repartidor.vehiculo}</small>
+                </p>
+              )}
             </div>
           </div>
         )}

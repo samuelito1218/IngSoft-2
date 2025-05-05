@@ -1,5 +1,5 @@
 // src/services/ChatService.js
-import api from './api';
+import ApiService, { api } from './api'; // Importamos ApiService y api correctamente
 import { ref, push, set, onValue, query, orderByChild, get, update } from 'firebase/database';
 import { db } from '../firebase/config';
 
@@ -12,10 +12,7 @@ class ChatService {
       }
       
       // 1. Enviar al backend
-      const response = await api.post(`/mensajes/enviar/${pedidoId}`, {
-        texto,
-        usuarioReceptorId: receptorId
-      });
+      const response = await ApiService.mensajes.enviar(pedidoId, texto, receptorId);
       
       if (!response.data || !response.data.id) {
         throw new Error('Error al enviar mensaje al backend');
@@ -62,7 +59,7 @@ class ChatService {
       }
       
       // 1. Actualizar en el backend
-      await api.put(`/mensajes/marcar-leido/${mensajeId}`);
+      await ApiService.mensajes.marcarLeido(mensajeId);
       
       // 2. Buscar el mensaje en Firebase
       // Primero necesitamos encontrar en qué chat está el mensaje
@@ -101,7 +98,7 @@ class ChatService {
       }
       
       // Obtener del backend para histórico completo
-      const response = await api.get(`/mensajes/${pedidoId}`);
+      const response = await ApiService.mensajes.obtener(pedidoId);
       return response.data;
     } catch (error) {
       console.error('Error al obtener mensajes:', error);
@@ -239,8 +236,9 @@ class ChatService {
       
       // Si no hay en Firebase, verificar en el backend
       try {
-        const response = await api.get(`/mensajes/${pedidoId}/no-leidos?usuarioId=${usuarioId}`);
-        return response.data && response.data.tieneNoLeidos;
+        const response = await ApiService.mensajes.obtener(pedidoId);
+        const mensajes = response.data;
+        return mensajes.some(m => m.usuarioReceptor === usuarioId && !m.leido);
       } catch (backendError) {
         console.error('Error al verificar mensajes no leídos en el backend:', backendError);
         return false;
@@ -251,6 +249,37 @@ class ChatService {
     }
   }
   
+  // Método para verificar mensajes no leídos en todos los pedidos activos
+  async checkUnreadMessages(usuarioId) {
+    try {
+      if (!usuarioId) return 0;
+      
+      // Implementar cuando el backend tenga el endpoint adecuado
+      // Por ahora, buscar en Firebase
+      const chatsRef = ref(db, 'chats');
+      const snapshot = await get(chatsRef);
+      
+      let unreadCount = 0;
+      
+      if (snapshot.exists()) {
+        const promises = [];
+        
+        snapshot.forEach(chatSnapshot => {
+          const pedidoId = chatSnapshot.key;
+          promises.push(this.hasUnreadMessages(pedidoId, usuarioId));
+        });
+        
+        const results = await Promise.all(promises);
+        unreadCount = results.filter(Boolean).length;
+      }
+      
+      return unreadCount;
+    } catch (error) {
+      console.error('Error al verificar mensajes no leídos:', error);
+      return 0;
+    }
+  }
+  
   // Marcar todos los mensajes de un chat como leídos
   async markAllAsRead(pedidoId, usuarioId) {
     try {
@@ -258,8 +287,23 @@ class ChatService {
         return;
       }
       
-      // 1. Actualizar en el backend
-      await api.put(`/mensajes/${pedidoId}/marcar-todos-leidos?usuarioId=${usuarioId}`);
+      // 1. Actualizar en el backend (si tienes este endpoint)
+      try {
+        // Si tu backend tiene este endpoint
+        await ApiService.mensajes.marcarTodosLeidos(pedidoId, usuarioId);
+      } catch (backendError) {
+        console.warn('No se pudieron marcar mensajes como leídos en el backend');
+        
+        // Si no existe el endpoint, marcar uno por uno
+        const response = await ApiService.mensajes.obtener(pedidoId);
+        const mensajes = response.data;
+        
+        for (const mensaje of mensajes) {
+          if (mensaje.usuarioReceptor === usuarioId && !mensaje.leido) {
+            await ApiService.mensajes.marcarLeido(mensaje.id);
+          }
+        }
+      }
       
       // 2. Actualizar en Firebase
       const messagesRef = ref(db, `chats/${pedidoId}/messages`);
@@ -287,8 +331,13 @@ class ChatService {
         return;
       }
       
-      // 1. Eliminar en el backend
-      await api.delete(`/mensajes/${pedidoId}`);
+      // 1. Eliminar en el backend (si tienes este endpoint)
+      try {
+        // Si tu backend tiene este endpoint
+        await ApiService.mensajes.eliminarHistorial(pedidoId);
+      } catch (backendError) {
+        console.warn('No se pudo eliminar historial en el backend');
+      }
       
       // 2. Eliminar en Firebase
       const chatRef = ref(db, `chats/${pedidoId}`);
