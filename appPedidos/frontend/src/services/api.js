@@ -99,8 +99,16 @@ const ApiService = {
     listar: () => api.get('/restaurantes'),
     buscar: (query) => api.get(`/restaurantes?search=${query}`),
     detalle: (id) => api.get(`/restaurantes/${id}`),
-    productos: (restauranteId) => api.get(`/restaurantes/${restauranteId}/productos`)
+    productos: (restauranteId) => api.get(`/restaurantes/${restauranteId}/productos`),
+    crear: (data) => api.post('/restaurantes/crear',data)
   },
+  sucursales: {
+       listar:    () => api.get('/sucursales'),
+       detalle:   id => api.get(`/sucursales/${id}`),
+       crear:     data => api.post('/sucursales', data),        // <— nuevo endpoint
+       actualizar:data => api.put(`/sucursales/${data.id}`, data), // opcional
+       eliminar:  id => api.delete(`/sucursales/${id}`)         // opcional
+     },
   
   // Métodos para mensajes
   mensajes: {

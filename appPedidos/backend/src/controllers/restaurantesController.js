@@ -68,62 +68,64 @@ exports.listarProductosPorRestaurante = async (req, res) => {
 // Crear restaurante
 exports.crearRestaurante = async (req, res) => {
     try {
-        // Se verifica que el usuario sea Admin
-        if (req.user.rol !== "Admin") {
-            return res.status(403).json({
-                message: "Acceso denegado. Solo los usuarios con rol de Admin pueden crear un restaurante"
-            });
-        }
-
-        const { nombre, ubicaciones } = req.body;
-
-        if (!nombre || !Array.isArray(ubicaciones) || ubicaciones.length === 0) {
-            return res.status(400).json({
-                message: "Faltan datos obligatorios: nombre, ubicaciones"
-            });
-        }
-
-        // Validar cada ubicación
-        for (const ubicacion of ubicaciones) {
-            if (!ubicacion.sucursal_Id || !ubicacion.comuna) {
-                return res.status(400).json({
-                    message: "Cada ubicación debe tener sucursal_Id y comuna"
-                });
-            }
-        }
-
-        // Crear el restaurante
-        const nuevoRestaurante = await prisma.restaurantes.create({
-            data: {
-                nombre,
-                ubicaciones: ubicaciones,
-                usuariosIds: [req.user.id] // Agregar al usuario actual como propietario
-            }
+      // 1) Sólo Admin
+      if (req.user.rol !== "Admin") {
+        return res.status(403).json({ message: "Acceso denegado. Sólo Admin puede crear restaurantes" });
+      }
+  
+      // 2) Extraer y validar datos
+      const { nombre, descripcion, ownerId, ubicaciones, imageUrl } = req.body;
+      if (!nombre || !descripcion || !ownerId) {
+        return res.status(400).json({ message: "Faltan datos obligatorios: nombre, descripcion, ownerId" });
+      }
+      if (!/^[0-9a-fA-F]{24}$/.test(ownerId)) {
+        return res.status(400).json({ message: "ownerId no es un ObjectId válido" });
+      }
+  
+      // 3) Mapear ubicaciones (si vienen)
+      let ubicacionesData = [];
+      if (Array.isArray(ubicaciones)) {
+        ubicacionesData = ubicaciones.map(u => {
+          if (!u.sucursal_Id || !u.comuna) {
+            throw new Error("Cada ubicación debe tener sucursal_Id y comuna");
+          }
+          if (!/^[0-9a-fA-F]{24}$/.test(u.sucursal_Id)) {
+            throw new Error("sucursal_Id no es un ObjectId válido");
+          }
+          return { sucursal_Id: u.sucursal_Id, comuna: u.comuna };
         });
-
-        // Actualizar el usuario para agregar este restaurante a su lista
-        await prisma.usuarios.update({
-            where: { id: req.user.id },
-            data: {
-                restaurantesIds: {
-                    push: nuevoRestaurante.id
-                }
-            }
-        });
-
-        res.status(201).json({
-            message: "Restaurante creado exitosamente",
-            restaurante: nuevoRestaurante
-        });
-
+      }
+  
+      // 4) Armar el objeto data SIN usar `{ create: … }`
+      const data = {
+        nombre,
+        descripcion,
+        usuariosIds: [ownerId],
+        imageUrl
+      };
+      if (ubicacionesData.length) {
+        data.ubicaciones = ubicacionesData; 
+      }
+  
+      // 5) Crear el restaurante
+      const nuevoRestaurante = await prisma.restaurantes.create({ data });
+  
+      return res.status(201).json({
+        message: "Restaurante creado exitosamente",
+        restaurante: nuevoRestaurante
+      });
+  
     } catch (error) {
-        console.error("Error al crear restaurante: ", error);
-        res.status(500).json({
-            message: "Error al crear el restaurante",
-            error: error.message
-        });
+      console.error("Error al crear restaurante:", error);
+      const status = error.message.includes("ubicación") ? 400 : 500;
+      return res.status(status).json({
+        message: error.message.includes("ubic") 
+          ? error.message 
+          : "Error interno al crear el restaurante",
+        error: error.message
+      });
     }
-};
+  };
 
 // Método para agregar ubicación (solamente el dueño del restaurante)
 exports.agregarUbicacion = async (req, res) => {

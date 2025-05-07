@@ -23,6 +23,11 @@ import DeliveryTracking from './components/client/deliverytracking/DeliveryTrack
 import Checkout from './components/client/checkout/Checkout';
 import RateOrder from './components/client/rateorder/RateOrder';
 
+// Componentes de admin
+import AddRestaurant from './components/admin/AddRestaurant';
+import AdminLayout from './components/layouts/Admin';
+
+
 // Componentes de Restaurante - Comentados por ahora
 // import RestaurantDashboard from './components/restaurant/RestaurantDashboard';
 // import OrderManagement from './components/restaurant/OrderManagement';
@@ -197,6 +202,23 @@ function AppContent() {
         <Route path="/recover-password" element={<RecoverPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         
+       
+
+        
+          {/* … otras rutas … */}
+          <Route path="/admin" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout/>
+            </ProtectedRoute>
+          }>
+            <Route index element={<Navigate to="restaurantes/nuevo" replace />} />
+            <Route path="restaurantes/nuevo" element={<AddRestaurant/>} />
+            {/* aquí tus subrutas de Admin */}
+          </Route>
+          {/* … resto de rutas … */}
+        
+
+
         {/* Rutas Cliente */}
         <Route 
           path="/cliente" 
