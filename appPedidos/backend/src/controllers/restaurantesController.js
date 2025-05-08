@@ -74,13 +74,11 @@ exports.crearRestaurante = async (req, res) => {
       }
   
       // 2) Extraer y validar datos
-      const { nombre, descripcion, ownerId, ubicaciones, imageUrl } = req.body;
-      if (!nombre || !descripcion || !ownerId) {
+      const { nombre, descripcion, ubicaciones, imageUrl } = req.body;
+      if (!nombre || !descripcion ){
         return res.status(400).json({ message: "Faltan datos obligatorios: nombre, descripcion, ownerId" });
       }
-      if (!/^[0-9a-fA-F]{24}$/.test(ownerId)) {
-        return res.status(400).json({ message: "ownerId no es un ObjectId válido" });
-      }
+      
   
       // 3) Mapear ubicaciones (si vienen)
       let ubicacionesData = [];
@@ -100,7 +98,7 @@ exports.crearRestaurante = async (req, res) => {
       const data = {
         nombre,
         descripcion,
-        usuariosIds: [ownerId],
+        ownerId: req.user.id,
         imageUrl
       };
       if (ubicacionesData.length) {
