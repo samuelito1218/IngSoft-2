@@ -1,6 +1,25 @@
 const {PrismaClient} = require('@prisma/client');
 const prisma = new PrismaClient();
 
+// listado de los restaurantes del admin logueado
+exports.obtenerMisRestaurantes = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        console.log("id del admin: "+userId)
+        const restaurantes = await prisma.restaurantes.findMany({
+          where: { ownerId: userId },
+          orderBy: { nombre: 'asc' },
+        });
+        res.json(restaurantes);
+      } catch (error) {
+        console.error('Error interno al obtener restaurantes:', error);
+        res.status(500).json({
+          message: 'Error interno al obtener los restaurantes',
+          error: error.message
+        });
+      }
+    };
+    
 // Método para listar todos los restaurantes
 exports.listarRestaurantes = async (req, res) => {
   try {

@@ -1,0 +1,117 @@
+/* Contenedor general */
+.restaurants-container {
+    padding: 1.5rem;
+  }
+  
+  /* Título */
+  .restaurants-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: #2d3748; /* gris oscuro */
+  }
+  
+  /* Grid responsivo: hasta 4 columnas */
+  .restaurants-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  /* Tarjeta individual */
+  .restaurant-card {
+    background: #ffffff;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .restaurant-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  
+  /* Imagen */
+  .restaurant-card img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+  }
+  
+  /* Contenido dentro de la tarjeta */
+  .restaurant-card-content {
+    padding: 1rem;
+    flex: 1 1 auto;
+  }
+  
+  /* Nombre */
+  .restaurant-card-title {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: #1a202c;
+  }
+  
+  /* Descripción */
+  .restaurant-card-desc {
+    font-size: 0.9rem;
+    color: #4a5568;
+    flex: 1 1 auto;
+  }
+  
+  /* Botón de “Crear Restaurante” en estado vacío */
+  .create-restaurant-btn {
+    background-color: #ed8936;
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.375rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  .create-restaurant-btn:hover {
+    background-color: #dd6b20;
+  }
+  
+  /* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    max-width: 360px;
+    margin: 2rem auto;
+    text-align: center;
+  }
+  
+  .empty-state-title {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    color: #2d3748;
+  }
+  
+  .empty-state-btn {
+    margin-top: 1rem;
+  }
+  .empty-state-btn {
+    display: inline-block;
+    background-color: #ed8936;       /* naranja corporativo */
+    color: #ffffff;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+  }
+  .empty-state-btn:hover {
+    background-color: #dd6b20;
+    transform: translateY(-2px);
+  }
+  

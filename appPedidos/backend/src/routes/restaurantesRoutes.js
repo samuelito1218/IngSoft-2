@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const restaurantesController = require("../controllers/restaurantesController");
 const { authenticate /*authorize*/ } = require('../middlewares/authMiddleware');
+
+
+// GET /restaurants/mine → devuelve sólo los del owner logueado
+router.get('/mine', authenticate, restaurantesController.obtenerMisRestaurantes);
+
 router.get(
   "/",
   restaurantesController.listarRestaurantes // Necesitarás crear este método
@@ -63,5 +68,8 @@ router.delete(
     authenticate,
     restaurantesController.eliminarRestaurante
 );
+
+
+
 
 module.exports = router;

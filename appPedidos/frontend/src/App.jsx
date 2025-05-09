@@ -26,6 +26,7 @@ import RateOrder from './components/client/rateorder/RateOrder';
 // Componentes de admin
 import AddRestaurant from './components/admin/AddRestaurant';
 import AdminLayout from './components/layouts/Admin';
+import MisRestaurantes from './components/admin/MisRestaurantes';
 
 
 // Componentes de Restaurante - Comentados por ahora
@@ -211,9 +212,20 @@ function AppContent() {
               <AdminLayout/>
             </ProtectedRoute>
           }>
-            <Route index element={<Navigate to="restaurantes/nuevo" replace />} />
-            <Route path="restaurantes/nuevo" element={<AddRestaurant/>} />
-            {/* aquí tus subrutas de Admin */}
+            {/* Cuando vayas a /admin, redirige por defecto a “Mis Restaurantes” */}
+            <Route index element={<Navigate to="restaurantes" replace />} />
+
+            {/* Listar los restaurantes del admin */}
+            <Route 
+              path="restaurantes" 
+              element={<MisRestaurantes />} 
+            />
+
+            {/* Formulario para crear uno nuevo */}
+            <Route 
+              path="restaurantes/nuevo" 
+              element={<AddRestaurant />} 
+            />
           </Route>
           {/* … resto de rutas … */}
         
