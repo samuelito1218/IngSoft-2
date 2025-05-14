@@ -91,7 +91,25 @@ const ApiService = {
     detalle: (id) => api.get(`/pedidos/${id}`),
     cancelar: (id) => api.delete(`/pedidos/eliminar/${id}`),
     editar: (id, data) => api.put(`/pedidos/editar/${id}`, data),
-    calificar: (id, data) => api.post(`/calificaciones/calificar/${id}`, data)
+    calificar: (id, data) => api.post(`/calificaciones/calificar/${id}`, data),
+
+    // Nuevos métodos para repartidores (corregidos):
+    disponibles: () => api.get('/pedidos/disponibles'),
+    repartidorActivos: () => api.get('/pedidos/repartidor/activos'),
+    repartidorHistorial: () => api.get('/pedidos/repartidor/historial'),
+    tomarPedido: (pedidoId) => api.put(`/pedidos/asignar/${pedidoId}`),
+    actualizarEstado: (pedidoId, estado) => {
+      let endpoint;
+      if (estado === 'EN_CAMINO') {
+        endpoint = `/pedidos/en-camino/${pedidoId}`;
+      } else if (estado === 'ENTREGADO') {
+        endpoint = `/pedidos/entregar/${pedidoId}`;
+      } else {
+        throw new Error(`Estado no soportado: ${estado}`);
+      }
+      return api.put(endpoint);
+    },
+    obtenerPorId: (pedidoId) => api.get(`/pedidos/${pedidoId}`)
   },
   
   // Métodos para restaurantes y productos
@@ -137,6 +155,7 @@ const ApiService = {
     porRestaurante: (restauranteId) => api.get(`/productos/restaurante/${restauranteId}`)
   }
 };
+//Métodos para repartidores
 
 
 export { api };

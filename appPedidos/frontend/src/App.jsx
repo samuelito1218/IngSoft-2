@@ -38,6 +38,13 @@ import MisRestaurantes from './components/admin/MisRestaurantes';
 // import ActiveOrders from './components/delivery/ActiveOrders';
 // import DeliveryNavigation from './components/delivery/DeliveryNavigation';
 
+//Componentes del Repartidor (ensayo)
+import RepartidorLayout from './components/layouts/RepartidorLayout';
+import RepartidorDashboard from './components/repartidor/dashboard/RepartidorDashboard';
+import PedidosDisponibles from './components/repartidor/PedidosDisponibles';
+import PedidosActivos from './components/repartidor/PedidosActivos';
+import ChatPedido from './components/repartidor/ChatPedido';
+import HistorialPedidos from './components/repartidor/HistorialPedidos';
 // Layout components
 import ClientLayout from './components/layouts/ClientLayout';
 // import RestaurantLayout from './components/layouts/RestaurantLayout';
@@ -92,15 +99,27 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   if (!isAuthenticated) {
     return <Navigate to="/" />;
   }
-  
-  if (!allowedRoles.includes(user.rol)) {
+  //Sección comentada temporalmente
+  /*if (!allowedRoles.includes(user.rol)) {
     // Redirigir según el rol del usuario
     if (user.rol === 'Cliente' || user.rol === 'cliente') {
       return <Navigate to="/cliente" />;
     } else {
       return <Navigate to="/" />;
     }
-  }
+  }*/
+    if (!allowedRoles.includes(user.rol)) {
+      // Redirigir según el rol del usuario
+      if (user.rol === 'Cliente' || user.rol === 'cliente') {
+        return <Navigate to="/cliente" />;
+      } else if (user.rol === 'Repartidor' || user.rol === 'repartidor') {
+        return <Navigate to="/repartidor" />;
+      } else if (user.rol === 'Admin') {
+        return <Navigate to="/admin" />;
+      } else {
+        return <Navigate to="/" />;
+      }
+    }
   
   return children;
 };
@@ -387,6 +406,70 @@ function AppContent() {
           } 
         />
         */}
+        {/*Rutas para repartidores (de ensayo) */}
+        
+<Route 
+  path="/repartidor" 
+  element={
+    <ProtectedRoute allowedRoles={['Repartidor', 'repartidor']}>
+      <RepartidorLayout>
+        <RepartidorDashboard />
+      </RepartidorLayout>
+    </ProtectedRoute>
+  } 
+/>
+<Route 
+  path="/repartidor/pedidos-disponibles" 
+  element={
+    <ProtectedRoute allowedRoles={['Repartidor', 'repartidor']}>
+      <RepartidorLayout>
+        <PedidosDisponibles />
+      </RepartidorLayout>
+    </ProtectedRoute>
+  } 
+/>
+<Route 
+  path="/repartidor/pedidos-activos" 
+  element={
+    <ProtectedRoute allowedRoles={['Repartidor', 'repartidor']}>
+      <RepartidorLayout>
+        <PedidosActivos />
+      </RepartidorLayout>
+    </ProtectedRoute>
+  } 
+/>
+<Route 
+  path="/repartidor/chat/:pedidoId" 
+  element={
+    <ProtectedRoute allowedRoles={['Repartidor', 'repartidor']}>
+      <RepartidorLayout>
+        <ChatPedido />
+      </RepartidorLayout>
+    </ProtectedRoute>
+  } 
+/>
+<Route 
+  path="/repartidor/historial" 
+  element={
+    <ProtectedRoute allowedRoles={['Repartidor', 'repartidor']}>
+      <RepartidorLayout>
+        <HistorialPedidos />
+      </RepartidorLayout>
+    </ProtectedRoute>
+  } 
+/>
+<Route 
+  path="/repartidor/perfil" 
+  element={
+    <ProtectedRoute allowedRoles={['Repartidor', 'repartidor']}>
+      <RepartidorLayout>
+        <Profile />
+      </RepartidorLayout>
+    </ProtectedRoute>
+  } 
+/>
+
+        
         
         {/* Ruta para redireccionar rutas no encontradas */}
         <Route path="*" element={<Navigate to="/" />} />
