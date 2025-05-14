@@ -3,21 +3,57 @@ const router = express.Router();
 const pedidosController = require('../controllers/pedidosController');
 const { authenticate, authorize } = require('../middlewares/authMiddleware');
 
-// Ruta para obtener historial de pedidos de un cliente
+// Rutas para repartidores
+router.get(
+  "/disponibles",
+  authenticate,
+  authorize("Repartidor"), 
+  pedidosController.getPedidosDisponibles
+);
+
+router.get(
+  "/repartidor/activos",
+  authenticate,
+  authorize("Repartidor"), 
+  pedidosController.getPedidosRepartidor
+);
+
+router.get(
+  "/repartidor/historial",
+  authenticate,
+  authorize("Repartidor"),  
+  pedidosController.getHistorialRepartidor
+);
+
+// Rutas para clientes
 router.get(
   "/cliente",
   authenticate,
   authorize("Cliente", "cliente"),
-  pedidosController.getPedidosCliente  // Necesitarás implementar este método
+  pedidosController.getPedidosCliente
 );
 
-router.post('/crear',
-    authenticate,
-    authorize('Cliente','cliente'),
-    pedidosController.crearPedido
-  );
+router.get(
+  "/cliente/activo",
+  authenticate,
+  authorize("Cliente", "cliente"),
+  pedidosController.getPedidoActivo
+);
 
-router.put('/asignar/:pedidoId', authenticate, authorize('Repartidor'), pedidosController.asignarPedido);
+// Rutas que modifican datos
+router.post(
+  '/crear',
+  authenticate,
+  authorize('Cliente','cliente'),
+  pedidosController.crearPedido
+);
+
+router.put(
+  '/asignar/:pedidoId', 
+  authenticate, 
+  authorize('Repartidor'),
+  pedidosController.asignarPedido
+);
 
 router.put(
   '/en-camino/:pedidoId',
@@ -33,13 +69,6 @@ router.put(
   pedidosController.marcarEntregado
 );
 
-router.get(
-  '/cliente/activo',
-  authenticate,
-  authorize('Cliente', 'cliente'),
-  pedidosController.getPedidoActivo
-);
-
 router.delete(
   "/eliminar/:pedidoId",
   authenticate,
@@ -53,12 +82,13 @@ router.put(
   authorize("Cliente", "cliente"),
   pedidosController.editarPedido
 );
-// Ruta para obtener detalles de un pedido específico
+
 router.get(
   "/:pedidoId",
   authenticate,
   pedidosController.getPedidoDetalle  
 );
+<<<<<<< HEAD
 router.get(
   "/cliente/activo",
   authenticate,
@@ -106,4 +136,7 @@ router.get(
   authorize("Admin"),
   pedidosController.getEstadisticasRestaurante
 );
+=======
+
+>>>>>>> 5c147f6cea13243c2f54fbbaa85e56e735026635
 module.exports = router;

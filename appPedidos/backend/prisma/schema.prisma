@@ -23,15 +23,29 @@ type PedidosProductos {
 model Restaurantes {
   id          String                      @id @default(auto()) @map("_id") @db.ObjectId
   nombre      String
+  descripcion String?
   ubicaciones RestaurantesUbicaciones[]
   productos   Productos[]                 @relation("RestaurantesProductos")
+<<<<<<< HEAD
   usuariosIds String[]                    @db.ObjectId
   verificado  Boolean                     @default(true)
+=======
+  ownerId       String   @db.ObjectId
+  owner         Usuarios     @relation(fields: [ownerId], references: [id])
+  imageUrl String?
+>>>>>>> 5c147f6cea13243c2f54fbbaa85e56e735026635
 }
 
 type RestaurantesUbicaciones {
   sucursal_Id String @db.ObjectId
   comuna      String
+}
+model Sucursales {
+  id             String @id @map("_id") @db.ObjectId @default(auto())
+  nombre         String
+  direccion      String
+  comuna         String
+  restaurante_Id String @db.ObjectId
 }
 
 /// Modelo para gestionar verificaciones de restaurantes
@@ -131,8 +145,12 @@ model Usuarios {
   historialDirecciones HistorialDireccion[]
   resetToken           String?              @db.String
   resetTokenExpiry     String?              @db.String
+<<<<<<< HEAD
   restaurantesIds      String[]             @db.ObjectId
   verificado           Boolean              @default(true) // Los clientes y repartidores están verificados por defecto
+=======
+  restaurants  Restaurantes[] // ahora Prisma infiere la relación inversa automáticamente
+>>>>>>> 5c147f6cea13243c2f54fbbaa85e56e735026635
 }
 
 type HistorialDireccion {

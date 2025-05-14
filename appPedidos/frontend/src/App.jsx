@@ -23,18 +23,37 @@ import DeliveryTracking from './components/client/deliverytracking/DeliveryTrack
 import Checkout from './components/client/checkout/Checkout';
 import RateOrder from './components/client/rateorder/RateOrder';
 
+<<<<<<< HEAD
 // Componentes de Restaurante
 import RestaurantDashboard from './components/restaurant/RestaurantDashboard/RestaurantDashboard';
 import RestaurantManagement from './components/restaurant/restaurantManagement/RestaurantManagement';
 import RestaurantForm from './components/restaurant/restaurantForm/RestaurantForm';
 import MenuManagement from './components/restaurant/menuManagement/MenuManagement';
 import OrderManagement from './components/restaurant/orderManagement/OrderManagement';
+=======
+// Componentes de admin
+import AddRestaurant from './components/admin/AddRestaurant';
+import AdminLayout from './components/layouts/Admin';
+import MisRestaurantes from './components/admin/MisRestaurantes';
+
+
+// Componentes de Restaurante - Comentados por ahora
+// import RestaurantDashboard from './components/restaurant/RestaurantDashboard';
+// import OrderManagement from './components/restaurant/OrderManagement';
+>>>>>>> 5c147f6cea13243c2f54fbbaa85e56e735026635
 
 // Componentes de Repartidor - Comentados por ahora
 // import DeliveryDashboard from './components/delivery/DeliveryDashboard';
 // import ActiveOrders from './components/delivery/ActiveOrders';
 // import DeliveryNavigation from './components/delivery/DeliveryNavigation';
 
+//Componentes del Repartidor (ensayo)
+import RepartidorLayout from './components/layouts/RepartidorLayout';
+import RepartidorDashboard from './components/repartidor/dashboard/RepartidorDashboard';
+import PedidosDisponibles from './components/repartidor/PedidosDisponibles';
+import PedidosActivos from './components/repartidor/PedidosActivos';
+import ChatPedido from './components/repartidor/ChatPedido';
+import HistorialPedidos from './components/repartidor/HistorialPedidos';
 // Layout components
 import ClientLayout from './components/layouts/ClientLayout';
 import RestaurantLayout from './components/layouts/RestaurantLayout';
@@ -89,8 +108,8 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   if (!isAuthenticated) {
     return <Navigate to="/" />;
   }
-  
-  if (!allowedRoles.includes(user.rol)) {
+  //Sección comentada temporalmente
+  /*if (!allowedRoles.includes(user.rol)) {
     // Redirigir según el rol del usuario
     if (user.rol === 'Cliente' || user.rol === 'cliente') {
       return <Navigate to="/cliente" />;
@@ -99,7 +118,19 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     } else {
       return <Navigate to="/" />;
     }
-  }
+  }*/
+    if (!allowedRoles.includes(user.rol)) {
+      // Redirigir según el rol del usuario
+      if (user.rol === 'Cliente' || user.rol === 'cliente') {
+        return <Navigate to="/cliente" />;
+      } else if (user.rol === 'Repartidor' || user.rol === 'repartidor') {
+        return <Navigate to="/repartidor" />;
+      } else if (user.rol === 'Admin') {
+        return <Navigate to="/admin" />;
+      } else {
+        return <Navigate to="/" />;
+      }
+    }
   
   return children;
 };
@@ -202,6 +233,34 @@ function AppContent() {
         <Route path="/recover-password" element={<RecoverPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         
+       
+
+        
+          {/* … otras rutas … */}
+          <Route path="/admin" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout/>
+            </ProtectedRoute>
+          }>
+            {/* Cuando vayas a /admin, redirige por defecto a “Mis Restaurantes” */}
+            <Route index element={<Navigate to="restaurantes" replace />} />
+
+            {/* Listar los restaurantes del admin */}
+            <Route 
+              path="restaurantes" 
+              element={<MisRestaurantes />} 
+            />
+
+            {/* Formulario para crear uno nuevo */}
+            <Route 
+              path="restaurantes/nuevo" 
+              element={<AddRestaurant />} 
+            />
+          </Route>
+          {/* … resto de rutas … */}
+        
+
+
         {/* Rutas Cliente */}
         <Route 
           path="/cliente" 
@@ -407,6 +466,70 @@ function AppContent() {
           } 
         />
         */}
+        {/*Rutas para repartidores (de ensayo) */}
+        
+<Route 
+  path="/repartidor" 
+  element={
+    <ProtectedRoute allowedRoles={['Repartidor', 'repartidor']}>
+      <RepartidorLayout>
+        <RepartidorDashboard />
+      </RepartidorLayout>
+    </ProtectedRoute>
+  } 
+/>
+<Route 
+  path="/repartidor/pedidos-disponibles" 
+  element={
+    <ProtectedRoute allowedRoles={['Repartidor', 'repartidor']}>
+      <RepartidorLayout>
+        <PedidosDisponibles />
+      </RepartidorLayout>
+    </ProtectedRoute>
+  } 
+/>
+<Route 
+  path="/repartidor/pedidos-activos" 
+  element={
+    <ProtectedRoute allowedRoles={['Repartidor', 'repartidor']}>
+      <RepartidorLayout>
+        <PedidosActivos />
+      </RepartidorLayout>
+    </ProtectedRoute>
+  } 
+/>
+<Route 
+  path="/repartidor/chat/:pedidoId" 
+  element={
+    <ProtectedRoute allowedRoles={['Repartidor', 'repartidor']}>
+      <RepartidorLayout>
+        <ChatPedido />
+      </RepartidorLayout>
+    </ProtectedRoute>
+  } 
+/>
+<Route 
+  path="/repartidor/historial" 
+  element={
+    <ProtectedRoute allowedRoles={['Repartidor', 'repartidor']}>
+      <RepartidorLayout>
+        <HistorialPedidos />
+      </RepartidorLayout>
+    </ProtectedRoute>
+  } 
+/>
+<Route 
+  path="/repartidor/perfil" 
+  element={
+    <ProtectedRoute allowedRoles={['Repartidor', 'repartidor']}>
+      <RepartidorLayout>
+        <Profile />
+      </RepartidorLayout>
+    </ProtectedRoute>
+  } 
+/>
+
+        
         
         {/* Ruta para redireccionar rutas no encontradas */}
         <Route path="*" element={<Navigate to="/" />} />

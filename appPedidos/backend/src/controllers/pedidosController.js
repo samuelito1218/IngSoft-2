@@ -470,6 +470,7 @@ exports.editarPedido = async (req, res) =>{
     });
   }
 };
+<<<<<<< HEAD
 // Método para obtener todos los pedidos de un restaurante
 exports.getPedidosRestaurante = async (req, res) => {
   try {
@@ -574,11 +575,124 @@ exports.getPedidosRestaurante = async (req, res) => {
     console.error('Error al obtener pedidos del restaurante:', error);
     res.status(500).json({ 
       message: 'Error al obtener pedidos del restaurante', 
+=======
+
+//Nuevos métodos para el frontend del repartidor desde aqui:
+
+// Método para obtener todos los pedidos disponibles (sin repartidor asignado)
+exports.getPedidosDisponibles = async (req, res) => {
+  try {
+    // Buscar pedidos sin repartidor asignado
+    const pedidos = await prisma.pedidos.findMany({
+      where: {
+        repartidor_Id: null,
+        estado: 'Pendiente'
+      },
+      orderBy: {
+        fechaDeCreacion: 'desc'
+      }
+    });
+    
+    // Obtener información detallada de cada pedido
+    const pedidosConInfo = await Promise.all(pedidos.map(async (pedido) => {
+      try {
+        // Obtener información del cliente
+        const cliente = await prisma.usuarios.findUnique({
+          where: { id: pedido.usuario_id },
+          select: {
+            id: true,
+            nombreCompleto: true,
+            telefono: true
+          }
+        });
+        
+        // Info de restaurante y sucursal
+        let infoRestaurante = {
+          id: null,
+          nombre: "Restaurante no disponible",
+          imageUrl: null,
+          direccion: "Dirección no disponible", // Mantenemos campo para compatibilidad
+          sucursal: null // Nuevo campo opcional con datos completos de la sucursal
+        };
+        
+        // Obtener restaurante y sucursal a partir del primer producto
+        if (pedido.productos && pedido.productos.length > 0) {
+          try {
+            // 1. Obtener información del producto
+            const primerProducto = await prisma.productos.findUnique({
+              where: { id: pedido.productos[0].productoId }
+            });
+            
+            if (primerProducto) {
+              // 2. Obtener información del restaurante
+              const restaurante = await prisma.restaurantes.findUnique({
+                where: { id: primerProducto.restaurante_Id },
+                select: {
+                  id: true,
+                  nombre: true,
+                  imageUrl: true,
+                  ubicaciones: true
+                }
+              });
+              
+              if (restaurante) {
+                // Información básica del restaurante
+                infoRestaurante.id = restaurante.id;
+                infoRestaurante.nombre = restaurante.nombre;
+                infoRestaurante.imageUrl = restaurante.imageUrl;
+                
+                // 3. Obtener información de la sucursal
+                if (restaurante.ubicaciones && restaurante.ubicaciones.length > 0) {
+                  // Tomar la primera sucursal (podríamos implementar lógica para elegir la mejor)
+                  const sucursalId = restaurante.ubicaciones[0].sucursal_Id;
+                  
+                  const sucursal = await prisma.sucursales.findUnique({
+                    where: { id: sucursalId }
+                  });
+                  
+                  if (sucursal) {
+                    // Guardamos la dirección principal para compatibilidad
+                    infoRestaurante.direccion = sucursal.direccion;
+                    
+                    // Guardamos la información completa de la sucursal
+                    infoRestaurante.sucursal = {
+                      id: sucursal.id,
+                      nombre: sucursal.nombre,
+                      direccion: sucursal.direccion,
+                      comuna: sucursal.comuna
+                    };
+                  }
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error al obtener info de restaurante/sucursal:', error);
+          }
+        }
+        
+        return {
+          ...pedido,
+          cliente,
+          restaurante: infoRestaurante
+        };
+      } catch (error) {
+        console.error(`Error procesando pedido ${pedido.id}:`, error);
+        return pedido;
+      }
+    }));
+    
+    res.status(200).json(pedidosConInfo);
+  } catch (error) {
+    console.error('Error al obtener pedidos disponibles:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener pedidos disponibles', 
+>>>>>>> 5c147f6cea13243c2f54fbbaa85e56e735026635
       error: error.message 
     });
   }
 };
 
+<<<<<<< HEAD
 // Método para obtener pedidos pendientes de un restaurante
 exports.getPedidosPendientesRestaurante = async (req, res) => {
   try {
@@ -623,10 +737,148 @@ exports.getPedidosPendientesRestaurante = async (req, res) => {
 
     // Para cada pedido, obtener información del cliente
     const pedidosConCliente = await Promise.all(pedidosPendientes.map(async (pedido) => {
+=======
+// Método para obtener pedidos activos de un repartidor
+// Función mejorada con mejor manejo de errores
+exports.getPedidosRepartidor = async (req, res) => {
+  try {
+    // Verificar que el usuario tiene el rol correcto
+    console.log("ID de usuario:", req.user.id);
+    console.log("Rol de usuario:", req.user.rol);
+    
+    const repartidor_Id = req.user.id;
+    
+    // Primero verificar si el repartidor existe
+    const repartidor = await prisma.usuarios.findUnique({
+      where: { id: repartidor_Id }
+    });
+    
+    if (!repartidor) {
+      console.error(`Repartidor con ID ${repartidor_Id} no encontrado`);
+      return res.status(404).json({ message: 'Repartidor no encontrado' });
+    }
+    
+    console.log(`Buscando pedidos para repartidor: ${repartidor_Id}`);
+    
+    // Buscar pedidos con mejor manejo de errores
+    const pedidos = await prisma.pedidos.findMany({
+      where: {
+        repartidor_Id,
+        estado: {
+          in: ['Pendiente', 'En_Camino']
+        }
+      },
+      orderBy: {
+        fechaDeCreacion: 'desc'
+      }
+    });
+    
+    console.log(`Pedidos encontrados: ${pedidos.length}`);
+    
+    // Procesar un pedido a la vez para identificar errores más fácilmente
+    const pedidosConInfo = [];
+    
+    for (const pedido of pedidos) {
+      try {
+        console.log(`Procesando pedido ID: ${pedido.id}`);
+        
+        // Obtener cliente con manejo de errores
+        let cliente = null;
+        try {
+          cliente = await prisma.usuarios.findUnique({
+            where: { id: pedido.usuario_id },
+            select: {
+              id: true,
+              nombreCompleto: true,
+              telefono: true
+            }
+          });
+        } catch (clienteError) {
+          console.error(`Error al obtener cliente para pedido ${pedido.id}:`, clienteError);
+        }
+        
+        // Obtener restaurante con manejo de errores
+        let restaurante = null;
+        if (pedido.productos && pedido.productos.length > 0) {
+          try {
+            const primerProductoId = pedido.productos[0].productoId;
+            console.log(`Buscando producto ID: ${primerProductoId}`);
+            
+            const primerProducto = await prisma.productos.findUnique({
+              where: { id: primerProductoId }
+            });
+            
+            if (primerProducto && primerProducto.restaurante_Id) {
+              console.log(`Buscando restaurante ID: ${primerProducto.restaurante_Id}`);
+              
+              restaurante = await prisma.restaurantes.findUnique({
+                where: { id: primerProducto.restaurante_Id },
+                select: {
+                  id: true,
+                  nombre: true,
+                  // Eliminar direccion: true
+                  ubicaciones: true, // En su lugar, incluir ubicaciones
+                  imageUrl: true
+                }
+              });
+            }
+          } catch (productoError) {
+            console.error(`Error al obtener restaurante para pedido ${pedido.id}:`, productoError);
+          }
+        }
+        
+        pedidosConInfo.push({
+          ...pedido,
+          cliente,
+          restaurante
+        });
+      } catch (pedidoError) {
+        console.error(`Error procesando pedido ${pedido.id}:`, pedidoError);
+        // Continuar con el siguiente pedido sin interrumpir el proceso
+      }
+    }
+    
+    res.status(200).json(pedidosConInfo);
+  } catch (error) {
+    console.error('Error detallado al obtener pedidos del repartidor:', error);
+    console.error('Stack trace:', error.stack);
+    res.status(500).json({ 
+      message: 'Error al obtener pedidos del repartidor', 
+      error: error.message 
+    });
+  }
+};
+
+// Método para obtener historial de pedidos de un repartidor
+exports.getHistorialRepartidor = async (req, res) => {
+  try {
+    const repartidor_Id = req.user.id;
+    
+    // Buscar pedidos completados por el repartidor
+    const pedidos = await prisma.pedidos.findMany({
+      where: {
+        repartidor_Id,
+        estado: {
+          in: ['Entregado', 'Cancelado']
+        }
+      },
+      include:{
+        calificaciones: true
+      },
+      orderBy: {
+        fechaDeCreacion: 'desc'
+      }
+    });
+    
+    // Obtener información detallada de cada pedido
+    const pedidosConInfo = await Promise.all(pedidos.map(async (pedido) => {
+      // Obtener información del cliente
+>>>>>>> 5c147f6cea13243c2f54fbbaa85e56e735026635
       const cliente = await prisma.usuarios.findUnique({
         where: { id: pedido.usuario_id },
         select: {
           id: true,
+<<<<<<< HEAD
           nombreCompleto: true,
           telefono: true
         }
@@ -980,6 +1232,42 @@ exports.getEstadisticasRestaurante = async (req, res) => {
     console.error('Error al obtener estadísticas:', error);
     res.status(500).json({ 
       message: 'Error al obtener estadísticas', 
+=======
+          nombreCompleto: true
+        }
+      });
+      
+      // Obtener restaurante basado en el primer producto del pedido
+      let restaurante = null;
+      if (pedido.productos && pedido.productos.length > 0) {
+        const primerProducto = await prisma.productos.findUnique({
+          where: { id: pedido.productos[0].productoId }
+        });
+        
+        if (primerProducto) {
+          restaurante = await prisma.restaurantes.findUnique({
+            where: { id: primerProducto.restaurante_Id },
+            select: {
+              id: true,
+              nombre: true
+            }
+          });
+        }
+      }
+      
+      return {
+        ...pedido,
+        cliente,
+        restaurante
+      };
+    }));
+    
+    res.status(200).json(pedidosConInfo);
+  } catch (error) {
+    console.error('Error al obtener historial del repartidor:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener historial del repartidor', 
+>>>>>>> 5c147f6cea13243c2f54fbbaa85e56e735026635
       error: error.message 
     });
   }

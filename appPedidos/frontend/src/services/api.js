@@ -91,7 +91,25 @@ const ApiService = {
     detalle: (id) => api.get(`/pedidos/${id}`),
     cancelar: (id) => api.delete(`/pedidos/eliminar/${id}`),
     editar: (id, data) => api.put(`/pedidos/editar/${id}`, data),
-    calificar: (id, data) => api.post(`/calificaciones/calificar/${id}`, data)
+    calificar: (id, data) => api.post(`/calificaciones/calificar/${id}`, data),
+
+    // Nuevos métodos para repartidores (corregidos):
+    disponibles: () => api.get('/pedidos/disponibles'),
+    repartidorActivos: () => api.get('/pedidos/repartidor/activos'),
+    repartidorHistorial: () => api.get('/pedidos/repartidor/historial'),
+    tomarPedido: (pedidoId) => api.put(`/pedidos/asignar/${pedidoId}`),
+    actualizarEstado: (pedidoId, estado) => {
+      let endpoint;
+      if (estado === 'EN_CAMINO') {
+        endpoint = `/pedidos/en-camino/${pedidoId}`;
+      } else if (estado === 'ENTREGADO') {
+        endpoint = `/pedidos/entregar/${pedidoId}`;
+      } else {
+        throw new Error(`Estado no soportado: ${estado}`);
+      }
+      return api.put(endpoint);
+    },
+    obtenerPorId: (pedidoId) => api.get(`/pedidos/${pedidoId}`)
   },
   
   // Métodos para restaurantes y productos
@@ -100,8 +118,19 @@ const ApiService = {
     buscar: (query) => api.get(`/restaurantes?search=${query}`),
     detalle: (id) => api.get(`/restaurantes/${id}`),
     productos: (restauranteId) => api.get(`/restaurantes/${restauranteId}/productos`),
+<<<<<<< HEAD
     verificar: (id) => api.get(`/restaurantes/verificacion/${id}`)
+=======
+    crear: (data) => api.post('/restaurantes/crear',data)
+>>>>>>> 5c147f6cea13243c2f54fbbaa85e56e735026635
   },
+  sucursales: {
+       listar:    () => api.get('/sucursales'),
+       detalle:   id => api.get(`/sucursales/${id}`),
+       crear:     data => api.post('/sucursales', data),        // <— nuevo endpoint
+       actualizar:data => api.put(`/sucursales/${data.id}`, data), // opcional
+       eliminar:  id => api.delete(`/sucursales/${id}`)         // opcional
+     },
   
   // Métodos para mensajes
   mensajes: {
@@ -130,6 +159,7 @@ const ApiService = {
     porRestaurante: (restauranteId) => api.get(`/productos/restaurante/${restauranteId}`)
   }
 };
+//Métodos para repartidores
 
 
 export { api };
