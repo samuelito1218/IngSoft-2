@@ -1,4 +1,4 @@
-// appPedidos/backend/prisma/schema.prisma (corregido)
+// appPedidos/backend/prisma/schema.prisma (actualizado)
 generator client {
   provider = "prisma-client-js"
 }
@@ -26,11 +26,38 @@ model Restaurantes {
   ubicaciones RestaurantesUbicaciones[]
   productos   Productos[]                 @relation("RestaurantesProductos")
   usuariosIds String[]                    @db.ObjectId
+  verificado  Boolean                     @default(true)
 }
 
 type RestaurantesUbicaciones {
   sucursal_Id String @db.ObjectId
   comuna      String
+}
+
+/// Modelo para gestionar verificaciones de restaurantes
+model RestaurantesVerificaciones {
+  id                   String                           @id @default(auto()) @map("_id") @db.ObjectId
+  usuarioId            String                           @db.ObjectId
+  nombre               String
+  documentoPath        String
+  ubicaciones          RestaurantesVerificacionesUbicaciones[]
+  direccionesDetalladas RestaurantesVerificacionesDirecciones[]
+  fechaSolicitud       DateTime                         @default(now())
+  estado               String                          // pendiente, aprobado, rechazado
+  fechaAprobacion      DateTime?
+  fechaRechazo         DateTime?
+  motivoRechazo        String?
+  restauranteId        String?                          @db.ObjectId
+}
+
+type RestaurantesVerificacionesUbicaciones {
+  sucursal_Id String @db.ObjectId
+  comuna      String
+}
+
+type RestaurantesVerificacionesDirecciones {
+  sucursal_Id String @db.ObjectId
+  direccion   String
 }
 
 /// This collection uses a JSON Schema defined in the database, which requires additional setup for migrations. Visit https://pris.ly/d/mongodb-json-schema for more info.
@@ -67,8 +94,10 @@ model Pedidos {
   metodoPago          String?                 // nuevo campo
   pagos               Pagos[]
   ubicacion           Ubicacion?
+  aceptadoPorRestaurante Boolean?              @default(false)  // Marca si el restaurante aceptó el pedido
+  listoPorRestaurante    Boolean?              @default(false)  // Marca si el pedido está preparado y listo
+  motivoRechazo          String?                                // Motivo si el restaurante rechaza el pedido
 }
-
 enum EstadoPedido {
   Pendiente
   En_Camino
@@ -103,6 +132,7 @@ model Usuarios {
   resetToken           String?              @db.String
   resetTokenExpiry     String?              @db.String
   restaurantesIds      String[]             @db.ObjectId
+  verificado           Boolean              @default(true) // Los clientes y repartidores están verificados por defecto
 }
 
 type HistorialDireccion {

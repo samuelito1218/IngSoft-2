@@ -4,7 +4,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { useAuth } from './hooks/useAuth';
-import ChatService from './services/chatService';
+import ChatService from './services/ChatService';
 import MapTest from './components/client/MapTest';
 // Componentes de autenticación
 import Login from './pages/Login';
@@ -23,9 +23,12 @@ import DeliveryTracking from './components/client/deliverytracking/DeliveryTrack
 import Checkout from './components/client/checkout/Checkout';
 import RateOrder from './components/client/rateorder/RateOrder';
 
-// Componentes de Restaurante - Comentados por ahora
-// import RestaurantDashboard from './components/restaurant/RestaurantDashboard';
-// import OrderManagement from './components/restaurant/OrderManagement';
+// Componentes de Restaurante
+import RestaurantDashboard from './components/restaurant/RestaurantDashboard/RestaurantDashboard';
+import RestaurantManagement from './components/restaurant/restaurantManagement/RestaurantManagement';
+import RestaurantForm from './components/restaurant/restaurantForm/RestaurantForm';
+import MenuManagement from './components/restaurant/menuManagement/MenuManagement';
+import OrderManagement from './components/restaurant/orderManagement/OrderManagement';
 
 // Componentes de Repartidor - Comentados por ahora
 // import DeliveryDashboard from './components/delivery/DeliveryDashboard';
@@ -34,7 +37,7 @@ import RateOrder from './components/client/rateorder/RateOrder';
 
 // Layout components
 import ClientLayout from './components/layouts/ClientLayout';
-// import RestaurantLayout from './components/layouts/RestaurantLayout';
+import RestaurantLayout from './components/layouts/RestaurantLayout';
 // import DeliveryLayout from './components/layouts/DeliveryLayout';
 
 // Shared components
@@ -91,6 +94,8 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     // Redirigir según el rol del usuario
     if (user.rol === 'Cliente' || user.rol === 'cliente') {
       return <Navigate to="/cliente" />;
+    } else if (user.rol === 'Admin') {
+      return <Navigate to="/restaurante" />;
     } else {
       return <Navigate to="/" />;
     }
@@ -298,11 +303,11 @@ function AppContent() {
           } 
         />
         
-        {/* Rutas Restaurante - Comentadas por ahora
+        {/* Rutas Restaurante (Admin) */}
         <Route 
           path="/restaurante" 
           element={
-            <ProtectedRoute allowedRoles={['Restaurante', 'restaurante']}>
+            <ProtectedRoute allowedRoles={['Admin']}>
               <RestaurantLayout>
                 <RestaurantDashboard />
               </RestaurantLayout>
@@ -310,16 +315,65 @@ function AppContent() {
           } 
         />
         <Route 
-          path="/restaurante/pedidos" 
+          path="/restaurante/mis-restaurantes" 
           element={
-            <ProtectedRoute allowedRoles={['Restaurante', 'restaurante']}>
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <RestaurantLayout>
+                <RestaurantManagement />
+              </RestaurantLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/restaurante/crear" 
+          element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <RestaurantLayout>
+                <RestaurantForm />
+              </RestaurantLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/restaurante/editar/:id" 
+          element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <RestaurantLayout>
+                <RestaurantForm />
+              </RestaurantLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/restaurante/menu/:restaurantId" 
+          element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <RestaurantLayout>
+                <MenuManagement />
+              </RestaurantLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/restaurante/pedidos/:restaurantId" 
+          element={
+            <ProtectedRoute allowedRoles={['Admin']}>
               <RestaurantLayout>
                 <OrderManagement />
               </RestaurantLayout>
             </ProtectedRoute>
           } 
         />
-        */}
+        <Route 
+          path="/restaurante/perfil" 
+          element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <RestaurantLayout>
+                <Profile />
+              </RestaurantLayout>
+            </ProtectedRoute>
+          } 
+        />
         
         {/* Rutas Repartidor - Comentadas por ahora
         <Route 

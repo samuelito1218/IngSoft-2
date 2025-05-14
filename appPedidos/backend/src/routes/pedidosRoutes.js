@@ -64,4 +64,46 @@ router.get(
   authenticate,
   pedidosController.getPedidoActivo  
 );
+// Rutas para restaurantes
+router.get(
+  "/restaurante/:restauranteId",
+  authenticate,
+  authorize("Admin"),
+  pedidosController.getPedidosRestaurante
+);
+
+router.get(
+  "/restaurante/:restauranteId/pendientes",
+  authenticate,
+  authorize("Admin"),
+  pedidosController.getPedidosPendientesRestaurante
+);
+
+router.put(
+  "/aceptar/:pedidoId",
+  authenticate,
+  authorize("Admin"),
+  pedidosController.aceptarPedido
+);
+
+router.put(
+  "/rechazar/:pedidoId",
+  authenticate,
+  authorize("Admin"),
+  pedidosController.rechazarPedido
+);
+
+router.put(
+  "/preparado/:pedidoId",
+  authenticate,
+  authorize("Admin"),
+  pedidosController.marcarPedidoPreparado
+);
+
+router.get(
+  "/restaurante/:restauranteId/estadisticas",
+  authenticate,
+  authorize("Admin"),
+  pedidosController.getEstadisticasRestaurante
+);
 module.exports = router;

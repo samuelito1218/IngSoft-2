@@ -1,4 +1,3 @@
-// src/services/ChatService.js
 import ApiService, { api } from './api'; // Importamos ApiService y api correctamente
 import { ref, push, set, onValue, query, orderByChild, get, update } from 'firebase/database';
 import { db } from '../firebase/config';

@@ -41,17 +41,18 @@ function Login() {
         console.log("Login exitoso. Usuario:", result.user, "Token:", result.token);
         
         // Redireccionar según el rol
-        if (result.user.rol === 'Admin') {
-          navigate('/admin');
-        } else if (result.user.rol === 'Repartidor') {
-          navigate('/repartidor');
-        } else if (result.user.rol === 'Cliente') {
-          console.log("Redirigiendo a /cliente");
-          navigate('/cliente');
-        } else {
-          console.log("Rol no manejado:", result.user.rol, "redirigiendo a /dashboard");
-          navigate('/dashboard');
-        }
+        // Redireccionar según el rol
+      if (result.user.rol === 'Admin') {
+        navigate('/restaurante'); // Cambiar de '/admin' a '/restaurante'
+      } else if (result.user.rol === 'Repartidor') {
+        navigate('/repartidor');
+      } else if (result.user.rol === 'Cliente') {
+        console.log("Redirigiendo a /cliente");
+        navigate('/cliente');
+      } else {
+        console.log("Rol no manejado:", result.user.rol, "redirigiendo a /dashboard");
+        navigate('/dashboard');
+      }
       } else {
         // Si el login no fue exitoso, mostrar el mensaje de error
         setError(result.message);

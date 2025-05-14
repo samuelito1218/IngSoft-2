@@ -184,7 +184,115 @@ const OrderService = {
         error
       };
     }
+  },
+
+// Obtener pedidos pendientes para un restaurante
+getPendingOrdersByRestaurant: async (restaurantId) => {
+  try {
+    const response = await api.get(`/pedidos/restaurante/${restaurantId}/pendientes`);
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error) {
+    console.error(`Error al obtener pedidos pendientes para restaurante ${restaurantId}:`, error);
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Error al obtener pedidos pendientes',
+      error
+    };
   }
+},
+
+// Obtener todos los pedidos para un restaurante
+getOrdersByRestaurant: async (restaurantId, params = {}) => {
+  try {
+    const response = await api.get(`/pedidos/restaurante/${restaurantId}`, { params });
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error) {
+    console.error(`Error al obtener pedidos para restaurante ${restaurantId}:`, error);
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Error al obtener pedidos',
+      error
+    };
+  }
+},
+
+// Aceptar un pedido
+acceptOrder: async (orderId) => {
+  try {
+    const response = await api.put(`/pedidos/aceptar/${orderId}`);
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error) {
+    console.error(`Error al aceptar pedido con ID ${orderId}:`, error);
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Error al aceptar el pedido',
+      error
+    };
+  }
+},
+
+// Rechazar un pedido
+rejectOrder: async (orderId, reason = '') => {
+  try {
+    const response = await api.put(`/pedidos/rechazar/${orderId}`, { motivo: reason });
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error) {
+    console.error(`Error al rechazar pedido con ID ${orderId}:`, error);
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Error al rechazar el pedido',
+      error
+    };
+  }
+},
+
+// Marcar un pedido como preparado (listo para entrega)
+markOrderAsReady: async (orderId) => {
+  try {
+    const response = await api.put(`/pedidos/preparado/${orderId}`);
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error) {
+    console.error(`Error al marcar pedido ${orderId} como preparado:`, error);
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Error al marcar pedido como preparado',
+      error
+    };
+  }
+},
+
+// Obtener estadísticas de pedidos
+getOrderStats: async (restaurantId, params = {}) => {
+  try {
+    const response = await api.get(`/pedidos/restaurante/${restaurantId}/estadisticas`, { params });
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error) {
+    console.error(`Error al obtener estadísticas para restaurante ${restaurantId}:`, error);
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Error al obtener estadísticas',
+      error
+    };
+  }
+}
 };
 
 export default OrderService;

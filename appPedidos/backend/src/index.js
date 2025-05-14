@@ -11,6 +11,7 @@ const calificacionesRoutes = require("./routes/calificacionesRoutes");
 const restaurantesRoutes = require("./routes/restaurantesRoutes");
 const usuariosRoutes = require('./routes/usuariosRoutes');
 const productosRoutes = require('./routes/productosRoutes');
+const restaurantesVerificacionRoutes = require('./routes/restaurantesVerificacionRoutes');
 // Cargar variables de entorno
 dotenv.config();
 
@@ -33,7 +34,7 @@ app.use('/api/ubicacion', ubicacionRoutes);
 app.use("/api/restaurantes",restaurantesRoutes); 
 app.use('/api/usuarios', usuariosRoutes); 
 app.use('/api/productos', productosRoutes);
-
+app.use('/api/restaurantes/verificacion', restaurantesVerificacionRoutes);
 // Ruta de prueba
 app.get('/', (req, res) => {
   res.json({ message: 'API de AppPedidos funcionando correctamente' });

@@ -124,7 +124,44 @@ exports.crearRestaurante = async (req, res) => {
         });
     }
 };
+// Método para subir/actualizar imagen de restaurante
+exports.actualizarImagen = async (req, res) => {
+    try {
+        const { restauranteId } = req.params;
+        const { imageUrl } = req.body;
 
+        // Verificar que el restaurante existe
+        const restaurante = await prisma.restaurantes.findUnique({
+            where: { id: restauranteId }
+        });
+
+        if (!restaurante) {
+            return res.status(404).json({ message: "Restaurante no encontrado" });
+        }
+
+        // Verificar que el usuario puede modificar este restaurante
+        if (!restaurante.usuariosIds.includes(req.user.id)) {
+            return res.status(403).json({ message: "No tienes permiso para modificar este restaurante" });
+        }
+
+        // Actualizar imagen
+        const restauranteActualizado = await prisma.restaurantes.update({
+            where: { id: restauranteId },
+            data: { imageUrl }
+        });
+
+        res.status(200).json({
+            message: "Imagen actualizada correctamente",
+            restaurante: restauranteActualizado
+        });
+    } catch (error) {
+        console.error("Error al actualizar imagen:", error);
+        res.status(500).json({
+            message: "Error al actualizar la imagen",
+            error: error.message
+        });
+    }
+};
 // Método para agregar ubicación (solamente el dueño del restaurante)
 exports.agregarUbicacion = async (req, res) => {
     try {

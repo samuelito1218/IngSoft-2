@@ -13,7 +13,11 @@ router.post(
     //authorize("Admin", "admin"),
     restaurantesController.crearRestaurante
 );
-
+router.put(
+    "/:restauranteId/imagen",
+    authenticate,
+    restaurantesController.actualizarImagen
+);
 // Ruta para agregar una ubicación (antes era sucursal)
 router.post(
     "/:restauranteId/agregar-ubicacion",

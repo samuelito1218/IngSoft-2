@@ -99,7 +99,8 @@ const ApiService = {
     listar: () => api.get('/restaurantes'),
     buscar: (query) => api.get(`/restaurantes?search=${query}`),
     detalle: (id) => api.get(`/restaurantes/${id}`),
-    productos: (restauranteId) => api.get(`/restaurantes/${restauranteId}/productos`)
+    productos: (restauranteId) => api.get(`/restaurantes/${restauranteId}/productos`),
+    verificar: (id) => api.get(`/restaurantes/verificacion/${id}`)
   },
   
   // Métodos para mensajes
