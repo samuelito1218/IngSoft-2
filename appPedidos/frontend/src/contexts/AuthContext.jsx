@@ -10,9 +10,23 @@ export const AuthProvider = ({ children }) => {
   
   // API base URL
   const API_URL = 'http://localhost:5000/api';
+
+  const saveUserToLocalStorage = (user) => {
+  localStorage.setItem('user_data', JSON.stringify(user));
+};
   
   // Verificar token al cargar
   useEffect(() => {
+    
+    //Nuevas funciones para la persistencia del usuario
+    
+
+
+    const getUserFromLocalStorage = () =>{
+      const data = localStorage.getItem("user_data");
+      return data ? JSON.parse(data) : null;
+    }
+
     const verifyToken = async () => {
       const token = localStorage.getItem('token');
       
@@ -32,23 +46,50 @@ export const AuthProvider = ({ children }) => {
         
         if (response.status === 200) {
           const data = await response.json();
-          console.log('Verificación exitosa, datos del usuario:', data.user);
-          setUser(data.user);
+          console.log('Verificación exitosa, datos del usuario:', data);
+          //Se manejan 2 estructuras
+          const userData = data.user || data;
+
+          const storedUser = getUserFromLocalStorage();
+          if(storedUser && (!userData.nombreCompleto || !userData.vehiculo)){
+            const completeUser = {
+              ...userData,
+              nombreCompleto: userData.nombreCompleto || storedUser.nombreCompleto,
+              vehiculo: userData.vehiculo || storedUser.vehiculo
+            };
+            setUser(completeUser);
+          } else {
+            setUser(userData);
+          }
           setIsAuthenticated(true);
-        } else {
-          // Token inválido o expirado
-          localStorage.removeItem('token');
+        } else{
+          //En caso de que falle la api, se usan los datos locales de la sesión
+
+          const storedUser = getUserFromLocalStorage();
+          if(storedUser){
+            setUser(storedUser);
+            setIsAuthenticated(true);
+          } else{
+            localStorage.removeItem('token');
+          }
         }
       } catch (error) {
-        console.error('Error de verificación:', error);
-        localStorage.removeItem('token');
-      } finally {
-        setLoading(false);
+      console.error('Error de verificación:', error);
+      //localStorage.removeItem('token');
+
+      const storedUser = getUserFromLocalStorage();
+      if(storedUser){
+        setUser(storedUser);
+        setIsAuthenticated(true);
       }
-    };
-    
-    verifyToken();
-  }, []);
+      
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  verifyToken();
+}, []);
   
   // Iniciar sesión
   const login = async (credentials) => {
@@ -66,6 +107,11 @@ export const AuthProvider = ({ children }) => {
       if (response.status === 200) {
         const { token, user } = data;
         localStorage.setItem('token', token);
+        
+        //Nueva implementación para persistencia
+
+        saveUserToLocalStorage(user);
+
         setUser(user);
         setIsAuthenticated(true);
         return { success: true, user, token }; // Añadir token aquí
@@ -86,7 +132,12 @@ export const AuthProvider = ({ children }) => {
   
   // Cerrar sesión
   const logout = () => {
+    
+    //Nueva función para mantener persistencia
+
     localStorage.removeItem('token');
+    localStorage.removeItem("user_data");
+
     setUser(null);
     setIsAuthenticated(false);
   };

@@ -19,23 +19,19 @@ const PedidosActivos = () => {
 
   // Estados posibles de un pedido
   const estados = {
-    PENDIENTE: 'Pendiente',
-    PREPARANDO: 'Preparando',
-    LISTO: 'Listo para recoger',
-    EN_CAMINO: 'En camino',
-    ENTREGADO: 'Entregado',
-    CANCELADO: 'Cancelado'
-  };
-  
-  // Colores de los estados
-  const estadoColores = {
-    PENDIENTE: 'var(--color-warning)',
-    PREPARANDO: 'var(--color-info)',
-    LISTO: 'var(--color-info-dark)',
-    EN_CAMINO: 'var(--color-primary)',
-    ENTREGADO: 'var(--color-success)',
-    CANCELADO: 'var(--color-danger)'
-  };
+  PENDIENTE: '#f7dc6f',    // amarillo claro
+  EN_CAMINO: '#3498db',    // azul oscuro
+  ENTREGADO: '#27ae60',    // verde oscuro
+  CANCELADO: '#e74c3c',    // rojo
+};
+
+const estadoColores = {
+  PENDIENTE: 'black',  // para amarillo claro, texto negro
+  EN_CAMINO: 'white',
+  ENTREGADO: 'white',
+  CANCELADO: 'white',
+};
+
 
   useEffect(() => {
     fetchPedidosActivos();
@@ -64,28 +60,38 @@ const PedidosActivos = () => {
   };
 
   const handleCambiarEstado = async (pedidoId, nuevoEstado) => {
-    try {
-      setPedidoSeleccionadoId(pedidoId);
-      setCambiandoEstado(true);
-      
-      const response = await ApiService.pedidos.actualizarEstado(pedidoId, nuevoEstado);
-      
-      if (response.success) {
-        // Recargar la lista de pedidos activos
-        fetchPedidosActivos();
-      } else {
-        alert(response.message || 'No se pudo actualizar el estado del pedido. Inténtelo nuevamente.');
-      }
-      
+  try {
+    setPedidoSeleccionadoId(pedidoId);
+    setCambiandoEstado(true);
+
+    let response;
+
+    if (nuevoEstado === 'En_Camino') {
+      response = await ApiService.pedidos.actualizarEstado(pedidoId, 'EN_CAMINO');
+    } else if (nuevoEstado === 'Entregado') {
+      response = await ApiService.pedidos.actualizarEstado(pedidoId, 'ENTREGADO');
+    } else {
+      alert("Estado no válido para este flujo");
       setCambiandoEstado(false);
-      setPedidoSeleccionadoId(null);
-    } catch (error) {
-      console.error('Error al cambiar estado:', error);
-      alert('Error al actualizar el estado del pedido. Por favor, intenta nuevamente.');
-      setCambiandoEstado(false);
-      setPedidoSeleccionadoId(null);
+      return;
     }
-  };
+
+    if (response.status === 200) {
+      alert(response.data.message || "Estado actualizado correctamente");
+      await fetchPedidosActivos();
+    } else {
+      alert(response.message || 'No se pudo actualizar el estado del pedido. Inténtelo nuevamente.');
+    }
+
+  } catch (error) {
+    console.error('Error al cambiar estado:', error);
+    alert('Error al actualizar el estado del pedido. Por favor, intenta nuevamente.');
+  } finally {
+    setCambiandoEstado(false);
+    setPedidoSeleccionadoId(null);
+  }
+};
+
   
   const navigateToChat = (pedidoId) => {
     navigate(`/repartidor/chat/${pedidoId}`);
@@ -93,53 +99,54 @@ const PedidosActivos = () => {
 
   // Determinar qué botones de acción mostrar según el estado actual
   const getAccionesEstado = (pedido) => {
-    switch (pedido.estado) {
-      case 'LISTO':
-        return (
-          <button 
-            className="action-button pickup-btn" 
-            onClick={() => handleCambiarEstado(pedido.id, 'EN_CAMINO')}
-            disabled={cambiandoEstado && pedidoSeleccionadoId === pedido.id}
-          >
-            {cambiandoEstado && pedidoSeleccionadoId === pedido.id ? (
-              <div className="btn-spinner"></div>
-            ) : (
-              <>
-                <FaMotorcycle />
-                <span>Iniciar entrega</span>
-              </>
-            )}
-          </button>
-        );
-      case 'EN_CAMINO':
-        return (
-          <button 
-            className="action-button deliver-btn" 
-            onClick={() => handleCambiarEstado(pedido.id, 'ENTREGADO')}
-            disabled={cambiandoEstado && pedidoSeleccionadoId === pedido.id}
-          >
-            {cambiandoEstado && pedidoSeleccionadoId === pedido.id ? (
-              <div className="btn-spinner"></div>
-            ) : (
-              <>
-                <FaCheckCircle />
-                <span>Confirmar entrega</span>
-              </>
-            )}
-          </button>
-        );
-      case 'PENDIENTE':
-      case 'PREPARANDO':
-        return (
-          <div className="mensaje-estado">
-            <p>Esperando que el restaurante prepare el pedido</p>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
+  const estado = pedido.estado.toLowerCase();
 
+  switch (estado) {
+    case 'pendiente':
+      return (
+        <button 
+          className="action-button pickup-btn" 
+          onClick={() => handleCambiarEstado(pedido.id, 'En_Camino')}
+          disabled={cambiandoEstado && pedidoSeleccionadoId === pedido.id}
+        >
+          {cambiandoEstado && pedidoSeleccionadoId === pedido.id ? (
+            <div className="btn-spinner"></div>
+          ) : (
+            <>
+              <FaMotorcycle />
+              <span>Iniciar entrega</span>
+            </>
+          )}
+        </button>
+      );
+    case 'en_camino':
+    case 'en camino': // Por si viene con espacio
+      return (
+        <button 
+          className="action-button deliver-btn" 
+          onClick={() => handleCambiarEstado(pedido.id, 'Entregado')}
+          disabled={cambiandoEstado && pedidoSeleccionadoId === pedido.id}
+        >
+          {cambiandoEstado && pedidoSeleccionadoId === pedido.id ? (
+            <div className="btn-spinner"></div>
+          ) : (
+            <>
+              <FaCheckCircle />
+              <span>Confirmar entrega</span>
+            </>
+          )}
+        </button>
+      );
+    case 'entregado':
+      return (
+        <div className="mensaje-estado entregado">
+          <p>Pedido entregado</p>
+        </div>
+      );
+    default:
+      return null;
+  }
+};
   if (loading && pedidos.length === 0) {
     return (
       <div className="pedidos-loading">
@@ -191,7 +198,9 @@ const PedidosActivos = () => {
                 </div>
                 <div 
                   className="estado-badge"
-                  style={{ backgroundColor: estadoColores[pedido.estado] || 'var(--color-gray)' }}
+                  style={{ backgroundColor: estadoColores[pedido.estado] || 'var(--color-gray)',
+                    color: estadoColores[pedido.estado] || 'black'
+                   }}
                 >
                   {estados[pedido.estado] || pedido.estado}
                 </div>

@@ -14,5 +14,7 @@ router.post('/reset-password', authController.resetPassword);
 router.get('/me', authenticate, (req, res) => {
   res.json({ user: req.user });
 });
+//Nueva ruta
 
+router.get("/me", authenticate, authController.getCurrentUser);
 module.exports = router;

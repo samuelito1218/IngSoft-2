@@ -221,10 +221,7 @@ const RepartidorDashboard = () => {
       {stats.pedidosActivos > 0 && (
         <div className="dashboard-section">
           <div className="section-header">
-            <h2>Mis entregas en curso</h2>
-            <button className="view-all-button" onClick={goToPedidosActivos}>
-              Ver todas
-            </button>
+            <h2>Mi entrega en curso</h2>
           </div>
           <PedidosActivosPreview />
         </div>

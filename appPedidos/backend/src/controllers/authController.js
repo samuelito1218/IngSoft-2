@@ -254,3 +254,37 @@ exports.resetPassword = async (req, res) => {
         res.status(500).json({ message: 'Error al restablecer contraseña', error: error.message });
     }
 };
+
+//Nuevo método para mantener la persistencia de los usuarios en sus respectivos perfiles:
+// Obtener información del usuario actual
+exports.getCurrentUser = async (req, res) => {
+  try {
+    // req.user.id está disponible gracias al middleware de autenticación
+    const userId = req.user.id;
+    
+    // Buscar el usuario en la base de datos
+    const user = await prisma.Usuarios.findUnique({
+      where: { id: userId }
+    });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    
+    // Devolver la información del usuario (sin la contraseña)
+    res.status(200).json({
+      id: user.id,
+      nombreCompleto: user.nombreCompleto,
+      email: user.email,
+      telefono: user.telefono,
+      cedula: user.cedula,
+      direccion: user.direccion,
+      rol: user.rol,
+      vehiculo: user.vehiculo,
+      imageUrl: user.imageUrl || null
+    });
+  } catch (error) {
+    console.error('Error al obtener información del usuario:', error);
+    res.status(500).json({ message: 'Error del servidor', error: error.message });
+  }
+};

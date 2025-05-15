@@ -439,6 +439,17 @@ function AppContent() {
   } 
 />
 <Route 
+  path="/repartidor/misEntregas/:pedidoId" 
+  element={
+    <ProtectedRoute allowedRoles={['Repartidor', 'repartidor']}>
+      <RepartidorLayout>
+        <PedidosActivos />
+      </RepartidorLayout>
+    </ProtectedRoute>
+  }
+/>
+
+<Route 
   path="/repartidor/chat/:pedidoId" 
   element={
     <ProtectedRoute allowedRoles={['Repartidor', 'repartidor']}>

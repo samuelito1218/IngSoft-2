@@ -105,10 +105,14 @@ const PedidosActivosPreview = () => {
       setPedidoSeleccionadoId(null);
     }
   };
-  
-  const goToDetail = (pedidoId) => {
-    navigate(`/repartidor/pedidos-activos/${pedidoId}`);
+   // Ir a la sección de pedidos activos
+  const goToPedidosActivos = () => {
+    navigate('/repartidor/pedidos-activos');
   };
+  
+  /*const goToDetail = (pedidoId) => {
+    navigate(`/repartidor/pedidos-activos/${pedidoId}`);
+  };*/
 
   // Determinar qué botones de acción mostrar según el estado actual
   const getAccionesEstado = (pedido) => {
@@ -152,7 +156,7 @@ const PedidosActivosPreview = () => {
         return (
           <button 
             className="view-detail-btn-sm" 
-            onClick={() => goToDetail(pedido.id)}
+            onClick={() => goToPedidosActivos(pedido.id)}
           >
             <span>Ver detalles</span>
           </button>
@@ -161,7 +165,7 @@ const PedidosActivosPreview = () => {
         return (
           <button 
             className="view-detail-btn-sm" 
-            onClick={() => goToDetail(pedido.id)}
+            onClick={() => goToPedidosActivos(pedido.id)}
           >
             <span>Ver detalles</span>
           </button>
