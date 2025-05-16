@@ -22,6 +22,7 @@ const DeliveryTracking = () => {
   const [activeTab, setActiveTab] = useState('map');
   const [repartidorLocation, setRepartidorLocation] = useState(null);
   const [statusStep, setStatusStep] = useState(1); // 1: Pendiente, 2: En_Camino, 3: Entregado
+  const [locationAttempted, setLocationAttempted] = useState(false);
   
   // Cargar datos del pedido
   useEffect(() => {
@@ -60,11 +61,17 @@ const DeliveryTracking = () => {
           setRepartidor(response.data.repartidor);
         }
         
-        // Obtener ubicación inicial
-        if (pedidoData.repartidor_Id) {
-          const locationData = await LocationService.getCurrentLocation(pedidoId);
-          if (locationData) {
-            setRepartidorLocation(locationData);
+        // Obtener ubicación inicial solo si hay repartidor asignado y no lo hemos intentado antes
+        if (pedidoData.repartidor_Id && !locationAttempted) {
+          try {
+            const locationData = await LocationService.getCurrentLocation(pedidoId);
+            if (locationData) {
+              setRepartidorLocation(locationData);
+            }
+          } catch (error) {
+            console.log("No se pudo obtener la ubicación inicial, se intentará mediante suscripción");
+          } finally {
+            setLocationAttempted(true);
           }
         }
         
@@ -78,15 +85,20 @@ const DeliveryTracking = () => {
     
     fetchPedidoData();
     
-    // Suscribirse a actualizaciones de ubicación
-    const unsubscribeLocation = LocationService.subscribeToLocationUpdates(
-      pedidoId,
-      (locationData) => {
-        if (locationData) {
-          setRepartidorLocation(locationData);
+    // Suscribirse a actualizaciones de ubicación solo si hay un ID de pedido
+    let unsubscribeLocation = () => {};
+    
+    if (pedidoId) {
+      unsubscribeLocation = LocationService.subscribeToLocationUpdates(
+        pedidoId,
+        (locationData, error) => {
+          // Solo actualizar si hay datos válidos y no hay error
+          if (locationData && !error) {
+            setRepartidorLocation(locationData);
+          }
         }
-      }
-    );
+      );
+    }
     
     return () => {
       // Limpiar suscripciones
@@ -94,7 +106,7 @@ const DeliveryTracking = () => {
         unsubscribeLocation();
       }
     };
-  }, [pedidoId]);
+  }, [pedidoId, locationAttempted]);
   
   // Formatear precio
   const formatPrice = (price) => {
@@ -287,6 +299,7 @@ const DeliveryTracking = () => {
               pedidoId={pedidoId}
               location={repartidorLocation}
               destination={pedido.direccionEntrega}
+              pedido={pedido} // Añadir esta línea
               height={350}
             />
             {!repartidorLocation && (

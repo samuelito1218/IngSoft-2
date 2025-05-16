@@ -2,7 +2,11 @@ const express = require('express');
 const router = express.Router();
 const usuariosController = require("../controllers/UsuariosController");
 const { authenticate } = require('../middlewares/authMiddleware');
-
+router.get(
+  '/mis-pedidos',
+  authenticate,
+  usuariosController.obtenerPedidosUsuario
+);
 // Rutas para el perfil de usuario
 router.get('/perfil', authenticate, usuariosController.getUserProfile);
 router.put('/perfil', authenticate, usuariosController.updateUserProfile);

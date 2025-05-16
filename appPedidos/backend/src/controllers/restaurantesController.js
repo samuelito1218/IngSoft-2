@@ -21,121 +21,41 @@ exports.obtenerMisRestaurantes = async (req, res) => {
     };
     
 // Método para listar todos los restaurantes
+// En el método listarRestaurantes del restaurantesController.js
 exports.listarRestaurantes = async (req, res) => {
   try {
-    // DIAGNÓSTICO: Verificar si la colección existe y tiene documentos
-    console.log("Diagnosticando problema con restaurantes...");
+    console.log("Iniciando listarRestaurantes");
     
-    // Examinar la base de datos directamente
-    try {
-      const dbName = prisma._baseDmmf?.datamodel?.models?.find(m => m.name === 'Restaurantes')?.dbName || "Restaurantes";
-      const { _client } = prisma;
-      
-      if (_client && _client.db) {
-        const db = _client.db();
-        const collections = await db.listCollections().toArray();
-        console.log("Colecciones disponibles:", collections.map(c => c.name));
-        
-        // Verificar si existe la colección
-        const collectionName = collections.find(c => 
-          c.name === "Restaurantes" || c.name === "restaurantes")?.name;
-          
-        if (collectionName) {
-          console.log(`Usando colección: ${collectionName}`);
-          const count = await db.collection(collectionName).countDocuments();
-          console.log(`Total documentos: ${count}`);
-          
-          if (count > 0) {
-            // Obtener un ejemplo para entender la estructura
-            const sample = await db.collection(collectionName).findOne();
-            console.log("Estructura del documento:", Object.keys(sample));
-            
-            // Intentar consulta directa
-            const documentsRaw = await db.collection(collectionName)
-              .find({}, { 
-                projection: { _id: 1, nombre: 1, descripcion: 1, imageUrl: 1 } 
-              })
-              .limit(10)
-              .toArray();
-              
-            if (documentsRaw && documentsRaw.length > 0) {
-              // Transformar a formato esperado
-              const restaurantes = documentsRaw.map(doc => ({
-                id: doc._id.toString(),
-                nombre: doc.nombre || "Restaurante sin nombre",
-                descripcion: doc.descripcion || "",
-                imageUrl: doc.imageUrl || null
-              }));
-              
-              console.log(`Retornando ${restaurantes.length} restaurantes encontrados`);
-              return res.status(200).json(restaurantes);
-            }
-          }
-        }
-      }
-    } catch (diagError) {
-      console.error("Error en diagnóstico:", diagError);
+    // Intento 1: Consulta simple sin filtros
+    const restaurantes = await prisma.restaurantes.findMany();
+    console.log(`Consulta simple encontró: ${restaurantes.length} restaurantes`);
+    
+    if (restaurantes && restaurantes.length > 0) {
+      return res.status(200).json(restaurantes);
     }
 
-    // INTENTO 1: Usando prisma con select limitado
-    try {
-      console.log("Intentando consulta con Prisma y campos mínimos...");
-      const restaurantes = await prisma.restaurantes.findMany({
-        take: 10,
-        select: {
-          id: true,
-          nombre: true,
-          descripcion: true,
-          imageUrl: true
-        }
-      });
-      
-      if (restaurantes && restaurantes.length > 0) {
-        console.log(`Retornando ${restaurantes.length} restaurantes`);
-        return res.status(200).json(restaurantes);
-      } else {
-        console.log("No se encontraron restaurantes con Prisma");
-      }
-    } catch (prismaError) {
-      console.error("Error específico en Prisma:", prismaError);
-    }
-
-    // INTENTO 2: Crear un restaurante de prueba
-    try {
-      console.log("Intentando crear restaurante de prueba...");
-      
-      // Usar un ID válido (preferiblemente del usuario autenticado si está disponible)
-      const ownerId = req.user?.id || "680a89df42ecc27359cb8b53"; // usar un ID válido real
-      
-      const nuevoRestaurante = await prisma.restaurantes.create({
-        data: {
-          nombre: "Restaurante Demo",
-          descripcion: "Este restaurante fue creado automáticamente para verificar la funcionalidad",
-          imageUrl: null,
-          usuariosIds: [ownerId], // Incluir el ID del owner
-          ubicaciones: [],
-          verificado: true,
-          ownerId: ownerId
-        }
-      });
-      
-      console.log("¡Restaurante creado exitosamente!", nuevoRestaurante);
-      return res.status(200).json([nuevoRestaurante]);
-    } catch (createError) {
-      console.error("Error al crear restaurante:", createError);
-    }
-
-    // ÚLTIMO RECURSO: Retornar un restaurante ficticio
-    console.log("Retornando restaurante ficticio como último recurso");
+    // Intento 2: Verificar directamente en la base de datos
+    console.log("Realizando consulta alternativa...");
+    
+    // Verificar si hay algún problema con el modelo
+    const collections = await prisma.$queryRaw`SHOW COLLECTIONS`;
+    console.log("Colecciones disponibles:", collections);
+    
+    // Intento 3: Restaurante de respaldo
+    console.log("Retornando datos de respaldo");
     return res.status(200).json([{
-      id: "fallback-1",
-      nombre: "Restaurante Fallback",
-      descripcion: "Este restaurante aparece mientras se resuelven problemas técnicos",
-      imageUrl: null
+      id: "default-1",
+      nombre: "Restaurante Database",
+      descripcion: "Este es un restaurante generado para solucionar problemas de conexión a la BD",
+      imageUrl: null,
+      categorias: ["General"]
     }]);
-  } catch (finalError) {
-    console.error("Error fatal:", finalError);
-    return res.status(200).json([]);
+  } catch (error) {
+    console.error("Error en listarRestaurantes:", error);
+    return res.status(500).json({ 
+      message: "Error al obtener restaurantes", 
+      error: error.message 
+    });
   }
 };
 

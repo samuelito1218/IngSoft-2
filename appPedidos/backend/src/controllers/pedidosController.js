@@ -1277,3 +1277,17 @@ exports.getHistorialRepartidor = async (req, res) => {
     });
   }
 };
+// En pedidosController.js
+exports.listarPedidosUsuario = async (req, res) => {
+  // Simplemente redirigir al método existente
+  return exports.getPedidosCliente(req, res);
+};
+exports.obtenerPedido = async (req, res) => {
+  // Puedes simplemente redirigir al método existente
+  return exports.getPedidoDetalle(req, res);
+};
+// En pedidosController.js
+exports.asignarRepartidor = async (req, res) => {
+  // Puedes redirigir al método existente
+  return exports.asignarPedido(req, res);
+};

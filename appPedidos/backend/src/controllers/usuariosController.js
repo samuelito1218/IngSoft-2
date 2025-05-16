@@ -225,3 +225,25 @@ exports.guardarDireccion = async (req, res) => {
     });
   }
 };
+
+//esto no se esta usando
+// En UsuariosController.js
+exports.obtenerPedidosUsuario = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Obtener pedidos del usuario
+    const pedidos = await prisma.pedidos.findMany({
+      where: { usuario_id: userId },
+      orderBy: { fechaDeCreacion: 'desc' }
+    });
+    
+    res.status(200).json(pedidos);
+  } catch (error) {
+    console.error('Error al obtener pedidos del usuario:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener pedidos', 
+      error: error.message 
+    });
+  }
+};

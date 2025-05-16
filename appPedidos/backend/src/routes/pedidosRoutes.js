@@ -3,6 +3,8 @@ const router = express.Router();
 const pedidosController = require('../controllers/pedidosController');
 const { authenticate, authorize } = require('../middlewares/authMiddleware');
 
+
+router.get('/', authenticate, pedidosController.getPedidosCliente);
 // Rutas para repartidores
 router.get(
   "/disponibles",
@@ -10,6 +12,7 @@ router.get(
   authorize("Repartidor"), 
   pedidosController.getPedidosDisponibles
 );
+
 
 router.get(
   "/repartidor/activos",
@@ -48,13 +51,13 @@ router.post(
   pedidosController.crearPedido
 );
 
-router.put(
+/*router.put(
   '/asignar/:pedidoId', 
   authenticate, 
   authorize('Repartidor'),
   pedidosController.asignarPedido
-);
-
+);*/
+router.put('/:id/repartidor', authenticate, authorize('Administrador'), pedidosController.asignarPedido);
 router.put(
   '/en-camino/:pedidoId',
   authenticate,
@@ -131,5 +134,8 @@ router.get(
   authorize("Admin"),
   pedidosController.getEstadisticasRestaurante
 );
+//router.get('/:id', authenticate, pedidosController.obtenerPedido);
+router.put('/:id/repartidor', authenticate, authorize('Administrador'), pedidosController.asignarRepartidor);
 
 module.exports = router;
+router.get('/:id', authenticate, pedidosController.getPedidoDetalle);

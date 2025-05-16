@@ -28,9 +28,10 @@ model Restaurantes {
   productos   Productos[]                 @relation("RestaurantesProductos")
   usuariosIds String[]                    @db.ObjectId
   verificado  Boolean                     @default(true)
-  ownerId     String                      @db.ObjectId
-  owner       Usuarios                    @relation(fields: [ownerId], references: [id])
+  ownerId     String?                      @db.ObjectId
+  owner       Usuarios?                   @relation(fields: [ownerId], references: [id])
   imageUrl    String?
+  categorias  String[]
 }
 
 type RestaurantesUbicaciones {

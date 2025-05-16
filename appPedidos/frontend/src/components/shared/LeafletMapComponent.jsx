@@ -1,11 +1,17 @@
 // src/components/shared/LeafletMapComponent.jsx
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../../styles/Map.css';
 import LocationService from '../../services/LocationService';
-import { FaLocationArrow, FaMapMarkerAlt, FaStore, FaHome } from 'react-icons/fa';
+import { 
+  FaLocationArrow, 
+  FaMapMarkerAlt, 
+  FaStore, 
+  FaHome, 
+  FaCheckCircle // Añadido FaCheckCircle
+} from 'react-icons/fa';
 
 // Corregir problemas de iconos en Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -55,6 +61,7 @@ function RouteLine({ positions }) {
 function LeafletMapComponent({ 
   pedidoId, 
   destination, 
+  pedido, // Nuevo: recibir el pedido completo
   isDelivery = false, 
   showControls = true,
   height = 350,
@@ -64,6 +71,7 @@ function LeafletMapComponent({
   const [routePositions, setRoutePositions] = useState(null);
   const [locationError, setLocationError] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
+  const [locationAttempted, setLocationAttempted] = useState(false);
   const watchPositionIdRef = useRef(null);
   const mapRef = useRef(null);
   
@@ -103,52 +111,73 @@ function LeafletMapComponent({
   useEffect(() => {
     if (isDelivery) {
       startTracking();
-    } else if (pedidoId) {
-      // Si tenemos un pedido, obtener ubicación guardada
+    } else if (pedidoId && !locationAttempted) {
+      // Si tenemos un pedido, obtener ubicación guardada (solo una vez)
       fetchSavedLocation();
+      setLocationAttempted(true);
     }
     
     // Suscripción a actualizaciones en tiempo real si no estamos en modo entrega
+    let unsubscribe = () => {};
+    
     if (!isDelivery && pedidoId) {
-      const unsubscribe = LocationService.subscribeToLocationUpdates(pedidoId, (location) => {
+      unsubscribe = LocationService.subscribeToLocationUpdates(pedidoId, (location) => {
         if (location) {
+          // Si el pedido está entregado, marcar la ubicación como entregada
+          if (pedido && pedido.estado === 'Entregado') {
+            location.isDelivered = true;
+            location.message = 'Ubicación finalizada. El pedido ha sido entregado.';
+          }
+          
           setCurrentLocation(location);
           updateRouteIfPossible(location);
         }
       });
-      
-      return () => {
-        if (typeof unsubscribe === 'function') {
-          unsubscribe();
-        }
-      };
     }
-  }, [isDelivery, pedidoId]);
+    
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, [isDelivery, pedidoId, locationAttempted, pedido]);
   
   // Obtener ubicación guardada del pedido
   const fetchSavedLocation = async () => {
+    if (locationAttempted) return;
+    
     try {
       const location = await LocationService.getCurrentLocation(pedidoId);
       if (location) {
+        // Si el pedido está entregado, marcar la ubicación como entregada
+        if (pedido && pedido.estado === 'Entregado') {
+          location.isDelivered = true;
+          location.message = 'Ubicación finalizada. El pedido ha sido entregado.';
+        }
+        
         setCurrentLocation(location);
         updateRouteIfPossible(location);
       }
     } catch (error) {
-      console.error('Error al obtener ubicación guardada:', error);
+      console.log("Error al obtener ubicación, se usará la suscripción en tiempo real");
+    } finally {
+      setLocationAttempted(true);
     }
   };
   
   // Actualizar ruta si tenemos origen y destino
   const updateRouteIfPossible = (currentLoc) => {
-    if (!destination || !destination.lat || !destination.lng) return;
+    if (!destination) return;
+    
+    // Extraer lat, lng de la dirección de destino o usar valores por defecto
+    const destLat = parseFloat(destination.lat) || 3.45;
+    const destLng = parseFloat(destination.lng) || -76.53;
     
     // Para una ruta simple, solo usamos los puntos de inicio y fin
     setRoutePositions([
       [currentLoc.lat, currentLoc.lng],
-      [destination.lat, destination.lng]
+      [destLat, destLng]
     ]);
-    
-    // Para una ruta más avanzada, podrías usar un servicio como OSRM o GraphHopper
   };
   
   // Iniciar seguimiento en tiempo real
@@ -202,6 +231,12 @@ function LeafletMapComponent({
       timestamp: Date.now()
     };
     
+    // Si el pedido está entregado, marcar la ubicación como entregada
+    if (pedido && pedido.estado === 'Entregado') {
+      locationData.isDelivered = true;
+      locationData.message = 'Ubicación finalizada. El pedido ha sido entregado.';
+    }
+    
     setCurrentLocation(locationData);
     updateRouteIfPossible(locationData);
     
@@ -250,6 +285,49 @@ function LeafletMapComponent({
     }
   };
   
+  // Estilos CSS para mensajes
+  const deliveryCompleteStyle = {
+    backgroundColor: '#e8f5e9',
+    border: '1px solid #4CAF50',
+    borderRadius: '8px',
+    padding: '15px',
+    margin: '10px 0',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    position: 'absolute',
+    top: '10px',
+    left: '10px',
+    right: '10px',
+    zIndex: 1000,
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+  };
+  
+  const successIconStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  };
+  
+  const deliveryMessageStyle = {
+    margin: 0,
+    color: '#2E7D32',
+    fontWeight: '500'
+  };
+  
+  const noLocationStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    backgroundColor: 'white',
+    padding: '15px',
+    borderRadius: '8px',
+    textAlign: 'center',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    zIndex: 1000
+  };
+  
   return (
     <div className="map-wrapper" style={{ height: `${height}px` }}>
       {locationError && (
@@ -258,6 +336,15 @@ function LeafletMapComponent({
           <button onClick={() => { setLocationError(null); startTracking(); }}>
             Reintentar
           </button>
+        </div>
+      )}
+      
+      {currentLocation && currentLocation.isDelivered && (
+        <div style={deliveryCompleteStyle} className="delivery-complete-message">
+          <div style={successIconStyle} className="success-icon">
+            <FaCheckCircle size={30} color="#4CAF50" />
+          </div>
+          <p style={deliveryMessageStyle}>{currentLocation.message}</p>
         </div>
       )}
       
@@ -285,7 +372,7 @@ function LeafletMapComponent({
         <MapView center={mapCenter} zoom={15} />
         
         {/* Marcador de ubicación actual */}
-        {currentLocation && (
+        {currentLocation && !currentLocation.isDelivered && (
           <Marker 
             position={[currentLocation.lat, currentLocation.lng]} 
             icon={currentLocationIcon}
@@ -297,9 +384,12 @@ function LeafletMapComponent({
         )}
         
         {/* Marcador de destino */}
-        {destination && destination.lat && destination.lng && (
+        {destination && (
           <Marker 
-            position={[destination.lat, destination.lng]} 
+            position={[
+              parseFloat(destination.lat) || 3.45, 
+              parseFloat(destination.lng) || -76.53
+            ]} 
             icon={destinationIcon}
           >
             <Popup>
@@ -309,10 +399,19 @@ function LeafletMapComponent({
         )}
         
         {/* Mostrar ruta si tenemos las posiciones */}
-        {routePositions && (
+        {routePositions && !currentLocation.isDelivered && (
           <RouteLine positions={routePositions} />
         )}
       </MapContainer>
+      
+      {!currentLocation && !locationError && (
+        <div style={noLocationStyle} className="no-location-info">
+          <p>La ubicación del repartidor aún no está disponible.</p>
+          {pedido && pedido.estado === 'Pendiente' && (
+            <p>La ubicación será visible cuando el pedido esté en camino.</p>
+          )}
+        </div>
+      )}
       
       {showControls && (
         <div className="map-controls">
@@ -336,7 +435,7 @@ function LeafletMapComponent({
         </div>
       )}
       
-      {currentLocation && destination && (
+      {currentLocation && destination && !currentLocation.isDelivered && (
         <div className="map-info">
           <div className="location-info">
             <div className="info-item">
