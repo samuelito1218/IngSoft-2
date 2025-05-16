@@ -88,12 +88,7 @@ router.get(
   authenticate,
   pedidosController.getPedidoDetalle  
 );
-<<<<<<< HEAD
-router.get(
-  "/cliente/activo",
-  authenticate,
-  pedidosController.getPedidoActivo  
-);
+
 // Rutas para restaurantes
 router.get(
   "/restaurante/:restauranteId",
@@ -136,7 +131,5 @@ router.get(
   authorize("Admin"),
   pedidosController.getEstadisticasRestaurante
 );
-=======
 
->>>>>>> 5c147f6cea13243c2f54fbbaa85e56e735026635
 module.exports = router;

@@ -24,41 +24,63 @@ const ClientHome = () => {
   
   // Cargar restaurantes al iniciar
   useEffect(() => {
-    const fetchRestaurants = async () => {
+  const fetchRestaurants = async () => {
+    try {
+      setLoading(true);
+      
+      // Usar una estructura try/catch independiente para cada llamada API
+      let restaurantsData = [];
+      
       try {
-        setLoading(true);
         const response = await ApiService.restaurantes.listar();
         
-        if (response.data && Array.isArray(response.data)) {
-          setRestaurants(response.data);
-          setFilteredRestaurants(response.data);
-          
-          // Extraer categorías únicas
-          const uniqueCategories = [...new Set(
-            response.data.flatMap(restaurant => 
-              restaurant.categorias || ['General']
-            )
-          )];
-          
-          setCategories(['All', ...uniqueCategories]);
+        if (response && response.data && Array.isArray(response.data)) {
+          restaurantsData = response.data.map(r => ({
+            id: r.id || `temp-${Math.random()}`,
+            nombre: r.nombre || 'Restaurante sin nombre',
+            descripcion: r.descripcion || '',
+            imageUrl: r.imageUrl || null,
+            categorias: Array.isArray(r.categorias) ? r.categorias : ['General']
+          }));
         }
-        
-        // Verificar si hay un pedido activo
+      } catch (apiError) {
+        console.error('Error en API de restaurantes:', apiError);
+        // No hacemos rethrow del error - seguimos con un array vacío
+      }
+      
+      setRestaurants(restaurantsData);
+      setFilteredRestaurants(restaurantsData);
+      
+      // Extraer categorías únicas de manera segura
+      const uniqueCategories = [...new Set(
+        restaurantsData.flatMap(restaurant => 
+          restaurant.categorias || ['General']
+        )
+      )];
+      
+      setCategories(['All', ...uniqueCategories]);
+      
+      // Pedido activo en bloque try/catch separado
+      try {
         const pedidoResponse = await ApiService.pedidos.activo();
-        if (pedidoResponse.data && pedidoResponse.data.pedido) {
+        if (pedidoResponse && pedidoResponse.data && pedidoResponse.data.pedido) {
           setActivePedido(pedidoResponse.data);
         }
-        
-        setLoading(false);
-      } catch (error) {
-        console.error('Error al cargar restaurantes:', error);
-        setError('No se pudieron cargar los restaurantes. Intente nuevamente.');
-        setLoading(false);
+      } catch (pedidoError) {
+        console.error('Error al cargar pedido activo:', pedidoError);
+        // No bloqueamos la UI por este error
       }
-    };
-    
-    fetchRestaurants();
-  }, []);
+      
+      setLoading(false);
+    } catch (globalError) {
+      console.error('Error general:', globalError);
+      setError('No se pudieron cargar los datos. Intente nuevamente.');
+      setLoading(false);
+    }
+  };
+  
+  fetchRestaurants();
+}, []);
   
   // Filtrar restaurantes cuando cambia la categoría o el término de búsqueda
   useEffect(() => {

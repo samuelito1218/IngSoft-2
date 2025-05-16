@@ -23,29 +23,17 @@ import DeliveryTracking from './components/client/deliverytracking/DeliveryTrack
 import Checkout from './components/client/checkout/Checkout';
 import RateOrder from './components/client/rateorder/RateOrder';
 
-<<<<<<< HEAD
 // Componentes de Restaurante
-import RestaurantDashboard from './components/restaurant/RestaurantDashboard/RestaurantDashboard';
+/*import RestaurantDashboard from './components/restaurant/RestaurantDashboard/RestaurantDashboard';
 import RestaurantManagement from './components/restaurant/restaurantManagement/RestaurantManagement';
 import RestaurantForm from './components/restaurant/restaurantForm/RestaurantForm';
 import MenuManagement from './components/restaurant/menuManagement/MenuManagement';
 import OrderManagement from './components/restaurant/orderManagement/OrderManagement';
-=======
+*/
 // Componentes de admin
 import AddRestaurant from './components/admin/AddRestaurant';
 import AdminLayout from './components/layouts/Admin';
 import MisRestaurantes from './components/admin/MisRestaurantes';
-
-
-// Componentes de Restaurante - Comentados por ahora
-// import RestaurantDashboard from './components/restaurant/RestaurantDashboard';
-// import OrderManagement from './components/restaurant/OrderManagement';
->>>>>>> 5c147f6cea13243c2f54fbbaa85e56e735026635
-
-// Componentes de Repartidor - Comentados por ahora
-// import DeliveryDashboard from './components/delivery/DeliveryDashboard';
-// import ActiveOrders from './components/delivery/ActiveOrders';
-// import DeliveryNavigation from './components/delivery/DeliveryNavigation';
 
 //Componentes del Repartidor (ensayo)
 import RepartidorLayout from './components/layouts/RepartidorLayout';
@@ -242,7 +230,7 @@ function AppContent() {
               <AdminLayout/>
             </ProtectedRoute>
           }>
-            {/* Cuando vayas a /admin, redirige por defecto a “Mis Restaurantes” */}
+            {/* Cuando vayas a /admin, redirige por defecto a "Mis Restaurantes" */}
             <Route index element={<Navigate to="restaurantes" replace />} />
 
             {/* Listar los restaurantes del admin */}
@@ -363,7 +351,7 @@ function AppContent() {
         />
         
         {/* Rutas Restaurante (Admin) */}
-        <Route 
+        {/*<Route 
           path="/restaurante" 
           element={
             <ProtectedRoute allowedRoles={['Admin']}>
@@ -372,8 +360,9 @@ function AppContent() {
               </RestaurantLayout>
             </ProtectedRoute>
           } 
-        />
-        <Route 
+        />*/}
+
+        {/*<Route 
           path="/restaurante/mis-restaurantes" 
           element={
             <ProtectedRoute allowedRoles={['Admin']}>
@@ -382,8 +371,8 @@ function AppContent() {
               </RestaurantLayout>
             </ProtectedRoute>
           } 
-        />
-        <Route 
+        />*/}
+        {/*<Route 
           path="/restaurante/crear" 
           element={
             <ProtectedRoute allowedRoles={['Admin']}>
@@ -392,8 +381,8 @@ function AppContent() {
               </RestaurantLayout>
             </ProtectedRoute>
           } 
-        />
-        <Route 
+        />*/}
+        {/*<Route 
           path="/restaurante/editar/:id" 
           element={
             <ProtectedRoute allowedRoles={['Admin']}>
@@ -402,8 +391,8 @@ function AppContent() {
               </RestaurantLayout>
             </ProtectedRoute>
           } 
-        />
-        <Route 
+        />*/}
+        {/*<Route 
           path="/restaurante/menu/:restaurantId" 
           element={
             <ProtectedRoute allowedRoles={['Admin']}>
@@ -412,8 +401,8 @@ function AppContent() {
               </RestaurantLayout>
             </ProtectedRoute>
           } 
-        />
-        <Route 
+        />*/}
+        {/*<Route 
           path="/restaurante/pedidos/:restaurantId" 
           element={
             <ProtectedRoute allowedRoles={['Admin']}>
@@ -422,8 +411,8 @@ function AppContent() {
               </RestaurantLayout>
             </ProtectedRoute>
           } 
-        />
-        <Route 
+        />*/}
+        {/*<Route 
           path="/restaurante/perfil" 
           element={
             <ProtectedRoute allowedRoles={['Admin']}>

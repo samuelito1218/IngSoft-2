@@ -11,11 +11,9 @@ const calificacionesRoutes = require("./routes/calificacionesRoutes");
 const restaurantesRoutes = require("./routes/restaurantesRoutes");
 const usuariosRoutes = require('./routes/usuariosRoutes');
 const productosRoutes = require('./routes/productosRoutes');
-<<<<<<< HEAD
 const restaurantesVerificacionRoutes = require('./routes/restaurantesVerificacionRoutes');
-=======
 const sucursalesRoutes = require('./routes/sucursalesRoutes');
->>>>>>> 5c147f6cea13243c2f54fbbaa85e56e735026635
+
 // Cargar variables de entorno
 dotenv.config();
 
@@ -38,12 +36,9 @@ app.use('/api/ubicacion', ubicacionRoutes);
 app.use("/api/restaurantes",restaurantesRoutes); 
 app.use('/api/usuarios', usuariosRoutes); 
 app.use('/api/productos', productosRoutes);
-<<<<<<< HEAD
 app.use('/api/restaurantes/verificacion', restaurantesVerificacionRoutes);
-=======
-app.use('/api/sucursales',sucursalesRoutes);
+app.use('/api/sucursales', sucursalesRoutes);
 
->>>>>>> 5c147f6cea13243c2f54fbbaa85e56e735026635
 // Ruta de prueba
 app.get('/', (req, res) => {
   res.json({ message: 'API de AppPedidos funcionando correctamente' });
@@ -62,4 +57,3 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
-

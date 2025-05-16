@@ -78,7 +78,6 @@ const ApiService = {
     direcciones: () => api.get('/usuarios/direcciones'),
     guardarDireccion: (data) => api.post('/usuarios/direcciones', data),
     perfil: () => api.get('/usuarios/perfil'),
-    // Nuevo método para obtener un usuario por ID
     obtenerUsuario: (id) => api.get(`/usuarios/${id}`),
     actualizarPerfil: (data) => api.put('/usuarios/perfil', data),
     actualizarImagen: (data) => api.put('/usuarios/perfil/imagen', data)
@@ -93,7 +92,7 @@ const ApiService = {
     editar: (id, data) => api.put(`/pedidos/editar/${id}`, data),
     calificar: (id, data) => api.post(`/calificaciones/calificar/${id}`, data),
 
-    // Nuevos métodos para repartidores (corregidos):
+    // Métodos para repartidores:
     disponibles: () => api.get('/pedidos/disponibles'),
     repartidorActivos: () => api.get('/pedidos/repartidor/activos'),
     repartidorHistorial: () => api.get('/pedidos/repartidor/historial'),
@@ -118,18 +117,15 @@ const ApiService = {
     buscar: (query) => api.get(`/restaurantes?search=${query}`),
     detalle: (id) => api.get(`/restaurantes/${id}`),
     productos: (restauranteId) => api.get(`/restaurantes/${restauranteId}/productos`),
-<<<<<<< HEAD
-    verificar: (id) => api.get(`/restaurantes/verificacion/${id}`)
-=======
-    crear: (data) => api.post('/restaurantes/crear',data)
->>>>>>> 5c147f6cea13243c2f54fbbaa85e56e735026635
+    verificar: (id) => api.get(`/restaurantes/verificacion/${id}`),
+    crear: (data) => api.post('/restaurantes/crear', data)
   },
   sucursales: {
        listar:    () => api.get('/sucursales'),
        detalle:   id => api.get(`/sucursales/${id}`),
-       crear:     data => api.post('/sucursales', data),        // <— nuevo endpoint
-       actualizar:data => api.put(`/sucursales/${data.id}`, data), // opcional
-       eliminar:  id => api.delete(`/sucursales/${id}`)         // opcional
+       crear:     data => api.post('/sucursales', data),
+       actualizar:data => api.put(`/sucursales/${data.id}`, data),
+       eliminar:  id => api.delete(`/sucursales/${id}`)
      },
   
   // Métodos para mensajes
@@ -159,8 +155,6 @@ const ApiService = {
     porRestaurante: (restauranteId) => api.get(`/productos/restaurante/${restauranteId}`)
   }
 };
-//Métodos para repartidores
-
 
 export { api };
 export default ApiService;

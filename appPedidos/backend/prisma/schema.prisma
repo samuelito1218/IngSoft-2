@@ -26,20 +26,18 @@ model Restaurantes {
   descripcion String?
   ubicaciones RestaurantesUbicaciones[]
   productos   Productos[]                 @relation("RestaurantesProductos")
-<<<<<<< HEAD
   usuariosIds String[]                    @db.ObjectId
   verificado  Boolean                     @default(true)
-=======
-  ownerId       String   @db.ObjectId
-  owner         Usuarios     @relation(fields: [ownerId], references: [id])
-  imageUrl String?
->>>>>>> 5c147f6cea13243c2f54fbbaa85e56e735026635
+  ownerId     String                      @db.ObjectId
+  owner       Usuarios                    @relation(fields: [ownerId], references: [id])
+  imageUrl    String?
 }
 
 type RestaurantesUbicaciones {
   sucursal_Id String @db.ObjectId
   comuna      String
 }
+
 model Sucursales {
   id             String @id @map("_id") @db.ObjectId @default(auto())
   nombre         String
@@ -112,6 +110,7 @@ model Pedidos {
   listoPorRestaurante    Boolean?              @default(false)  // Marca si el pedido está preparado y listo
   motivoRechazo          String?                                // Motivo si el restaurante rechaza el pedido
 }
+
 enum EstadoPedido {
   Pendiente
   En_Camino
@@ -129,7 +128,6 @@ model Productos {
   restaurante      Restaurantes @relation("RestaurantesProductos", fields: [restaurante_Id], references: [id])
 }
 
-
 /// This collection uses a JSON Schema defined in the database, which requires additional setup for migrations. Visit https://pris.ly/d/mongodb-json-schema for more info.
 model Usuarios {
   id                   String               @id @default(auto()) @map("_id") @db.ObjectId
@@ -145,12 +143,9 @@ model Usuarios {
   historialDirecciones HistorialDireccion[]
   resetToken           String?              @db.String
   resetTokenExpiry     String?              @db.String
-<<<<<<< HEAD
   restaurantesIds      String[]             @db.ObjectId
   verificado           Boolean              @default(true) // Los clientes y repartidores están verificados por defecto
-=======
-  restaurants  Restaurantes[] // ahora Prisma infiere la relación inversa automáticamente
->>>>>>> 5c147f6cea13243c2f54fbbaa85e56e735026635
+  restaurants          Restaurantes[]       // Relación inversa con restaurantes
 }
 
 type HistorialDireccion {
