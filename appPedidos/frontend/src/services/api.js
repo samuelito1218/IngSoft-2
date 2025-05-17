@@ -1,4 +1,4 @@
-// src/services/api.js
+// Updated ApiService.js with obtenerUsuario method
 import axios from 'axios';
 
 // Definir la URL base de la API
@@ -56,7 +56,11 @@ const ApiService = {
     actualizar: (userData) => apiClient.put('/usuarios/perfil', userData),
     actualizarImagen: (formData) => apiClient.post('/usuarios/imagen', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
-    })
+    }),
+    direcciones: () => apiClient.get('/usuarios/direcciones'),
+    guardarDireccion: (data) => apiClient.post('/usuarios/direcciones', data),
+    // Añadir método para obtener información de usuario/repartidor
+    obtenerUsuario: (userId) => apiClient.get(`/usuarios/${userId}`)
   },
   
   // Restaurantes
@@ -81,7 +85,7 @@ const ApiService = {
   
   // Pedidos
   pedidos: {
-    crear: (data) => apiClient.post('/pedidos', data),
+    crear: (data) => apiClient.post('/pedidos/crear', data),
     listar: () => apiClient.get('/historial'),
     detalle: (id) => apiClient.get(`/pedidos/${id}`),
     asignarRepartidor: (pedidoId, repartidorId) => apiClient.put(`/pedidos/${pedidoId}/repartidor`, { repartidorId }),
@@ -89,7 +93,8 @@ const ApiService = {
     rechazar: (pedidoId, motivo) => apiClient.put(`/pedidos/${pedidoId}/rechazar`, { motivo }),
     marcarListo: (pedidoId) => apiClient.put(`/pedidos/${pedidoId}/listo`),
     cambiarEstado: (pedidoId, estado) => apiClient.put(`/pedidos/${pedidoId}/estado`, { estado }),
-    calificar: (pedidoId, data) => apiClient.post(`/pedidos/${pedidoId}/calificacion`, data),
+    // Corregir endpoint para calificar pedidos (basado en OrderService.js)
+    calificar: (pedidoId, data) => apiClient.post(`/calificaciones/calificar/${pedidoId}`, data),
     historial: () => apiClient.get('/pedidos/cliente'),
     activo: () => apiClient.get('/pedidos/cliente/activo')
   },
@@ -118,7 +123,8 @@ const ApiService = {
   pagos: {
     crear: (pedidoId, data) => apiClient.post(`/pagos/pedido/${pedidoId}`, data),
     detalle: (pagoId) => apiClient.get(`/pagos/${pagoId}`),
-    solicitudReembolso: (pagoId, motivo) => apiClient.post(`/pagos/${pagoId}/reembolso`, { motivo })
+    solicitudReembolso: (pagoId, motivo) => apiClient.post(`/pagos/${pagoId}/reembolso`, { motivo }),
+    crearIntencion: (pedidoId) => apiClient.post(`/pagos/intencion/${pedidoId}`)
   }
 };
 

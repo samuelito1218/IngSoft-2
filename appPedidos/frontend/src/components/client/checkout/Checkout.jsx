@@ -133,68 +133,113 @@ const Checkout = () => {
   
   // Confirmar pedido
   const handleConfirmarPedido = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Crear estructura de datos para el pedido
-      const productos = cartItems.map(item => ({
-        productoId: item.id,
-        cantidad: item.quantity
-      }));
-      
-      const pedidoData = {
-        direccionEntrega: direccion,
-        productos,
-        metodoPago
-      };
-      
-      // Guardar dirección si se seleccionó la opción
-      if (guardaDireccion && user) {
-        try {
-          await ApiService.usuarios.guardarDireccion({ direccion });
-        } catch (dirError) {
-          console.error('Error al guardar dirección:', dirError);
-          // No interrumpir el flujo si falla el guardado de dirección
-        }
+  try {
+    setLoading(true);
+    setError(null);
+    
+    // Crear estructura de datos para el pedido
+    const productos = cartItems.map(item => ({
+      productoId: item.id,
+      cantidad: item.quantity
+    }));
+    
+    // Convertir comuna a número entero antes de enviar al servidor
+    const direccionFormateada = {
+      ...direccion,
+      comuna: parseInt(direccion.comuna, 10) // Convertir a entero
+    };
+    
+    const pedidoData = {
+      direccionEntrega: direccionFormateada,
+      productos,
+      metodoPago
+    };
+    
+    // Guardar dirección si se seleccionó la opción
+    if (guardaDireccion && user) {
+      try {
+        // También convertir comuna a entero para guardar dirección
+        await ApiService.usuarios.guardarDireccion({ 
+          direccion: direccionFormateada 
+        });
+        console.log('Dirección guardada correctamente');
+      } catch (dirError) {
+        console.error('Error al guardar dirección:', dirError);
+        // No interrumpir el flujo si falla el guardado de dirección
       }
-      
-      // Enviar pedido al backend
-      const response = await ApiService.pedidos.crear(pedidoData);
-      
-      if (response.data && response.data.id) {
-        setPedidoId(response.data.id);
-        setSuccess(true);
-        clearCart(); // Limpiar carrito después de crear el pedido
-        
-        // Si el método de pago es tarjeta, proceder al pago
-        if (metodoPago === 'tarjeta') {
-          try {
-            // Crear intención de pago
-            const pagoResponse = await ApiService.pagos.crearIntencion(response.data.id);
-            if (pagoResponse.data && pagoResponse.data.clientSecret) {
-              // Redirigir a la página de pago
-              navigate(`/cliente/pago/${response.data.id}`, {
-                state: { clientSecret: pagoResponse.data.clientSecret }
-              });
-              return;
-            }
-          } catch (pagoError) {
-            console.error('Error al crear intención de pago:', pagoError);
-            // Continuar mostrando éxito aunque falle el pago
-          }
-        }
-      } else {
-        throw new Error('Error al crear el pedido');
-      }
-      
-      setLoading(false);
-    } catch (error) {
-      console.error('Error al confirmar pedido:', error);
-      setError('Error al confirmar el pedido. Inténtalo de nuevo.');
-      setLoading(false);
     }
-  };
+    
+    // Log para depuración
+    console.log('Enviando datos del pedido:', pedidoData);
+    
+    // Enviar pedido al backend
+    const response = await ApiService.pedidos.crear(pedidoData);
+    console.log('Respuesta del servidor:', response);
+    
+    if (response.data && response.data.id) {
+      setPedidoId(response.data.id);
+      setSuccess(true);
+      clearCart(); // Limpiar carrito después de crear el pedido
+      
+      // Si el método de pago es tarjeta, proceder al pago
+      if (metodoPago === 'tarjeta') {
+        try {
+          // Crear intención de pago
+          const pagoResponse = await ApiService.pagos.crearIntencion(response.data.id);
+          if (pagoResponse.data && pagoResponse.data.clientSecret) {
+            // Redirigir a la página de pago
+            navigate(`/cliente/pago/${response.data.id}`, {
+              state: { clientSecret: pagoResponse.data.clientSecret }
+            });
+            return;
+          }
+        } catch (pagoError) {
+          console.error('Error al crear intención de pago:', pagoError);
+          // Continuar mostrando éxito aunque falle el pago
+        }
+      }
+    } else {
+      throw new Error('Error al crear el pedido: Respuesta del servidor sin ID');
+    }
+    
+    setLoading(false);
+  } catch (error) {
+    console.error('Error al confirmar pedido:', error);
+    
+    // Mejorar el mensaje de error basado en el tipo de error
+    let errorMsg = 'Error al confirmar el pedido. Inténtalo de nuevo.';
+    
+    if (error.response) {
+      // Error de respuesta del servidor
+      if (error.response.status === 404) {
+        errorMsg = 'Endpoint no encontrado. Verifica la configuración del API.';
+      } else if (error.response.status === 400) {
+        errorMsg = error.response.data.message || 'Datos inválidos. Verifica la información ingresada.';
+      } else if (error.response.status === 401) {
+        errorMsg = 'Sesión expirada. Por favor, inicia sesión nuevamente.';
+      } else if (error.response.status === 500) {
+        // Buscar el mensaje de error específico en la respuesta
+        if (error.response.data && error.response.data.error && 
+            typeof error.response.data.error === 'string' && 
+            error.response.data.error.includes('Expected Int, provided String')) {
+          errorMsg = 'Error en el tipo de datos: La comuna debe ser un número.';
+        } else if (error.response.data && error.response.data.message) {
+          errorMsg = error.response.data.message;
+        } else {
+          errorMsg = 'Error en el servidor. Por favor, contacta al administrador.';
+        }
+      } else if (error.response.data && error.response.data.message) {
+        errorMsg = error.response.data.message;
+      }
+    } else if (error.request) {
+      // Error de conexión
+      errorMsg = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
+    }
+    
+    setError(errorMsg);
+    setLoading(false);
+  }
+};
   
   // Ver detalles del pedido creado
   const verPedido = () => {

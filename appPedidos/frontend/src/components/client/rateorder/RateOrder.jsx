@@ -51,10 +51,22 @@ const RateOrder = () => {
         // Obtener información del repartidor si existe
         if (pedidoData.repartidor_Id) {
           try {
-            // Usamos el nuevo endpoint para obtener información del repartidor
-            const repartidorResponse = await ApiService.usuarios.obtenerUsuario(pedidoData.repartidor_Id);
-            if (repartidorResponse.data) {
-              setRepartidor(repartidorResponse.data);
+            // Verificar si tenemos el método implementado
+            if (typeof ApiService.usuarios.obtenerUsuario === 'function') {
+              const repartidorResponse = await ApiService.usuarios.obtenerUsuario(pedidoData.repartidor_Id);
+              if (repartidorResponse.data) {
+                setRepartidor(repartidorResponse.data);
+              }
+            } else {
+              // Si el método no existe, usar información del repartidor de la respuesta del pedido
+              if (responsePedido.data.repartidor) {
+                setRepartidor(responsePedido.data.repartidor);
+              } else {
+                // Usar información mínima
+                setRepartidor({
+                  nombreCompleto: 'Repartidor #' + pedidoData.repartidor_Id.slice(-4)
+                });
+              }
             }
           } catch (repartidorError) {
             console.error('Error al obtener información del repartidor:', repartidorError);
@@ -129,13 +141,66 @@ const RateOrder = () => {
         comentarios: comentarios.trim()
       };
       
-      // Enviar calificación al backend usando ApiService
-      const response = await ApiService.pedidos.calificar(pedidoId, calificacionData);
+      console.log(`Enviando calificación para pedido ${pedidoId}:`, calificacionData);
       
-      if (response.data && response.data.message) {
+      // Intentar primer método de API (vía ApiService)
+      let success = false;
+      try {
+        const response = await ApiService.pedidos.calificar(pedidoId, calificacionData);
+        console.log('Respuesta del servidor (calificar):', response);
+        
+        if (response.data && (response.data.message || response.status === 200 || response.status === 201)) {
+          success = true;
+        }
+      } catch (apiError) {
+        console.error('Error con ApiService.pedidos.calificar:', apiError);
+        
+        // Si falla, intentar con el OrderService
+        if (typeof OrderService !== 'undefined' && typeof OrderService.rateOrder === 'function') {
+          try {
+            const orderServiceResponse = await OrderService.rateOrder(pedidoId, calificacionData);
+            console.log('Respuesta de OrderService:', orderServiceResponse);
+            
+            if (orderServiceResponse.success) {
+              success = true;
+            } else {
+              throw new Error(orderServiceResponse.message || 'Error al calificar con OrderService');
+            }
+          } catch (orderServiceError) {
+            console.error('Error con OrderService.rateOrder:', orderServiceError);
+            // Falló también el segundo intento, lanzar error
+            throw apiError; // Re-lanzar el error original
+          }
+        } else {
+          // Si OrderService no está disponible, intentar directamente con axios
+          try {
+            const axiosResponse = await axios.post(
+              `${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/calificaciones/calificar/${pedidoId}`, 
+              calificacionData,
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+              }
+            );
+            
+            console.log('Respuesta directa de axios:', axiosResponse);
+            if (axiosResponse.data) {
+              success = true;
+            }
+          } catch (axiosError) {
+            console.error('Error con llamada directa de axios:', axiosError);
+            // Falló también el tercer intento, lanzar error
+            throw apiError; // Re-lanzar el error original
+          }
+        }
+      }
+      
+      if (success) {
         setSuccess(true);
       } else {
-        throw new Error('Error al enviar calificación');
+        throw new Error('No se pudo procesar la calificación');
       }
       
       setSubmitting(false);
