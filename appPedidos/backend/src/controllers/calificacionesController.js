@@ -1,76 +1,117 @@
-const { PrismaClient, Prisma } = require('@prisma/client');
+const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-exports.calificarPedido = async (req,res) =>{
-    try{
-        const { pedidoId } = req.params;
-        const { calificacionRepartidor, calificacionPedido, comentarios } = req.body;
-        const clienteId = req.user.id; //ID del cliente autenticado
-    //Buscar pedido
-
+exports.calificarPedido = async (req, res) => {
+  try {
+    const { pedidoId } = req.params;
+    const { calificacionRepartidor, calificacionPedido, comentarios } = req.body;
+    const usuario_id = req.user.id;
+    
+    if (calificacionPedido === undefined || calificacionRepartidor === undefined) {
+      return res.status(400).json({ message: 'Faltan datos de calificación' });
+    }
+    
+    if (typeof calificacionPedido !== 'number' || typeof calificacionRepartidor !== 'number') {
+      return res.status(400).json({ message: 'Las calificaciones deben ser numéricas' });
+    }
+    
+    if (calificacionPedido < 1 || calificacionPedido > 5 || calificacionRepartidor < 1 || calificacionRepartidor > 5) {
+      return res.status(400).json({ message: 'Las calificaciones deben estar entre 1 y 5' });
+    }
+    
     const pedido = await prisma.pedidos.findUnique({
-        where: {id:pedidoId}
+      where: { id: pedidoId }
     });
-
-    if (!pedido){
-        return res.status(404).json({message: "Pedido no encontrado"});
-
+    
+    if (!pedido) {
+      return res.status(404).json({ message: 'Pedido no encontrado' });
     }
-    //Verificar que ese pedido pertenece a un cliente autenticado
-
-    if (pedido.usuario_id !==clienteId){
-        return res.status(403).json({message: "No tienes permiso para calificar este pedido"});
+    
+    if (pedido.usuario_id !== usuario_id) {
+      return res.status(403).json({ message: 'No tienes permiso para calificar este pedido' });
     }
-
-    //Verificar que el pedido esté en estado Entregado
-
-    if (pedido.estado !== "Entregado"){
-        return res.status(400).json({message:"Solo puedes calificar pedidos entregados"});
+    
+    if (pedido.estado !== 'Entregado') {
+      return res.status(400).json({ message: 'Solo se pueden calificar pedidos entregados' });
     }
-
-    //Validar rangos de calificación
-    if(
-        typeof calificacionRepartidor !== "number" ||
-        typeof calificacionPedido !== "number" ||
-        calificacionRepartidor < 1 || calificacionRepartidor > 5 ||
-        calificacionPedido <1 || calificacionPedido > 5
-    ) {
-        return res.status(400).json({
-            message: "Las calificaciones deben ser números entre 1 y 5"
-        });
-    }
-
-    //Verificar que aún no exista una calificacion para este pedido
-
-    const yaCalificado = await prisma.calificaciones.findFirst({
-        where: {pedidoId}
+    
+    const calificacionExistente = await prisma.calificaciones.findFirst({
+      where: { pedido_id: pedidoId }
     });
-    if (yaCalificado){
-        return res.status(400).json({message: "Este pedido ya ha sido calificado"});
+    
+    if (calificacionExistente) {
+      return res.status(400).json({ message: 'Este pedido ya ha sido calificado' });
     }
-
-    //Crear la calificación
-    const nuevaCalificacion = await prisma.calificaciones.create({
-        data: {
-            calificacionRepartidor,
-            calificacionPedido,
-            comentarios,
-            pedidoId
-        }
+    
+    const calificacion = await prisma.calificaciones.create({
+      data: {
+        pedido_id: pedidoId,
+        usuario_id,
+        repartidor_Id: pedido.repartidor_Id,
+        calificacionRepartidor,
+        calificacionPedido,
+        comentarios: comentarios || '',
+        fechaCreacion: new Date()
+      }
     });
-
+    
     res.status(201).json({
-        message: "Calificación registrada exitosamente",
-        calificacion: nuevaCalificacion
+      message: 'Calificación guardada correctamente',
+      calificacion
+    });
+  } catch (error) {
+    console.error('Error al calificar pedido:', error);
+    res.status(500).json({ message: 'Error al guardar la calificación', error: error.message });
+  }
+};
+
+exports.getCalificacionesRepartidor = async (req, res) => {
+  try {
+    const { repartidorId } = req.params;
+    
+    const calificaciones = await prisma.calificaciones.findMany({
+      where: { repartidor_Id: repartidorId },
+      orderBy: { fechaCreacion: 'desc' }
     });
     
-    
-    } catch (error){
-        console.error("Error al calificar pedido:", error);
-        res.status(500).json({
-            message: "Error interno al calificar el pedido",
-            error: error.message
-        });
+    let promedio = 0;
+    if (calificaciones.length > 0) {
+      const suma = calificaciones.reduce((acc, cal) => acc + cal.calificacionRepartidor, 0);
+      promedio = suma / calificaciones.length;
     }
+    
+    res.status(200).json({
+      calificaciones,
+      promedio,
+      totalCalificaciones: calificaciones.length
+    });
+  } catch (error) {
+    console.error('Error al obtener calificaciones del repartidor:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener calificaciones', 
+      error: error.message 
+    });
+  }
+};
 
+exports.getCalificacionesUsuario = async (req, res) => {
+  try {
+    const usuario_id = req.user.id;
+    
+    const calificaciones = await prisma.calificaciones.findMany({
+      where: { usuario_id },
+      orderBy: { fechaCreacion: 'desc' },
+      include: {
+        pedido: true
+      }
+    });
+    
+    res.status(200).json(calificaciones);
+  } catch (error) {
+    console.error('Error al obtener calificaciones del usuario:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener calificaciones', 
+      error: error.message 
+    });
+  }
 };

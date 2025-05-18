@@ -23,9 +23,26 @@ const DeliveryTracking = () => {
   const [repartidorLocation, setRepartidorLocation] = useState(null);
   const [statusStep, setStatusStep] = useState(1); // 1: Pendiente, 2: En_Camino, 3: Entregado
   const [locationAttempted, setLocationAttempted] = useState(false);
+  const [permissionDenied, setPermissionDenied] = useState(false);
   
   // Cargar datos del pedido
   useEffect(() => {
+    const checkGeolocationPermission = async () => {
+      try {
+        const result = await navigator.permissions.query({ name: 'geolocation' });
+        if (result.state === 'denied') {
+          setPermissionDenied(true);
+        }
+        result.addEventListener('change', () => {
+          setPermissionDenied(result.state === 'denied');
+        });
+      } catch (error) {
+        console.error('Error al verificar permisos:', error);
+      }
+    };
+
+    checkGeolocationPermission();
+
     const fetchPedidoData = async () => {
       try {
         setLoading(true);
@@ -62,14 +79,16 @@ const DeliveryTracking = () => {
         }
         
         // Obtener ubicación inicial solo si hay repartidor asignado y no lo hemos intentado antes
-        if (pedidoData.repartidor_Id && !locationAttempted) {
+        if (pedidoData.repartidor_Id && pedidoData.estado === 'En_Camino' && !locationAttempted) {
           try {
             const locationData = await LocationService.getCurrentLocation(pedidoId);
             if (locationData) {
               setRepartidorLocation(locationData);
+            } else {
+              console.log("Ubicación no disponible, esperando actualizaciones en tiempo real");
             }
-          } catch (error) {
-            console.log("No se pudo obtener la ubicación inicial, se intentará mediante suscripción");
+          } catch (locationError) {
+            console.error("Error al obtener ubicación inicial:", locationError);
           } finally {
             setLocationAttempted(true);
           }
@@ -78,22 +97,24 @@ const DeliveryTracking = () => {
         setLoading(false);
       } catch (error) {
         console.error('Error al cargar información del pedido:', error);
-        setError('No se pudo cargar la información del pedido. Intente nuevamente.');
+        setError('No se pudo cargar la información del pedido. Por favor, intente nuevamente.');
         setLoading(false);
       }
     };
     
-    fetchPedidoData();
-    
-    // Suscribirse a actualizaciones de ubicación solo si hay un ID de pedido
     let unsubscribeLocation = () => {};
     
     if (pedidoId) {
+      fetchPedidoData();
+      
       unsubscribeLocation = LocationService.subscribeToLocationUpdates(
         pedidoId,
         (locationData, error) => {
-          // Solo actualizar si hay datos válidos y no hay error
-          if (locationData && !error) {
+          if (error) {
+            console.error('Error en actualización de ubicación:', error);
+            return;
+          }
+          if (locationData) {
             setRepartidorLocation(locationData);
           }
         }
@@ -162,23 +183,21 @@ const DeliveryTracking = () => {
   
   if (error) {
     return (
-      <div className="delivery-tracking error">
-        <div className="error-container">
-          <p>{error}</p>
-          <button onClick={() => window.location.reload()}>Reintentar</button>
-          <button onClick={handleBack} className="secondary">Volver atrás</button>
-        </div>
+      <div className="error-container">
+        <h3>Error</h3>
+        <p>{error}</p>
+        <button onClick={() => window.location.reload()} className="retry-button">
+          Reintentar
+        </button>
       </div>
     );
   }
   
   if (!pedido) {
     return (
-      <div className="delivery-tracking error">
-        <div className="error-container">
-          <p>No se encontró el pedido solicitado.</p>
-          <button onClick={handleBack}>Volver a mis pedidos</button>
-        </div>
+      <div className="error-container">
+        <h3>Pedido no encontrado</h3>
+        <p>No se pudo encontrar información sobre este pedido.</p>
       </div>
     );
   }
@@ -192,6 +211,19 @@ const DeliveryTracking = () => {
         <h2>Seguimiento de Pedido</h2>
       </div>
       
+      {permissionDenied && (
+        <div className="permission-denied-alert">
+          <h3>Permisos de Ubicación Denegados</h3>
+          <p>Para ver la ubicación del repartidor, necesitas habilitar los permisos de ubicación en tu navegador.</p>
+          <ol>
+            <li>Haz clic en el ícono de candado o información en la barra de direcciones</li>
+            <li>Busca los permisos de ubicación</li>
+            <li>Cambia el permiso a "Permitir"</li>
+            <li>Recarga la página</li>
+          </ol>
+        </div>
+      )}
+
       <div className="delivery-status">
         <div className="status-steps">
           <div className={`status-step ${statusStep >= 1 ? 'active' : ''} ${statusStep > 1 ? 'completed' : ''}`}>

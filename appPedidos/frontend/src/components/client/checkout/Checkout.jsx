@@ -1,4 +1,3 @@
-// src/components/client/Checkout.jsx
 import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaCreditCard, FaMoneyBillWave, FaMapMarkerAlt, FaSave } from 'react-icons/fa';
@@ -42,23 +41,63 @@ const Checkout = () => {
     }
   }, [cartItems, navigate, success]);
   
-  // Cargar direcciones guardadas
+  // Versión simplificada para cargar direcciones (sin llamadas API)
+  // Esta es una solución temporal mientras se resuelven los problemas de backend
   useEffect(() => {
-    const fetchDirecciones = async () => {
-      try {
-        if (user) {
-          const response = await ApiService.usuarios.direcciones();
-          if (response.data && Array.isArray(response.data)) {
-            setDireccionesGuardadas(response.data);
-          }
-        }
-      } catch (error) {
-        console.error('Error al cargar direcciones guardadas:', error);
-      }
-    };
+  // Solo proceder si hay un usuario autenticado
+  if (!user) return;
+  
+  const cargarDirecciones = async () => {
+    console.log('Intentando cargar direcciones para usuario:', user.id);
     
-    fetchDirecciones();
-  }, [user]);
+    try {
+      // Intenta cargar direcciones desde la API
+      const response = await ApiService.usuarios.perfil(); // Cambiado a perfil() en lugar de direcciones()
+      console.log('Respuesta de perfil:', response);
+      
+      // Verificar si el usuario tiene direcciones guardadas en su perfil
+      if (response.data && response.data.historialDirecciones && 
+          Array.isArray(response.data.historialDirecciones) && 
+          response.data.historialDirecciones.length > 0) {
+        
+        console.log('Direcciones encontradas:', response.data.historialDirecciones);
+        setDireccionesGuardadas(response.data.historialDirecciones);
+        
+        // Si hay direcciones, seleccionar la primera por defecto
+        if (response.data.historialDirecciones.length > 0) {
+          const ultimaDireccion = response.data.historialDirecciones[response.data.historialDirecciones.length - 1];
+          setDireccion(ultimaDireccion);
+          setDireccionSeleccionada(ultimaDireccion);
+          console.log('Dirección seleccionada automáticamente:', ultimaDireccion);
+        }
+      } else {
+        console.log('No se encontraron direcciones guardadas');
+        setDireccionesGuardadas([]);
+      }
+    } catch (error) {
+      console.error('Error al cargar direcciones:', error);
+      
+      // Si hay un error, inicializar con un array vacío
+      setDireccionesGuardadas([]);
+      
+      // Aquí podrías cargar datos ficticios para pruebas si lo deseas
+      /*
+      const direccionesEjemplo = [
+        {
+          barrio: "El Poblado",
+          comuna: 14,
+          direccionEspecifica: "Calle 10 #43-12"
+        }
+      ];
+      setDireccionesGuardadas(direccionesEjemplo);
+      */
+    }
+  };
+  
+  // Ejecutar la carga de direcciones
+  cargarDirecciones();
+  
+}, [user]); // Dependencia: usuario // Dependencia: usuario
   
   // Formatear precio
   const formatPrice = (price) => {
@@ -133,113 +172,128 @@ const Checkout = () => {
   
   // Confirmar pedido
   const handleConfirmarPedido = async () => {
-  try {
-    setLoading(true);
-    setError(null);
-    
-    // Crear estructura de datos para el pedido
-    const productos = cartItems.map(item => ({
-      productoId: item.id,
-      cantidad: item.quantity
-    }));
-    
-    // Convertir comuna a número entero antes de enviar al servidor
-    const direccionFormateada = {
-      ...direccion,
-      comuna: parseInt(direccion.comuna, 10) // Convertir a entero
-    };
-    
-    const pedidoData = {
-      direccionEntrega: direccionFormateada,
-      productos,
-      metodoPago
-    };
-    
-    // Guardar dirección si se seleccionó la opción
-    if (guardaDireccion && user) {
-      try {
-        // También convertir comuna a entero para guardar dirección
-        await ApiService.usuarios.guardarDireccion({ 
-          direccion: direccionFormateada 
-        });
-        console.log('Dirección guardada correctamente');
-      } catch (dirError) {
-        console.error('Error al guardar dirección:', dirError);
-        // No interrumpir el flujo si falla el guardado de dirección
-      }
-    }
-    
-    // Log para depuración
-    console.log('Enviando datos del pedido:', pedidoData);
-    
-    // Enviar pedido al backend
-    const response = await ApiService.pedidos.crear(pedidoData);
-    console.log('Respuesta del servidor:', response);
-    
-    if (response.data && response.data.id) {
-      setPedidoId(response.data.id);
-      setSuccess(true);
-      clearCart(); // Limpiar carrito después de crear el pedido
+    try {
+      setLoading(true);
+      setError(null);
       
-      // Si el método de pago es tarjeta, proceder al pago
-      if (metodoPago === 'tarjeta') {
-        try {
-          // Crear intención de pago
-          const pagoResponse = await ApiService.pagos.crearIntencion(response.data.id);
-          if (pagoResponse.data && pagoResponse.data.clientSecret) {
-            // Redirigir a la página de pago
-            navigate(`/cliente/pago/${response.data.id}`, {
-              state: { clientSecret: pagoResponse.data.clientSecret }
-            });
-            return;
+      // Crear estructura de datos para el pedido
+      const productos = cartItems.map(item => ({
+        productoId: item.id,
+        cantidad: item.quantity
+      }));
+      
+      // Convertir comuna a número entero antes de enviar al servidor
+      const direccionFormateada = {
+        ...direccion,
+        comuna: parseInt(direccion.comuna, 10) // Convertir a entero
+      };
+      
+      const pedidoData = {
+        direccionEntrega: direccionFormateada,
+        productos,
+        metodoPago
+      };
+      
+      // Simular guardado de dirección (sin llamada API)
+      if (guardaDireccion && user) {
+          try {
+            // Actualizar el perfil del usuario con la nueva dirección
+            const perfilActual = await ApiService.usuarios.perfil();
+            
+            if (perfilActual.data) {
+              // Crear un historial de direcciones si no existe
+              const historialDirecciones = perfilActual.data.historialDirecciones || [];
+              
+              // Añadir la nueva dirección
+              const actualizado = await ApiService.usuarios.actualizar({
+                ...perfilActual.data,
+                historialDirecciones: [
+                  ...historialDirecciones,
+                  direccionFormateada
+                ]
+              });
+              
+              console.log('Dirección guardada correctamente:', actualizado);
+            } else {
+              console.error('No se pudo obtener el perfil actual');
+            }
+          } catch (dirError) {
+            console.error('Error al guardar dirección:', dirError);
+            // No interrumpir el flujo si falla el guardado de dirección
           }
-        } catch (pagoError) {
-          console.error('Error al crear intención de pago:', pagoError);
-          // Continuar mostrando éxito aunque falle el pago
         }
+      
+      // Log para depuración
+      console.log('Enviando datos del pedido:', pedidoData);
+      
+      // Enviar pedido al backend
+      const response = await ApiService.pedidos.crear(pedidoData);
+      console.log('Respuesta del servidor:', response);
+      
+      if (response.data && response.data.id) {
+        setPedidoId(response.data.id);
+        setSuccess(true);
+        clearCart(); // Limpiar carrito después de crear el pedido
+        
+        // Si el método de pago es tarjeta, proceder al pago
+        if (metodoPago === 'tarjeta') {
+          try {
+            // Crear intención de pago
+            const pagoResponse = await ApiService.pagos.crearIntencion(response.data.id);
+            if (pagoResponse.data && pagoResponse.data.clientSecret) {
+              // Redirigir a la página de pago
+              navigate(`/cliente/pago/${response.data.id}`, {
+                state: { clientSecret: pagoResponse.data.clientSecret }
+              });
+              return;
+            }
+          } catch (pagoError) {
+            console.error('Error al crear intención de pago:', pagoError);
+            // Continuar mostrando éxito aunque falle el pago
+          }
+        }
+      } else {
+        throw new Error('Error al crear el pedido: Respuesta del servidor sin ID');
       }
-    } else {
-      throw new Error('Error al crear el pedido: Respuesta del servidor sin ID');
-    }
-    
-    setLoading(false);
-  } catch (error) {
-    console.error('Error al confirmar pedido:', error);
-    
-    // Mejorar el mensaje de error basado en el tipo de error
-    let errorMsg = 'Error al confirmar el pedido. Inténtalo de nuevo.';
-    
-    if (error.response) {
-      // Error de respuesta del servidor
-      if (error.response.status === 404) {
-        errorMsg = 'Endpoint no encontrado. Verifica la configuración del API.';
-      } else if (error.response.status === 400) {
-        errorMsg = error.response.data.message || 'Datos inválidos. Verifica la información ingresada.';
-      } else if (error.response.status === 401) {
-        errorMsg = 'Sesión expirada. Por favor, inicia sesión nuevamente.';
-      } else if (error.response.status === 500) {
-        // Buscar el mensaje de error específico en la respuesta
-        if (error.response.data && error.response.data.error && 
-            typeof error.response.data.error === 'string' && 
-            error.response.data.error.includes('Expected Int, provided String')) {
-          errorMsg = 'Error en el tipo de datos: La comuna debe ser un número.';
+      
+      setLoading(false);
+    } catch (error) {
+      console.error('Error al confirmar pedido:', error);
+      
+      // Mejorar el mensaje de error basado en el tipo de error
+      let errorMsg = 'Error al confirmar el pedido. Inténtalo de nuevo.';
+      
+      if (error.response) {
+        // Error de respuesta del servidor
+        if (error.response.status === 404) {
+          errorMsg = 'Endpoint no encontrado. Verifica la configuración del API.';
+        } else if (error.response.status === 400) {
+          errorMsg = error.response.data.message || 'Datos inválidos. Verifica la información ingresada.';
+        } else if (error.response.status === 401) {
+          errorMsg = 'Sesión expirada. Por favor, inicia sesión nuevamente.';
+        } else if (error.response.status === 500) {
+          // Buscar el mensaje de error específico en la respuesta
+          if (error.response.data && error.response.data.error && 
+              typeof error.response.data.error === 'string' && 
+              error.response.data.error.includes('Expected Int, provided String')) {
+            errorMsg = 'Error en el tipo de datos: La comuna debe ser un número.';
+          } else if (error.response.data && error.response.data.message) {
+            errorMsg = error.response.data.message;
+          } else {
+            errorMsg = 'Error en el servidor. Por favor, contacta al administrador.';
+          }
         } else if (error.response.data && error.response.data.message) {
           errorMsg = error.response.data.message;
-        } else {
-          errorMsg = 'Error en el servidor. Por favor, contacta al administrador.';
         }
-      } else if (error.response.data && error.response.data.message) {
-        errorMsg = error.response.data.message;
+      } else if (error.request) {
+        // Error de conexión
+        errorMsg = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
       }
-    } else if (error.request) {
-      // Error de conexión
-      errorMsg = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
+      
+      setError(errorMsg);
+      setLoading(false);
     }
-    
-    setError(errorMsg);
-    setLoading(false);
-  }
-};
+  };
   
   // Ver detalles del pedido creado
   const verPedido = () => {

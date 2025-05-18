@@ -1,4 +1,3 @@
-// Updated ApiService.js with obtenerUsuario method
 import axios from 'axios';
 
 // Definir la URL base de la API
@@ -54,13 +53,16 @@ const ApiService = {
   usuarios: {
     perfil: () => apiClient.get('/usuarios/perfil'),
     actualizar: (userData) => apiClient.put('/usuarios/perfil', userData),
-    actualizarImagen: (formData) => apiClient.post('/usuarios/imagen', formData, {
+    actualizarImagen: (formData) => apiClient.post('/usuarios/perfil/imagen', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     }),
-    direcciones: () => apiClient.get('/usuarios/direcciones'),
-    guardarDireccion: (data) => apiClient.post('/usuarios/direcciones', data),
-    // Añadir método para obtener información de usuario/repartidor
     obtenerUsuario: (userId) => apiClient.get(`/usuarios/${userId}`)
+  },
+  
+  // Modificación en ApiService.js
+  direcciones: {
+    listar: () => apiClient.get('/api/direcciones'),
+    guardar: (data) => apiClient.post('/api/direcciones', data)
   },
   
   // Restaurantes
@@ -78,6 +80,9 @@ const ApiService = {
   
   // Productos
   productos: {
+    listar: () => apiClient.get('/productos'),
+    detalle: (id) => apiClient.get(`/productos/${id}`),
+    porRestaurante: (restauranteId) => apiClient.get(`/productos/restaurante/${restauranteId}`),
     crear: (data) => apiClient.post('/productos', data),
     actualizar: (id, data) => apiClient.put(`/productos/${id}`, data),
     eliminar: (id) => apiClient.delete(`/productos/${id}`)
@@ -93,7 +98,6 @@ const ApiService = {
     rechazar: (pedidoId, motivo) => apiClient.put(`/pedidos/${pedidoId}/rechazar`, { motivo }),
     marcarListo: (pedidoId) => apiClient.put(`/pedidos/${pedidoId}/listo`),
     cambiarEstado: (pedidoId, estado) => apiClient.put(`/pedidos/${pedidoId}/estado`, { estado }),
-    // Corregir endpoint para calificar pedidos (basado en OrderService.js)
     calificar: (pedidoId, data) => apiClient.post(`/calificaciones/calificar/${pedidoId}`, data),
     historial: () => apiClient.get('/pedidos/cliente'),
     activo: () => apiClient.get('/pedidos/cliente/activo')

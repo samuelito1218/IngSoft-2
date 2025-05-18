@@ -3,12 +3,23 @@ const router = express.Router();
 const calificacionesController = require('../controllers/calificacionesController');
 const { authenticate, authorize } = require('../middlewares/authMiddleware');
 
-// Ruta para que el cliente califique un pedido ya entregado
 router.post(
   '/calificar/:pedidoId',
   authenticate,
-  authorize('Cliente','cliente'),
+  authorize('Cliente', 'cliente'),
   calificacionesController.calificarPedido
+);
+
+router.get(
+  '/repartidor/:repartidorId',
+  authenticate,
+  calificacionesController.getCalificacionesRepartidor
+);
+
+router.get(
+  '/usuario',
+  authenticate,
+  calificacionesController.getCalificacionesUsuario
 );
 
 module.exports = router;
