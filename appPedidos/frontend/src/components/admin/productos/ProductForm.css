@@ -1,104 +1,48 @@
-.add-restaurant-container {
-  max-width: 800px;
-  margin: 0 auto;
+.product-form-container {
+  padding: 24px;
 }
 
 .form-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 24px;
-  gap: 16px;
-}
-
-.form-header h2 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 700;
-  color: #333;
-}
-
-.back-button {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background-color: white;
-  border: 1px solid #e0e0e0;
-  color: #666;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.back-button:hover {
-  background-color: #f5f5f5;
-  border-color: #ccc;
-  color: #333;
-}
-
-.error-message {
-  padding: 16px;
-  background-color: #ffebee;
-  color: #d32f2f;
-  border-radius: 8px;
-  margin-bottom: 24px;
-}
-
-.success-message {
-  padding: 16px;
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  border-radius: 8px;
-  margin-bottom: 24px;
-}
-
-.restaurant-form {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.form-section {
-  background-color: white;
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.form-section h3 {
-  margin: 0 0 24px 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
 }
 
-.add-branch-btn {
+.form-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.close-button {
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background-color: #ff4b2b;
-  color: white;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: #f5f5f5;
   border: none;
-  border-radius: 6px;
-  font-weight: 500;
-  font-size: 14px;
+  color: #666;
+  font-size: 16px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.add-branch-btn:hover {
-  background-color: #e63e1a;
-  transform: translateY(-2px);
+.close-button:hover {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.error-message {
+  padding: 12px 16px;
+  background-color: #ffebee;
+  color: #d32f2f;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
 }
 
 .image-upload-section {
@@ -107,7 +51,7 @@
 
 .image-upload-placeholder {
   width: 100%;
-  height: 200px;
+  height: 180px;
   border: 2px dashed #e0e0e0;
   border-radius: 12px;
   display: flex;
@@ -139,7 +83,7 @@
 .image-preview-container {
   position: relative;
   width: 100%;
-  height: 200px;
+  height: 180px;
   border-radius: 12px;
   overflow: hidden;
 }
@@ -209,71 +153,37 @@
   min-height: 100px;
 }
 
-.branch-container {
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 16px;
+.price-input-container {
+  position: relative;
 }
 
-.branch-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+.currency-symbol {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+  font-weight: 500;
 }
 
-.branch-header h4 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-}
-
-.remove-branch-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background-color: #f44336;
-  color: white;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.remove-branch-btn:hover {
-  background-color: #d32f2f;
-  transform: scale(1.1);
-}
-
-.branch-fields {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-
-.branch-fields .form-group:last-child {
-  grid-column: span 2;
+.price-input-container input {
+  padding-left: 24px;
 }
 
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 16px;
-  margin-top: 16px;
+  gap: 12px;
+  margin-top: 24px;
 }
 
 .cancel-button,
-.submit-button {
-  padding: 12px 24px;
+.save-button {
+  padding: 10px 20px;
   border-radius: 8px;
-  font-weight: 600;
-  font-size: 15px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s;
 }
 
 .cancel-button {
@@ -284,23 +194,24 @@
 
 .cancel-button:hover:not(:disabled) {
   background-color: #e0e0e0;
+  color: #333;
 }
 
-.submit-button {
+.save-button {
   background-color: #ff4b2b;
   color: white;
   border: none;
   box-shadow: 0 4px 8px rgba(255, 75, 43, 0.2);
 }
 
-.submit-button:hover:not(:disabled) {
+.save-button:hover:not(:disabled) {
   background-color: #e63e1a;
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(255, 75, 43, 0.25);
 }
 
 .cancel-button:disabled,
-.submit-button:disabled {
+.save-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
@@ -308,48 +219,22 @@
 }
 
 /* Responsive styles */
-@media (max-width: 768px) {
-  .branch-fields {
-    grid-template-columns: 1fr;
+@media (max-width: 480px) {
+  .product-form-container {
+    padding: 16px;
   }
   
-  .branch-fields .form-group:last-child {
-    grid-column: span 1;
+  .image-upload-placeholder,
+  .image-preview-container {
+    height: 150px;
   }
   
   .form-actions {
     flex-direction: column;
   }
   
-  .cancel-button, 
-  .submit-button {
+  .cancel-button,
+  .save-button {
     width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .form-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  
-  .form-section {
-    padding: 16px;
-  }
-  
-  .section-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  
-  .add-branch-btn {
-    width: 100%;
-  }
-  
-  .image-upload-placeholder, 
-  .image-preview-container {
-    height: 160px;
   }
 }

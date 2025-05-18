@@ -67,7 +67,7 @@ const ApiService = {
   
   // Restaurantes
   restaurantes: {
-    listar: () => apiClient.get('/restaurantes'),
+    listar: () => apiClient.get('admin/restaurantes'),
     detalle: (id) => apiClient.get(`/restaurantes/${id}`),
     productos: (id) => apiClient.get(`/restaurantes/${id}/productos`),
     crear: (data) => apiClient.post('/restaurantes', data),

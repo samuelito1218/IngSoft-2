@@ -43,7 +43,7 @@ function Login() {
         // Redireccionar según el rol
         // Redireccionar según el rol
       if (result.user.rol === 'Admin') {
-        navigate('/restaurante'); // Cambiar de '/admin' a '/restaurante'
+        navigate('/admin'); // Cambiar de '/admin' a '/restaurante'
       } else if (result.user.rol === 'Repartidor') {
         navigate('/repartidor');
       } else if (result.user.rol === 'Cliente') {
