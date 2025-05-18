@@ -1,5 +1,3 @@
-// Archivo App.jsx completo (Rutas actualizadas)
-
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'; 
 import { AuthProvider } from './contexts/AuthContext';
@@ -7,7 +5,6 @@ import { CartProvider } from './contexts/CartContext';
 import { useAuth } from './hooks/useAuth';
 import ChatService from './services/ChatService';
 import MapTest from './components/client/MapTest';
-
 // Componentes de autenticación
 import Login from './pages/Login';
 import Register from './components/Register';
@@ -32,10 +29,11 @@ import MisRestaurantes from './components/admin/MisRestaurantes';
 import AddRestaurant from './components/admin/AddRestaurant';
 import RestaurantDetail from './components/admin/restaurant/RestaurantDetail';
 import ProductManagement from './components/admin/productos/ProductManagement';
-import AllOrders from './components/admin/Orders/AllOrders';
+import AllOrders from './components/admin/orders/AllOrders';
 import Statistics from './components/admin/statistics/Statistics';
+import Settings from './components/admin/settings/Settings';
 
-// Componentes del Repartidor
+//Componentes del Repartidor
 import RepartidorLayout from './components/layouts/RepartidorLayout';
 import RepartidorDashboard from './components/repartidor/dashboard/RepartidorDashboard';
 import PedidosDisponibles from './components/repartidor/PedidosDisponibles';
@@ -233,7 +231,9 @@ function AppContent() {
           
           {/* Rutas para estadísticas */}
           <Route path="estadisticas" element={<Statistics />} />
-
+          
+          {/* Rutas para configuración */}
+          <Route path="configuracion" element={<Settings />} />
           
           {/* Ruta para perfil de usuario administrador */}
           <Route path="perfil" element={<Profile />} />

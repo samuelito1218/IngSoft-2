@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { 
   FaHome, FaStore, FaUtensils, FaClipboardList, 
-  FaUser, FaSignOutAlt, FaBars, FaTimes, FaPlus 
+  FaUser, FaSignOutAlt, FaBars, FaTimes, FaPlus, 
+  FaChartLine, FaCog
 } from 'react-icons/fa';
 import { useAuth } from '../../hooks/useAuth';
 import './layouts.css';
 
-const AdminLayout = ({ children }) => {
+const AdminLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -78,21 +79,21 @@ const AdminLayout = ({ children }) => {
               </Link>
               
               <Link 
-                to="/admin/productos" 
-                className={isActive('/admin/productos') ? 'active' : ''}
-                onClick={closeMenu}
-              >
-                <FaUtensils />
-                <span>Productos</span>
-              </Link>
-              
-              <Link 
                 to="/admin/pedidos" 
                 className={isActive('/admin/pedidos') ? 'active' : ''}
                 onClick={closeMenu}
               >
                 <FaClipboardList />
                 <span>Pedidos</span>
+              </Link>
+              
+              <Link 
+                to="/admin/estadisticas" 
+                className={isActive('/admin/estadisticas') ? 'active' : ''}
+                onClick={closeMenu}
+              >
+                <FaChartLine />
+                <span>Estadísticas</span>
               </Link>
             </nav>
             
@@ -126,7 +127,8 @@ const AdminLayout = ({ children }) => {
       </div>
       
       <main className="layout-main">
-        {children}
+        {/* Renderizar componentes hijos usando Outlet */}
+        <Outlet />
       </main>
       
       <footer className="layout-footer">

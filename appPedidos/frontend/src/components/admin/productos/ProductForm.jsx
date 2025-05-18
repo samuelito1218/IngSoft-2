@@ -8,13 +8,14 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
     nombre: '',
     especificaciones: '',
     precio: '',
-    imagen: null,
-    imagenUrl: '',
+    image: null,
+    imageUrl: '',
   });
   
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Si estamos editando, cargar datos del producto
   useEffect(() => {
@@ -22,9 +23,9 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
       setForm({
         nombre: product.nombre || '',
         especificaciones: product.especificaciones || '',
-        precio: product.precio || '',
-        imagen: null,
-        imagenUrl: product.imagen || '',
+        precio: product.precio ? String(product.precio) : '',
+        image: null,
+        imageUrl: product.imagen || '',
       });
       
       if (product.imagen) {
@@ -37,10 +38,10 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
   const handleChange = e => {
     const { name, value } = e.target;
     
-    // Para precio, solo permitir números y una coma/punto
+    // Para precio, solo permitir números y un punto decimal
     if (name === 'precio') {
-      const regex = /^[0-9]*(\.[0-9]{0,2})?$/;
-      if (value === '' || regex.test(value)) {
+      // Permitir números y hasta un punto decimal
+      if (value === '' || /^[0-9]*(\.[0-9]{0,2})?$/.test(value)) {
         setForm(prev => ({ ...prev, [name]: value }));
       }
     } else {
@@ -49,11 +50,11 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
   };
 
   // Manejar cambio de imagen
-  const handleFileChange = e => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    setForm(prev => ({ ...prev, imagen: file }));
+    setForm(prev => ({ ...prev, image: file }));
 
     // Crear URL para vista previa
     const reader = new FileReader();
@@ -61,11 +62,24 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
       setPreview(reader.result);
     };
     reader.readAsDataURL(file);
+    
+    // Opcional: Subir imagen inmediatamente
+    try {
+      setUploadingImage(true);
+      const imageUrl = await CloudinaryService.uploadImage(file, 'productos');
+      setForm(prev => ({ ...prev, imageUrl }));
+      setUploadingImage(false);
+    } catch (error) {
+      console.error("Error al subir imagen:", error);
+      // No establecemos error, solo permitimos que el usuario continúe
+      // La imagen se intentará subir nuevamente al guardar
+      setUploadingImage(false);
+    }
   };
 
   // Eliminar imagen
   const removeImage = () => {
-    setForm(prev => ({ ...prev, imagen: null, imagenUrl: '' }));
+    setForm(prev => ({ ...prev, image: null, imageUrl: '' }));
     setPreview(null);
   };
 
@@ -85,10 +99,15 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
         throw new Error('El precio debe ser un valor válido mayor a cero');
       }
 
-      // Subir imagen si se seleccionó una nueva
-      let imagenFinal = form.imagenUrl;
-      if (form.imagen) {
-        imagenFinal = await CloudinaryService.uploadProfileImage(form.imagen);
+      // Subir imagen si se seleccionó una nueva y no se subió anteriormente
+      let imagenFinal = form.imageUrl;
+      if (form.image && !form.imageUrl) {
+        try {
+          imagenFinal = await CloudinaryService.uploadImage(form.image, 'productos');
+        } catch (error) {
+          console.error("Error al subir imagen:", error);
+          // Continuamos aunque falle la imagen
+        }
       }
 
       // Crear objeto con datos del producto
@@ -104,7 +123,6 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
       onSave(productData);
     } catch (error) {
       setError(error.message);
-    } finally {
       setLoading(false);
     }
   };
@@ -129,11 +147,13 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
         <div className="image-upload-section">
           {preview ? (
             <div className="image-preview-container">
+              {uploadingImage && <div className="uploading-overlay">Subiendo...</div>}
               <img src={preview} alt="Vista previa" className="image-preview" />
               <button 
                 type="button" 
                 className="remove-image-btn" 
                 onClick={removeImage}
+                disabled={uploadingImage}
               >
                 <FaTimes />
               </button>
@@ -150,6 +170,7 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
             accept="image/*"
             onChange={handleFileChange}
             style={{ display: 'none' }}
+            disabled={uploadingImage}
           />
         </div>
 
@@ -199,16 +220,16 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
             type="button"
             className="cancel-button"
             onClick={onCancel}
-            disabled={loading}
+            disabled={loading || uploadingImage}
           >
             Cancelar
           </button>
           <button
             type="submit"
             className="save-button"
-            disabled={loading}
+            disabled={loading || uploadingImage}
           >
-            {loading ? 'Guardando...' : isEditing ? 'Actualizar' : 'Guardar'}
+            {loading || uploadingImage ? 'Guardando...' : isEditing ? 'Actualizar' : 'Guardar'}
           </button>
         </div>
       </form>

@@ -1,8 +1,10 @@
-// src/services/ProductService.js
-import api from './api';
+// src/services/ProductService.js (Servicio mejorado)
+import { api } from './api';
 
 const ProductService = {
-  // Obtener todos los productos
+  /**
+   * Obtener todos los productos
+   */
   getAllProducts: async () => {
     try {
       const response = await api.get('/productos');
@@ -20,7 +22,9 @@ const ProductService = {
     }
   },
   
-  // Obtener un producto por su ID
+  /**
+   * Obtener un producto por su ID
+   */
   getProductById: async (id) => {
     try {
       const response = await api.get(`/productos/${id}`);
@@ -38,10 +42,12 @@ const ProductService = {
     }
   },
   
-  // Obtener productos por restaurante
+  /**
+   * Obtener productos por restaurante
+   */
   getProductsByRestaurant: async (restaurantId) => {
     try {
-      const response = await api.get(`/productos/restaurante/${restaurantId}`);
+      const response = await api.get(`/restaurantes/${restaurantId}/productos`);
       return {
         success: true,
         data: response.data
@@ -56,7 +62,9 @@ const ProductService = {
     }
   },
   
-  // Crear un nuevo producto
+  /**
+   * Crear un nuevo producto
+   */
   createProduct: async (productData) => {
     try {
       const response = await api.post('/productos', productData);
@@ -74,7 +82,9 @@ const ProductService = {
     }
   },
   
-  // Actualizar un producto existente
+  /**
+   * Actualizar un producto existente
+   */
   updateProduct: async (id, productData) => {
     try {
       const response = await api.put(`/productos/${id}`, productData);
@@ -92,7 +102,9 @@ const ProductService = {
     }
   },
   
-  // Eliminar un producto
+  /**
+   * Eliminar un producto
+   */
   deleteProduct: async (id) => {
     try {
       const response = await api.delete(`/productos/${id}`);
@@ -105,6 +117,37 @@ const ProductService = {
       return {
         success: false,
         message: error.response?.data?.message || 'Error al eliminar el producto',
+        error
+      };
+    }
+  },
+  
+  /**
+   * Subir imagen de producto y actualizar
+   */
+  uploadProductImage: async (id, file) => {
+    try {
+      // Subir imagen a Cloudinary (usando CloudinaryService)
+      const CloudinaryService = (await import('../services/CloudinaryService')).default;
+      const imageUrl = await CloudinaryService.uploadImage(file, 'productos');
+      
+      // Actualizar producto con la nueva URL
+      const response = await api.put(`/productos/${id}`, {
+        imagen: imageUrl
+      });
+      
+      return {
+        success: true,
+        data: {
+          imageUrl,
+          producto: response.data
+        }
+      };
+    } catch (error) {
+      console.error(`Error al subir imagen para producto ${id}:`, error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Error al subir imagen del producto',
         error
       };
     }

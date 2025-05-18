@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { api } from '../../services/api';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaPlus, FaEdit, FaTrash, FaUtensils, FaExternalLinkAlt } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaUtensils, FaExternalLinkAlt, FaStore } from 'react-icons/fa';
 import './MisRestaurantes.css';
 
 export default function MisRestaurantes() {
   const { token } = useAuth();
   const navigate = useNavigate();
-  const [restaurants, setRestaurants] = useState(null);
+  const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -22,7 +22,7 @@ export default function MisRestaurantes() {
         const res = await api.get('/restaurantes/mine', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setRestaurants(res.data);
+        setRestaurants(res.data || []);
         setLoading(false);
       } catch (err) {
         console.error(err);
@@ -38,6 +38,11 @@ export default function MisRestaurantes() {
   // Manejar edición de restaurante
   const handleEdit = (id) => {
     navigate(`/admin/restaurantes/editar/${id}`);
+  };
+
+  // Ver detalle de restaurante (con productos y pedidos)
+  const handleViewDetails = (id) => {
+    navigate(`/admin/restaurantes/${id}`);
   };
 
   // Mostrar modal de confirmación para eliminar
@@ -116,7 +121,7 @@ export default function MisRestaurantes() {
       ) : (
         <div className="restaurants-grid">
           {restaurants && restaurants.map(restaurant => (
-            <div key={restaurant.id} className="restaurant-card">
+            <div key={restaurant.id} className="restaurant-card" onClick={() => handleViewDetails(restaurant.id)}>
               <div className="restaurant-image">
                 {restaurant.imageUrl ? (
                   <img src={restaurant.imageUrl} alt={restaurant.nombre} />
@@ -140,28 +145,40 @@ export default function MisRestaurantes() {
               <div className="restaurant-actions">
                 <button 
                   className="action-button edit" 
-                  onClick={() => handleEdit(restaurant.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(restaurant.id);
+                  }}
                   title="Editar restaurante"
                 >
                   <FaEdit />
                 </button>
                 <button 
                   className="action-button products" 
-                  onClick={() => handleManageProducts(restaurant.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleManageProducts(restaurant.id);
+                  }}
                   title="Gestionar productos"
                 >
                   <FaUtensils />
                 </button>
                 <button 
                   className="action-button view" 
-                  onClick={() => window.open(`/cliente/restaurante/${restaurant.id}`, '_blank')}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(`/cliente/restaurante/${restaurant.id}`, '_blank');
+                  }}
                   title="Ver como cliente"
                 >
                   <FaExternalLinkAlt />
                 </button>
                 <button 
                   className="action-button delete" 
-                  onClick={() => confirmDelete(restaurant)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    confirmDelete(restaurant);
+                  }}
                   title="Eliminar restaurante"
                 >
                   <FaTrash />

@@ -94,6 +94,21 @@
   object-fit: cover;
 }
 
+.uploading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+}
+
 .remove-image-btn {
   position: absolute;
   top: 12px;
@@ -111,9 +126,14 @@
   transition: all 0.2s;
 }
 
-.remove-image-btn:hover {
+.remove-image-btn:hover:not(:disabled) {
   background-color: rgba(0, 0, 0, 0.8);
   transform: scale(1.1);
+}
+
+.remove-image-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .form-group {

@@ -1,4 +1,4 @@
-/* src/components/admin/restaurant/RestaurantDetail.css */
+/* src/components/admin/restaurant/RestaurantDetail.css - Mejorado */
 .restaurant-detail {
   max-width: 1200px;
   margin: 0 auto;
@@ -9,6 +9,7 @@
   display: flex;
   align-items: center;
   margin-bottom: 24px;
+  flex-wrap: wrap;
 }
 
 .back-button {
@@ -59,6 +60,7 @@
 
 .meta-icon {
   color: #ff4b2b;
+  font-size: 16px;
 }
 
 .category-tag {
@@ -72,7 +74,7 @@
 
 .edit-button {
   padding: 10px 20px;
-  background-color: #e0e0e0;
+  background-color: #f0f0f0;
   color: #333;
   border: none;
   border-radius: 8px;
@@ -82,10 +84,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 14px;
 }
 
 .edit-button:hover {
-  background-color: #d0d0d0;
+  background-color: #e0e0e0;
   transform: translateY(-2px);
 }
 
@@ -96,6 +99,13 @@
   overflow: hidden;
   margin-bottom: 24px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 .banner-image {
@@ -104,10 +114,54 @@
   object-fit: cover;
 }
 
+.image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #f0f0f0;
+  color: #aaa;
+}
+
+.placeholder-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.upload-image-label {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 20px;
+}
+
+.upload-image-label:hover {
+  background-color: rgba(0, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+
 .tab-navigation {
   display: flex;
   margin-bottom: 24px;
   border-bottom: 1px solid #eee;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab-navigation::-webkit-scrollbar {
+  display: none;
 }
 
 .tab-button {
@@ -123,6 +177,8 @@
   align-items: center;
   gap: 8px;
   border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  position: relative;
 }
 
 .tab-button:hover {
@@ -134,6 +190,23 @@
   border-bottom-color: #ff4b2b;
 }
 
+.badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #ff4b2b;
+  color: white;
+  font-size: 12px;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  padding: 0 6px;
+}
+
 .tab-content {
   min-height: 300px;
 }
@@ -143,6 +216,8 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .section-header h3 {
@@ -150,6 +225,41 @@
   font-size: 20px;
   font-weight: 600;
   color: #333;
+}
+
+.header-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search-field {
+  position: relative;
+  width: 240px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #aaa;
+}
+
+.search-field input {
+  width: 100%;
+  padding: 10px 12px 10px 36px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.search-field input:focus {
+  border-color: #ff4b2b;
+  box-shadow: 0 0 0 3px rgba(255, 75, 43, 0.1);
 }
 
 .create-button {
@@ -173,13 +283,458 @@
   box-shadow: 0 4px 10px rgba(255, 75, 43, 0.25);
 }
 
+/* Productos */
+.empty-products, .empty-orders {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: #ddd;
+  margin-bottom: 16px;
+}
+
+.empty-products h3, .empty-orders h3 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.empty-products p {
+  color: #666;
+  margin: 0 0 24px 0;
+}
+
+.add-empty-btn {
+  padding: 12px 24px;
+  background-color: #ff4b2b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.add-empty-btn:hover {
+  background-color: #e63e1a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(255, 75, 43, 0.25);
+}
+
+.products-table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.products-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+}
+
+.products-table th,
+.products-table td {
+  padding: 16px;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.products-table th {
+  font-weight: 600;
+  color: #333;
+  background-color: #f9f9f9;
+  white-space: nowrap;
+}
+
+.products-table tr:last-child td {
+  border-bottom: none;
+}
+
+.image-column {
+  width: 80px;
+}
+
+.product-image {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.image-placeholder {
+  width: 60px;
+  height: 60px;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+  font-size: 24px;
+}
+
+.actions-column {
+  width: 100px;
+  white-space: nowrap;
+}
+
+.action-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+}
+
+.action-button:last-child {
+  margin-right: 0;
+}
+
+.action-button.edit:hover {
+  background-color: rgba(33, 150, 243, 0.1);
+  color: #2196f3;
+}
+
+.action-button.delete:hover {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+}
+
+/* Pedidos */
+.orders-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.orders-tab-btn {
+  padding: 10px 16px;
+  background-color: #f0f0f0;
+  border: none;
+  border-radius: 8px;
+  color: #666;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  position: relative;
+}
+
+.orders-tab-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.orders-tab-btn.active {
+  background-color: #ff4b2b;
+  color: white;
+}
+
+.orders-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.order-card {
+  background-color: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  border-top: 4px solid #ccc;
+}
+
+.order-card.pendiente {
+  border-top-color: #ff9800;
+}
+
+.order-card.en_preparacion, .order-card.en_camino {
+  border-top-color: #2196f3;
+}
+
+.order-card.preparado {
+  border-top-color: #4caf50;
+}
+
+.order-card.entregado {
+  border-top-color: #4caf50;
+}
+
+.order-card.cancelado {
+  border-top-color: #f44336;
+}
+
+.order-header {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.order-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.order-status {
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.order-status.pendiente {
+  background-color: rgba(255, 152, 0, 0.1);
+  color: #ff9800;
+}
+
+.order-status.en_preparacion, .order-status.en_camino {
+  background-color: rgba(33, 150, 243, 0.1);
+  color: #2196f3;
+}
+
+.order-status.preparado {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
+}
+
+.order-status.entregado {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
+}
+
+.order-status.cancelado {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+}
+
+.order-info {
+  padding: 16px;
+  font-size: 14px;
+}
+
+.order-date, .order-client, .order-address {
+  margin: 0 0 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.order-date svg, .order-address svg {
+  color: #666;
+}
+
+.order-products {
+  padding: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.order-products h4 {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  color: #333;
+}
+
+.order-products ul {
+  margin: 0;
+  padding: 0 0 0 20px;
+  list-style-type: disc;
+}
+
+.order-products li {
+  margin-bottom: 8px;
+}
+
+.order-products li:last-child {
+  margin-bottom: 0;
+}
+
+.order-footer {
+  padding: 16px;
+  border-top: 1px solid #f0f0f0;
+  margin-top: auto;
+}
+
+.order-total {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+}
+
+.order-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.accept-button, .reject-button, .ready-button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.accept-button {
+  background-color: #4caf50;
+  color: white;
+}
+
+.accept-button:hover:not(:disabled) {
+  background-color: #43a047;
+}
+
+.reject-button {
+  background-color: #f44336;
+  color: white;
+}
+
+.reject-button:hover:not(:disabled) {
+  background-color: #e53935;
+}
+
+.ready-button {
+  background-color: #2196f3;
+  color: white;
+}
+
+.ready-button:hover:not(:disabled) {
+  background-color: #1e88e5;
+}
+
+.accept-button:disabled, .reject-button:disabled, .ready-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.product-modal, .confirm-modal, .reject-modal {
+  background-color: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.confirm-modal, .reject-modal {
+  padding: 24px;
+}
+
+.confirm-modal h3, .reject-modal h3 {
+  margin-top: 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.warning-text {
+  color: #f44336;
+  font-weight: 500;
+  margin-bottom: 24px;
+}
+
+.reject-reason {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  resize: vertical;
+  min-height: 100px;
+  margin-bottom: 24px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancel-button, .delete-button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-button {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #e0e0e0;
+}
+
+.cancel-button:hover:not(:disabled) {
+  background-color: #e0e0e0;
+}
+
+.delete-button {
+  background-color: #f44336;
+  color: white;
+  border: none;
+}
+
+.delete-button:hover:not(:disabled) {
+  background-color: #e53935;
+}
+
+.cancel-button:disabled, .delete-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Loading & Error */
 .loading-container, .error-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 60px 0;
-  text-align: center;
 }
 
 .spinner {
@@ -193,68 +748,60 @@
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
 .error-container {
-  color: #d32f2f;
+  text-align: center;
+  color: #f44336;
 }
 
 .error-container button {
   margin-top: 20px;
   padding: 10px 20px;
-  background-color: #d32f2f;
+  background-color: #f44336;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
+.error-container button:hover {
+  background-color: #e53935;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   .detail-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 16px;
-  }
-  
-  .back-button {
-    margin-bottom: 8px;
-  }
-  
-  .edit-button {
-    align-self: flex-start;
   }
   
   .restaurant-banner {
     height: 200px;
   }
   
-  .tab-navigation {
-    overflow-x: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  
-  .tab-navigation::-webkit-scrollbar {
-    display: none;
-  }
-  
-  .tab-button {
-    padding: 12px 16px;
-    font-size: 15px;
-    white-space: nowrap;
-  }
-  
   .section-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 16px;
+  }
+  
+  .header-actions {
+    width: 100%;
+  }
+  
+  .search-field {
+    width: 100%;
   }
   
   .create-button {
     width: 100%;
     justify-content: center;
+  }
+  
+  .orders-container {
+    grid-template-columns: 1fr;
   }
 }
