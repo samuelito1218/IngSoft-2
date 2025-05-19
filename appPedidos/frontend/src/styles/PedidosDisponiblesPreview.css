@@ -101,7 +101,9 @@
   padding: 0.75rem;
   border-top: 1px solid #eee;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .tomar-pedido-btn-sm {
@@ -109,7 +111,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  background-color: var(--color-primary);
+  background-color: #3498db; /* Mismo azul que el botón grande */
   color: white;
   border: none;
   border-radius: 50px;
@@ -117,17 +119,31 @@
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.2s ease;
   width: 100%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .tomar-pedido-btn-sm:hover {
-  background-color: var(--color-primary-dark);
+  background-color: #2980b9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .tomar-pedido-btn-sm:disabled {
-  background-color: var(--color-text-light);
+  background-color: #bdc3c7;
+  transform: none;
+  box-shadow: none;
   cursor: not-allowed;
+}
+
+.arrow-icon-sm {
+  font-size: 0.8rem;
+  transition: transform 0.2s ease;
+}
+
+.tomar-pedido-btn-sm:hover .arrow-icon-sm {
+  transform: translateX(2px);
 }
 
 .action-button-sm {
@@ -164,23 +180,26 @@
 }
 
 .view-detail-btn-sm {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: transparent;
-  color: var(--color-primary);
-  border: 1px solid var(--color-primary);
-  border-radius: 50px;
-  padding: 0.5rem 1.25rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  width: 100%;
+  background-color: #3498db !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 12px 15px !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important; /* Igual que el botón de chat */
+  height: auto !important; /* Mismo alto que el chat */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+  margin: 0 !important; /* Quita cualquier margen que pudiera tener */
 }
 
 .view-detail-btn-sm:hover {
-  background-color: var(--color-primary-light);
+  background-color: #2980b9 !important; /* Azul más sutil para hover */
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2) !important;
 }
 
 .btn-spinner-sm {

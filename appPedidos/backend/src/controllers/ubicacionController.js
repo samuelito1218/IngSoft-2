@@ -38,25 +38,36 @@ exports.actualizarUbicacionPedido = async (req, res) => {
       return res.status(404).json({ message: 'Pedido no encontrado' });
     }
     
-    // Actualizar o crear la ubicación
-    const ubicacion = await prisma.ubicacion.upsert({
-      where: { 
-        pedidoId: pedidoId 
-      },
-      update: { 
-        latitud, 
-        longitud, 
-        heading: heading || 0,
-        fechaActualizacion: new Date() 
-      },
-      create: {
-        pedidoId,
-        latitud,
-        longitud,
-        heading: heading || 0,
-        fechaActualizacion: new Date()
-      }
+    // Buscar si ya existe una ubicación para este pedido
+    const existingUbicacion = await prisma.ubicacion.findUnique({
+      where: { pedidoId: pedidoId }
     });
+    
+    let ubicacion;
+    
+    if (existingUbicacion) {
+      // Actualizar si existe
+      ubicacion = await prisma.ubicacion.update({
+        where: { id: existingUbicacion.id },
+        data: { 
+          latitud, 
+          longitud, 
+          heading: heading || 0,
+          fechaActualizacion: new Date() 
+        }
+      });
+    } else {
+      // Crear si no existe
+      ubicacion = await prisma.ubicacion.create({
+        data: {
+          pedidoId,
+          latitud,
+          longitud,
+          heading: heading || 0,
+          fechaActualizacion: new Date()
+        }
+      });
+    }
     
     res.status(200).json({ 
       message: 'Ubicación actualizada correctamente', 

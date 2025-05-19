@@ -1,4 +1,3 @@
-// src/components/client/RestaurantCard.jsx
 import React from 'react';
 import { FaStar, FaClock, FaMapMarkerAlt } from 'react-icons/fa';
 import './RestaurantCard.css';
@@ -6,67 +5,71 @@ import './RestaurantCard.css';
 const DEFAULT_IMAGE = '/images/restaurant-placeholder.jpg';
 
 const RestaurantCard = ({ restaurant, onClick }) => {
+  // Adaptador para manejar diferentes formatos de datos
+  const restaurantData = {
+    nombre: restaurant.nombre || 'Restaurante sin nombre',
+    descripcion: restaurant.descripcion || '',
+    // Usa imageUrl si existe, sino imagen, o valor por defecto
+    imagen: restaurant.imageUrl || restaurant.imagen || DEFAULT_IMAGE,
+    // Valores por defecto para campos que pueden no existir
+    calificaciones: restaurant.calificaciones || [],
+    tiempoEntrega: restaurant.tiempoEntrega || '30-45 min',
+    categorias: restaurant.categorias || ['General'],
+    ubicaciones: restaurant.ubicaciones || [],
+    envioGratis: restaurant.envioGratis || false
+  };
+  
   // Calcular la calificación promedio
   const getAverageRating = () => {
-    if (!restaurant.calificaciones || restaurant.calificaciones.length === 0) {
-      return 0;
+    if (restaurantData.calificaciones.length === 0) {
+      return 4.5; // Valor por defecto para mejor UI
     }
     
-    const total = restaurant.calificaciones.reduce((sum, rating) => sum + rating.valor, 0);
-    return (total / restaurant.calificaciones.length).toFixed(1);
-  };
-  
-  // Formatear tiempo de entrega estimado
-  const formatDeliveryTime = () => {
-    return restaurant.tiempoEntrega || '30-45 min';
-  };
-  
-  // Formatear categorías
-  const formatCategories = () => {
-    if (!restaurant.categorias || restaurant.categorias.length === 0) {
-      return 'General';
-    }
-    
-    return restaurant.categorias.slice(0, 2).join(' • ');
+    const total = restaurantData.calificaciones.reduce((sum, rating) => sum + rating.valor, 0);
+    return (total / restaurantData.calificaciones.length).toFixed(1);
   };
   
   return (
     <div className="restaurant-card" onClick={onClick}>
       <div className="restaurant-image">
         <img 
-          src={restaurant.imagen || DEFAULT_IMAGE} 
-          alt={restaurant.nombre}
+          src={restaurantData.imagen} 
+          alt={restaurantData.nombre}
           onError={(e) => {
             e.target.onerror = null;
             e.target.src = DEFAULT_IMAGE;
           }}
         />
-        {restaurant.envioGratis && <span className="free-delivery-badge">Envío gratis</span>}
+        {restaurantData.envioGratis && <span className="free-delivery-badge">Envío gratis</span>}
       </div>
       
       <div className="restaurant-info">
-        <h3 className="restaurant-name">{restaurant.nombre}</h3>
+        <h3 className="restaurant-name">{restaurantData.nombre}</h3>
         
         <div className="rating-time">
           <div className="rating">
             <FaStar className="star-icon" />
             <span>{getAverageRating()}</span>
-            <span className="rating-count">({restaurant.calificaciones?.length || 0})</span>
+            <span className="rating-count">({restaurantData.calificaciones.length})</span>
           </div>
           
           <div className="delivery-time">
             <FaClock className="clock-icon" />
-            <span>{formatDeliveryTime()}</span>
+            <span>{restaurantData.tiempoEntrega}</span>
           </div>
         </div>
         
         <div className="restaurant-details">
-          <p className="restaurant-categories">{formatCategories()}</p>
+          <p className="restaurant-categories">
+            {Array.isArray(restaurantData.categorias) 
+              ? restaurantData.categorias.slice(0, 2).join(' • ') 
+              : 'General'}
+          </p>
           
-          {restaurant.ubicaciones && restaurant.ubicaciones.length > 0 && (
+          {restaurantData.ubicaciones.length > 0 && (
             <div className="location">
               <FaMapMarkerAlt className="location-icon" />
-              <span>{restaurant.ubicaciones[0].comuna || 'Cali'}</span>
+              <span>{restaurantData.ubicaciones[0].comuna || 'Cali'}</span>
             </div>
           )}
         </div>

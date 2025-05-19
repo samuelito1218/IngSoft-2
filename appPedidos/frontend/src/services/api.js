@@ -1,162 +1,159 @@
-// src/services/api.js
 import axios from 'axios';
 
-// Función para obtener el token del almacenamiento
-const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
+// Definir la URL base de la API
+const API_URL = 'http://localhost:5000/api'; 
 
-// Crear instancia de axios con URL base
-const api = axios.create({
-  baseURL: 'http://localhost:5000/api', // URL de tu API
-  timeout: 10000, // Timeout de 10 segundos
-});
-
-// Interceptor para añadir el token a las peticiones
-api.interceptors.request.use(config => {
-  const token = getToken(); // Obtener token
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Configurar cliente axios
+const apiClient = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json'
   }
-  return config;
-}, error => {
-  console.error("Error en el interceptor de solicitud:", error);
-  return Promise.reject(error);
 });
+
+// Interceptor para manejar tokens de autenticación
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 // Interceptor para manejar errores de respuesta
-api.interceptors.response.use(
-  response => {
-    return response;
-  },
-  error => {
-    // Manejar error de conexión
-    if (error.code === 'ERR_NETWORK') {
-      console.error('Error de conexión al servidor. Verifica que el backend esté corriendo.');
-    }
-
-    // Manejar error de autenticación (token expirado o inválido)
-    if (error.response && error.response.status === 401) {
-      console.error('Error de autenticación 401. Limpiando tokens y redirigiendo...');
-      
-      // Limpiar tokens
-      localStorage.removeItem('token');
-      sessionStorage.removeItem('token');
-      delete api.defaults.headers.common['Authorization'];
-
-      // Redireccionar a login si no estamos ya en login
-      if (window.location.pathname !== '/' && 
-          window.location.pathname !== '/register' &&
-          !window.location.pathname.startsWith('/reset-password') &&
-          window.location.pathname !== '/recover-password') {
-        window.location.href = '/';
-      }
-    }
-    
-    // Si la respuesta tiene error, loggear más detalles para ayudar a debuggear
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
     if (error.response) {
-      console.error(`Error ${error.response.status} en ${error.config?.url || 'unknown URL'}:`, 
-                    error.response.data);
+      console.log(`Error ${error.response.status} en ${error.config.url}:`, error.response.data);
+    } else if (error.request) {
+      console.log(`Error de conexión en ${error.config.url}`);
     } else {
-      console.error('Error desconocido en la respuesta:', error);
+      console.log('Error desconocido:', error.message);
     }
-    
     return Promise.reject(error);
   }
 );
 
-// Exportar los métodos del servicio API
+// Servicio API principal
 const ApiService = {
-  // Métodos de autenticación
+  // Autenticación
   auth: {
-    login: (credentials) => api.post('/auth/login', credentials),
-    register: (userData) => api.post('/auth/register', userData),
-    recoverPassword: (email) => api.post('/auth/forgot-password', { email }),
-    resetPassword: (token, newPassword) => api.post('/auth/reset-password', { token, newPassword }),
-    verify: () => api.get('/auth/me')
+    login: (email, password) => apiClient.post('/auth/login', { email, password }),
+    register: (userData) => apiClient.post('/auth/register', userData),
+    requestPasswordReset: (email) => apiClient.post('/auth/forgot-password', { email }),
+    resetPassword: (token, password) => apiClient.post('/auth/reset-password', { token, password }),
+    verifyToken: () => apiClient.get('/auth/verify')
   },
-
+  
+  // Usuarios
   usuarios: {
-    direcciones: () => api.get('/usuarios/direcciones'),
-    guardarDireccion: (data) => api.post('/usuarios/direcciones', data),
-    perfil: () => api.get('/usuarios/perfil'),
-    // Nuevo método para obtener un usuario por ID
-    obtenerUsuario: (id) => api.get(`/usuarios/${id}`),
-    actualizarPerfil: (data) => api.put('/usuarios/perfil', data),
-    actualizarImagen: (data) => api.put('/usuarios/perfil/imagen', data)
-  },
-  // Métodos para pedidos
-  pedidos: {
-    crear: (pedidoData) => api.post('/pedidos/crear', pedidoData),
-    activo: () => api.get('/pedidos/cliente/activo'),
-    historial: () => api.get('/pedidos/cliente'),
-    detalle: (id) => api.get(`/pedidos/${id}`),
-    cancelar: (id) => api.delete(`/pedidos/eliminar/${id}`),
-    editar: (id, data) => api.put(`/pedidos/editar/${id}`, data),
-    calificar: (id, data) => api.post(`/calificaciones/calificar/${id}`, data),
-
-    // Nuevos métodos para repartidores (corregidos):
-    disponibles: () => api.get('/pedidos/disponibles'),
-    repartidorActivos: () => api.get('/pedidos/repartidor/activos'),
-    repartidorHistorial: () => api.get('/pedidos/repartidor/historial'),
-    tomarPedido: (pedidoId) => api.put(`/pedidos/asignar/${pedidoId}`),
-    actualizarEstado: (pedidoId, estado) => {
-      let endpoint;
-      if (estado === 'EN_CAMINO') {
-        endpoint = `/pedidos/en-camino/${pedidoId}`;
-      } else if (estado === 'ENTREGADO') {
-        endpoint = `/pedidos/entregar/${pedidoId}`;
-      } else {
-        throw new Error(`Estado no soportado: ${estado}`);
-      }
-      return api.put(endpoint);
-    },
-    obtenerPorId: (pedidoId) => api.get(`/pedidos/${pedidoId}`)
+    perfil: () => apiClient.get('/usuarios/perfil'),
+    actualizar: (userData) => apiClient.put('/usuarios/perfil', userData),
+    actualizarImagen: (formData) => apiClient.post('/usuarios/perfil/imagen', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+    obtenerUsuario: (userId) => apiClient.get(`/usuarios/${userId}`)
   },
   
-  // Métodos para restaurantes y productos
+  // Modificación en ApiService.js
+  direcciones: {
+    listar: () => apiClient.get('/api/direcciones'),
+    guardar: (data) => apiClient.post('/api/direcciones', data)
+  },
+  
+  // Restaurantes
   restaurantes: {
-    listar: () => api.get('/restaurantes'),
-    buscar: (query) => api.get(`/restaurantes?search=${query}`),
-    detalle: (id) => api.get(`/restaurantes/${id}`),
-    productos: (restauranteId) => api.get(`/restaurantes/${restauranteId}/productos`),
-    crear: (data) => api.post('/restaurantes/crear',data)
-  },
-  sucursales: {
-       listar:    () => api.get('/sucursales'),
-       detalle:   id => api.get(`/sucursales/${id}`),
-       crear:     data => api.post('/sucursales', data),        // <— nuevo endpoint
-       actualizar:data => api.put(`/sucursales/${data.id}`, data), // opcional
-       eliminar:  id => api.delete(`/sucursales/${id}`)         // opcional
-     },
-  
-  // Métodos para mensajes
-  mensajes: {
-    enviar: (pedidoId, texto, usuarioReceptorId) => 
-      api.post(`/mensajes/enviar/${pedidoId}`, { texto, usuarioReceptorId }),
-    obtener: (pedidoId) => api.get(`/mensajes/${pedidoId}`),
-    marcarLeido: (mensajeId) => api.put(`/mensajes/marcar-leido/${mensajeId}`)
+    listar: () => apiClient.get('admin/restaurantes'),
+    detalle: (id) => apiClient.get(`/restaurantes/${id}`),
+    productos: (id) => apiClient.get(`/restaurantes/${id}/productos`),
+    crear: (data) => apiClient.post('/restaurantes', data),
+    actualizar: (id, data) => apiClient.put(`/restaurantes/${id}`, data),
+    eliminar: (id) => apiClient.delete(`/restaurantes/${id}`),
+    solicitudVerificacion: (formData) => apiClient.post('/restaurantes/verificacion', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
   },
   
-  // Métodos para pagos
-  pagos: {
-    crearIntencion: (pedidoId) => api.post(`/pagos/${pedidoId}/crear-intencion`),
-    confirmar: (paymentIntentId) => api.post('/pagos/confirmar', { paymentIntentId }),
-    procesar: (pedidoId, data) => api.post(`/pagos/${pedidoId}/procesar`, data)
-  },
-  
-  // Métodos para ubicación
-  ubicacion: {
-    actualizar: (pedidoId, latitud, longitud) => 
-      api.put(`/ubicacion/pedido/${pedidoId}`, { latitud, longitud }),
-    obtener: (pedidoId) => api.get(`/ubicacion/pedido/${pedidoId}`)
-  },
+  // Productos
   productos: {
-    detalle: (id) => api.get(`/productos/${id}`),
-    listar: () => api.get('/productos'),
-    porRestaurante: (restauranteId) => api.get(`/productos/restaurante/${restauranteId}`)
+    listar: () => apiClient.get('/productos'),
+    detalle: (id) => apiClient.get(`/productos/${id}`),
+    porRestaurante: (restauranteId) => apiClient.get(`/productos/restaurante/${restauranteId}`),
+    crear: (data) => apiClient.post('/productos', data),
+    actualizar: (id, data) => apiClient.put(`/productos/${id}`, data),
+    eliminar: (id) => apiClient.delete(`/productos/${id}`)
+  },
+  
+  // Pedidos
+  pedidos: {
+    crear: (data) => apiClient.post('/pedidos/crear', data),
+    listar: () => apiClient.get('/historial'),
+    detalle: (id) => {
+      if (!id) {
+        return Promise.reject(new Error('ID de pedido no especificado'));
+      }
+      return apiClient.get(`/pedidos/${id}`);
+    },
+    tomarPedido: (pedidoId) => apiClient.put(`/api/pedidos/asignar/${pedidoId}`),
+    aceptar: (pedidoId) => apiClient.put(`/pedidos/${pedidoId}/aceptar`),
+    rechazar: (pedidoId, motivo) => apiClient.put(`/pedidos/${pedidoId}/rechazar`, { motivo }),
+    marcarListo: (pedidoId) => apiClient.put(`/pedidos/${pedidoId}/listo`),
+    cambiarEstado: (pedidoId, estado) => apiClient.put(`/pedidos/${pedidoId}/estado`, { estado }),
+    calificar: (pedidoId, data) => apiClient.post(`/calificaciones/calificar/${pedidoId}`, data),
+    historial: () => apiClient.get('/pedidos/cliente'),
+    activo: () => apiClient.get('/pedidos/cliente/activo'),
+
+    //Nuevas funciones
+
+    disponibles: () => apiClient.get('/pedidos/disponibles'),
+  repartidorActivos: () => apiClient.get('/pedidos/repartidor/activos'), 
+  tomarPedido: (pedidoId) => apiClient.put(`/pedidos/asignar/${pedidoId}`),
+  repartidorHistorial: () => apiClient.get('/pedidos/repartidor/historial'),
+  actualizarEstado: (pedidoId, estado) => {
+  if (estado === 'EN_CAMINO') {
+    return apiClient.put(`/pedidos/en-camino/${pedidoId}`);
+  } else if (estado === 'ENTREGADO') {
+    return apiClient.put(`/pedidos/entregar/${pedidoId}`);
+  } else {
+    throw new Error(`Estado no soportado: ${estado}`);
+  }}
+  },
+  
+  // Ubicación
+  ubicacion: {
+    obtener: (pedidoId) => apiClient.get(`/ubicacion/pedido/${pedidoId}`),
+    actualizar: (pedidoId, latitud, longitud, heading = 0) => apiClient.put(`/ubicacion/pedido/${pedidoId}`, {
+      latitud,
+      longitud,
+      heading
+    })
+  },
+  
+  // Mensajes
+  mensajes: {
+    obtener: (pedidoId) => apiClient.get(`/mensajes/${pedidoId}`),
+    enviar: (pedidoId, receptorId, texto) => apiClient.post(`/mensajes/enviar/${pedidoId}`, {
+      usuarioReceptorId: receptorId,
+      texto
+    }),
+    marcarLeido: (mensajeId) => apiClient.put(`/mensajes/marcar-leido/${mensajeId}`)
+  },
+  
+  // Pagos
+  pagos: {
+    crear: (pedidoId, data) => apiClient.post(`/pagos/pedido/${pedidoId}`, data),
+    detalle: (pagoId) => apiClient.get(`/pagos/${pagoId}`),
+    solicitudReembolso: (pagoId, motivo) => apiClient.post(`/pagos/${pagoId}/reembolso`, { motivo }),
+    crearIntencion: (pedidoId) => apiClient.post(`/pagos/intencion/${pedidoId}`)
   }
 };
-//Métodos para repartidores
 
-
-export { api };
+// Exportar ApiService como exportación predeterminada
 export default ApiService;
+
+// Exportar el cliente axios como "api"
+export { apiClient as api };

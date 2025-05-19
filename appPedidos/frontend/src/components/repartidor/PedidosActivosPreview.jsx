@@ -4,6 +4,7 @@ import { FaMotorcycle, FaMapMarkerAlt, FaStore, FaCheckCircle, FaComments } from
 import ApiService from '../../services/api';
 import '../../styles/PedidosDisponiblesPreview.css'
 import '../../styles/ChatPedido.css'
+import NotificationManager from '../shared/Notification';
 
 const PedidosActivosPreview = () => {
   const [pedidos, setPedidos] = useState([]);
@@ -63,6 +64,7 @@ const PedidosActivosPreview = () => {
         console.error('Error al cargar pedidos activos:', error);
         setError('No se pudieron cargar tus entregas');
         setLoading(false);
+        window.showNotification('Error al cargar pedidos activos', 'error');
       }
     };
     
@@ -91,28 +93,26 @@ const PedidosActivosPreview = () => {
       });
       
       if (response.ok) {
-        navigate('/repartidor/pedidos-activos');
+        window.showNotification('Estado actualizado correctamente', 'success');
+        setTimeout(() => {
+          navigate('/repartidor/pedidos-activos');
+        }, 1000);
       } else {
         const errorData = await response.json();
-        alert(errorData.message || 'No se pudo actualizar el estado del pedido. Inténtelo nuevamente.');
-        window.location.reload();
+        window.showNotification(errorData.message || 'No se pudo actualizar el estado del pedido', 'error');
       }
     } catch (error) {
       console.error('Error al cambiar estado:', error);
-      alert('Error al actualizar el estado del pedido. Por favor, intenta nuevamente.');
+      window.showNotification('Error al actualizar el estado del pedido', 'error');
     } finally {
       setCambiandoEstado(false);
       setPedidoSeleccionadoId(null);
     }
   };
-   // Ir a la sección de pedidos activos
+   
   const goToPedidosActivos = () => {
     navigate('/repartidor/pedidos-activos');
   };
-  
-  /*const goToDetail = (pedidoId) => {
-    navigate(`/repartidor/pedidos-activos/${pedidoId}`);
-  };*/
 
   // Determinar qué botones de acción mostrar según el estado actual
   const getAccionesEstado = (pedido) => {
@@ -198,15 +198,16 @@ const PedidosActivosPreview = () => {
     );
   }
 
-   //Nuevo fragmento
-
-   const formatearDireccion = (dir) => {
+  const formatearDireccion = (dir) => {
     if (!dir) return "Dirección no disponible";
     return `${dir.direccionEspecifica}, ${dir.barrio}, Comuna ${dir.comuna}`;
   };
 
   return (
     <div className="pedidos-activos-preview">
+      {/* Añadir NotificationManager */}
+      <NotificationManager />
+      
       <div className="preview-grid">
         {pedidos.map((pedido) => (
           <div key={pedido.id} className="pedido-preview-card">

@@ -1,18 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const usuariosController = require("../controllers/UsuariosController");
+const usuariosController = require("../controllers/usuariosController");
 const { authenticate } = require('../middlewares/authMiddleware');
 
-// Rutas para el perfil de usuario
+// Rutas explícitas (específicas) primero
 router.get('/perfil', authenticate, usuariosController.getUserProfile);
 router.put('/perfil', authenticate, usuariosController.updateUserProfile);
-router.put('/perfil/imagen', authenticate, usuariosController.updateProfileImage);
+router.post('/perfil/imagen', authenticate, usuariosController.updateProfileImage);
 
-// NUEVA RUTA - Obtener usuario por ID
+// IMPORTANTE: Estas rutas de direcciones deben estar ANTES de la ruta con parámetro /:id
+router.get('/mis-direcciones', authenticate, usuariosController.obtenerDirecciones); // CAMBIO DE NOMBRE DE RUTA
+router.post('/guardar-direccion', authenticate, usuariosController.guardarDireccion); // CAMBIO DE NOMBRE DE RUTA
+
+// Otras rutas específicas
+router.get('/mis-pedidos', authenticate, usuariosController.obtenerPedidosUsuario);
+
+// Ruta con parámetro dinámico (DEBE IR AL FINAL)
 router.get('/:id', authenticate, usuariosController.getUserById);
-
-// Rutas para direcciones de usuario
-router.get('/direcciones', authenticate, usuariosController.obtenerDirecciones);
-router.post('/direcciones', authenticate, usuariosController.guardarDireccion);
 
 module.exports = router;

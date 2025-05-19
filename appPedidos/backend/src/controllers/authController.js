@@ -1,11 +1,50 @@
 const jwt = require('jsonwebtoken');
 const {PrismaClient} = require('@prisma/client');
-const bcrypt = require('bcrypt');  // Añadida la importación de bcrypt
+const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const fs = require('fs');
+const path = require('path');
 
 const prisma = new PrismaClient();
 const saltRounds = 10;
+
+// Configuración del servicio de correo
+// Note: En un ambiente real, esto debería estar en un archivo de configuración 
+// y usar credenciales reales de un servicio como Sendgrid, Mailgun, etc.
+const mailConfig = {
+  service: process.env.EMAIL_SERVICE || 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER || 'fastfood.notificaciones@gmail.com',
+    pass: process.env.EMAIL_PASSWORD || 'app_password_here'
+  }
+};
+
+// Función para enviar correo (simulada para este ejemplo)
+const sendEmail = async (to, subject, htmlContent) => {
+  // En un entorno de desarrollo/pruebas, sólo logueamos en consola
+  console.log(`Correo enviado a: ${to}`);
+  console.log(`Asunto: ${subject}`);
+  console.log(`Contenido HTML: ${htmlContent}`);
+  
+  // Si estamos en producción, enviar realmente el correo
+  if (process.env.NODE_ENV === 'production') {
+    try {
+      const transporter = nodemailer.createTransport(mailConfig);
+      await transporter.sendMail({
+        from: '"FastFood App" <fastfood.notificaciones@gmail.com>',
+        to,
+        subject,
+        html: htmlContent
+      });
+      console.log('Correo enviado correctamente');
+    } catch (error) {
+      console.error('Error al enviar correo:', error);
+    }
+  }
+  
+  return true;
+};
 
 // Registro de usuario
 exports.register = async(req, res) => {
@@ -57,6 +96,9 @@ exports.register = async(req, res) => {
             });
         }
         
+        // Para administradores, establecer estado de verificación
+        const verificado = rol !== 'Admin';
+
         // Datos para crear el usuario - adaptado para MongoDB
         console.log('Preparando datos de usuario...');
         const userData = {
@@ -68,6 +110,7 @@ exports.register = async(req, res) => {
             direccion,
             rol,
             vehiculo: rol === 'Repartidor' ? vehiculo : null,
+            verificado, // nuevo campo para controlar si el usuario está verificado
             historialDirecciones: [  // Formato MongoDB
                 {
                     comuna: comunaNum,
@@ -91,11 +134,54 @@ exports.register = async(req, res) => {
         const token = jwt.sign(
             {userId: newUser.id, email: newUser.email, rol: newUser.rol},
             process.env.JWT_SECRET,
-            {expiresIn: '1h'}
+            {expiresIn: '24h'}
         );
 
+        // Si es admin, enviar correo de verificación pendiente
+        if (rol === 'Admin') {
+            await sendEmail(
+                email,
+                'Verificación de cuenta de Administrador - FastFood',
+                `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <h1 style="color: #ff4b2b;">FastFood</h1>
+                    </div>
+                    <h2>Solicitud de registro recibida</h2>
+                    <p>Estimado/a ${nombreCompleto},</p>
+                    <p>Hemos recibido tu solicitud para registrarte como administrador de un restaurante en nuestra plataforma FastFood.</p>
+                    <p>En estos momentos, nuestro equipo está revisando la documentación proporcionada. Este proceso puede tomar entre 24 y 48 horas hábiles.</p>
+                    <p>Te notificaremos por este medio cuando la verificación haya sido completada.</p>
+                    <p>Si tienes alguna pregunta, no dudes en contactarnos respondiendo a este correo.</p>
+                    <p>Gracias por elegir FastFood para tu negocio.</p>
+                    <p style="margin-top: 30px; font-size: 12px; color: #666;">Este es un mensaje automático, por favor no respondas directamente a este correo.</p>
+                </div>
+                `
+            );
+        } else {
+            // Para clientes y repartidores, enviar correo de bienvenida
+            await sendEmail(
+                email,
+                'Bienvenido a FastFood',
+                `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <h1 style="color: #ff4b2b;">FastFood</h1>
+                    </div>
+                    <h2>¡Bienvenido/a a FastFood!</h2>
+                    <p>Estimado/a ${nombreCompleto},</p>
+                    <p>Tu cuenta ha sido creada exitosamente. Ahora puedes disfrutar de todas las funcionalidades de nuestra plataforma.</p>
+                    <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.</p>
+                    <p>¡Esperamos que disfrutes de FastFood!</p>
+                </div>
+                `
+            );
+        }
+
         res.status(201).json({
-            message: 'Usuario registrado exitosamente',
+            message: rol === 'Admin' ? 
+                'Usuario registrado. Pendiente de verificación de documentos.' : 
+                'Usuario registrado exitosamente',
             token: token,
             user: {
                 id: newUser.id,
@@ -105,7 +191,8 @@ exports.register = async(req, res) => {
                 cedula: newUser.cedula,
                 direccion: newUser.direccion,
                 rol: newUser.rol,
-                vehiculo: newUser.vehiculo
+                vehiculo: newUser.vehiculo,
+                verificado: newUser.verificado
             },
         });
     } catch (error) {
@@ -146,6 +233,13 @@ exports.login = async(req, res) => {
             return res.status(401).json({message: 'Credenciales inválidas'});
         }
 
+        // Verificar si el usuario está verificado en caso de Admin
+        if (user.rol === 'Admin' && !user.verificado) {
+            return res.status(403).json({
+                message: 'Tu cuenta está pendiente de verificación. Por favor, revisa tu correo electrónico.'
+            });
+        }
+
         // Generar token de acceso
         const token = jwt.sign(
             {userId: user.id, email: user.email, rol: user.rol},
@@ -164,12 +258,142 @@ exports.login = async(req, res) => {
                 cedula: user.cedula,
                 direccion: user.direccion,
                 rol: user.rol,
-                vehiculo: user.vehiculo
+                vehiculo: user.vehiculo,
+                verificado: user.verificado
             },
         });
     } catch (error) {
         console.error('Error al iniciar sesión:', error);
         res.status(500).json({message: 'Error al iniciar sesión', error: error.message});
+    }
+};
+
+// Aprobar verificación de restaurante (para uso administrativo)
+exports.aprobarVerificacion = async(req, res) => {
+    try {
+        const { usuarioId } = req.params;
+
+        // Verificar privilegios de administración
+        if (req.user.rol !== 'SuperAdmin') {
+            return res.status(403).json({ message: 'No tienes permiso para realizar esta acción' });
+        }
+
+        // Buscar el usuario en la base de datos
+        const user = await prisma.Usuarios.findUnique({
+            where: { id: usuarioId },
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+
+        if (user.rol !== 'Admin') {
+            return res.status(400).json({ message: 'Este usuario no es administrador de restaurante' });
+        }
+
+        if (user.verificado) {
+            return res.status(400).json({ message: 'Este usuario ya está verificado' });
+        }
+
+        // Actualizar estado de verificación
+        await prisma.Usuarios.update({
+            where: { id: usuarioId },
+            data: { verificado: true }
+        });
+
+        // Enviar correo de confirmación
+        await sendEmail(
+            user.email,
+            '¡Tu cuenta ha sido verificada! - FastFood',
+            `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1 style="color: #ff4b2b;">FastFood</h1>
+                </div>
+                <h2>¡Verificación completada!</h2>
+                <p>Estimado/a ${user.nombreCompleto},</p>
+                <p>Nos complace informarte que hemos verificado y aprobado tu documentación.</p>
+                <p>Ya puedes acceder a tu cuenta de administrador en nuestra plataforma FastFood y comenzar a gestionar tu restaurante.</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" style="background-color: #ff4b2b; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Iniciar sesión ahora</a>
+                </div>
+                <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.</p>
+                <p>¡Gracias por unirte a FastFood!</p>
+            </div>
+            `
+        );
+
+        res.status(200).json({ 
+            message: 'Usuario verificado exitosamente',
+            usuarioId
+        });
+    } catch (error) {
+        console.error('Error al aprobar verificación:', error);
+        res.status(500).json({ message: 'Error al aprobar verificación', error: error.message });
+    }
+};
+
+// Rechazar verificación de restaurante (para uso administrativo)
+exports.rechazarVerificacion = async(req, res) => {
+    try {
+        const { usuarioId } = req.params;
+        const { motivo } = req.body;
+
+        // Verificar privilegios de administración
+        if (req.user.rol !== 'SuperAdmin') {
+            return res.status(403).json({ message: 'No tienes permiso para realizar esta acción' });
+        }
+
+        if (!motivo) {
+            return res.status(400).json({ message: 'Se requiere un motivo para el rechazo' });
+        }
+
+        // Buscar el usuario en la base de datos
+        const user = await prisma.Usuarios.findUnique({
+            where: { id: usuarioId },
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+
+        if (user.rol !== 'Admin') {
+            return res.status(400).json({ message: 'Este usuario no es administrador de restaurante' });
+        }
+
+        // Enviar correo de rechazo
+        await sendEmail(
+            user.email,
+            'Resultado de verificación - FastFood',
+            `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1 style="color: #ff4b2b;">FastFood</h1>
+                </div>
+                <h2>Verificación no aprobada</h2>
+                <p>Estimado/a ${user.nombreCompleto},</p>
+                <p>Lamentamos informarte que no hemos podido aprobar tu solicitud de registro como administrador de restaurante en nuestra plataforma.</p>
+                <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #ff4b2b; margin: 20px 0; border-radius: 4px;">
+                    <p><strong>Motivo:</strong> ${motivo}</p>
+                </div>
+                <p>Puedes corregir el problema y volver a intentarlo o contactarnos para más información.</p>
+                <p>Gracias por tu interés en FastFood.</p>
+            </div>
+            `
+        );
+
+        // Opcionalmente, eliminar el usuario o marcarlo como rechazado
+        await prisma.Usuarios.delete({
+            where: { id: usuarioId }
+        });
+
+        res.status(200).json({ 
+            message: 'Verificación rechazada y notificación enviada',
+            usuarioId
+        });
+    } catch (error) {
+        console.error('Error al rechazar verificación:', error);
+        res.status(500).json({ message: 'Error al rechazar verificación', error: error.message });
     }
 };
 
@@ -206,8 +430,28 @@ exports.requestPasswordReset = async(req, res) => {
         // URL para restablecer contraseña (frontend)
         const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${token}`;
 
-        // En una aplicación real, enviaríamos un correo
-        console.log(`Se enviaría un correo a ${email} con la URL: ${resetUrl}`);
+        // Enviar correo real
+        await sendEmail(
+            email,
+            'Recuperación de contraseña - FastFood',
+            `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1 style="color: #ff4b2b;">FastFood</h1>
+                </div>
+                <h2>Recuperación de contraseña</h2>
+                <p>Estimado/a ${user.nombreCompleto},</p>
+                <p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta. Si no has sido tú quien ha realizado esta solicitud, puedes ignorar este correo.</p>
+                <p>Para restablecer tu contraseña, haz clic en el siguiente enlace:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="${resetUrl}" style="background-color: #ff4b2b; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Restablecer contraseña</a>
+                </div>
+                <p>Este enlace expirará en 1 hora.</p>
+                <p>Si el botón no funciona, copia y pega el siguiente enlace en tu navegador:</p>
+                <p style="word-break: break-all;">${resetUrl}</p>
+            </div>
+            `
+        );
 
         res.status(200).json({message: 'Si el correo existe, recibirás instrucciones para recuperar tu contraseña'});
     } catch (error) {

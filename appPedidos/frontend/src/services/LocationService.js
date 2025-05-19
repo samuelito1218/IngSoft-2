@@ -1,9 +1,13 @@
-// src/services/LocationService.js - Implementación mejorada
+// src/services/LocationService.js
 import ApiService from './api';
 import { ref, onValue, set, get, onDisconnect } from 'firebase/database';
 import { db } from '../firebase/config';
 
 class LocationService {
+  // Cache para evitar multiples peticiones a la misma ubicación que no existe
+  #locationFetchAttempts = new Map();
+  #geolocationDenied = false;
+  
   // Actualizar la ubicación en tiempo real
   async updateLocation(pedidoId, position, heading = 0) {
     try {
@@ -18,155 +22,110 @@ class LocationService {
       };
 
       // 1. Actualizar en el backend
-      await ApiService.ubicacion.actualizar(pedidoId, locationData.latitud, locationData.longitud);
+      try {
+        await ApiService.ubicacion.actualizar(pedidoId, locationData.latitud, locationData.longitud, heading);
+      } catch (apiError) {
+        console.error('Error al actualizar ubicación en el backend:', apiError);
+        // Continuar con Firebase incluso si el backend falla
+      }
       
       // 2. Actualizar en Firebase para tiempo real
-      const locationRef = ref(db, `deliveries/${pedidoId}/location`);
-      await set(locationRef, {
-        lat: parseFloat(position.lat),
-        lng: parseFloat(position.lng),
-        heading: heading ? parseFloat(heading) : 0,
-        timestamp: Date.now()
-      });
+      try {
+        const locationRef = ref(db, `deliveries/${pedidoId}/location`);
+        await set(locationRef, {
+          lat: parseFloat(position.lat),
+          lng: parseFloat(position.lng),
+          heading: heading ? parseFloat(heading) : 0,
+          timestamp: Date.now(),
+          isOnline: true
+        });
+        
+        // 3. Configurar cleanup cuando el usuario se desconecta
+        const onDisconnectRef = onDisconnect(locationRef);
+        onDisconnectRef.update({
+          isOnline: false,
+          lastSeen: Date.now()
+        });
+      } catch (firebaseError) {
+        console.error('Error al actualizar ubicación en Firebase:', firebaseError);
+      }
       
-      // 3. Configurar cleanup cuando el usuario se desconecta
-      const onDisconnectRef = onDisconnect(locationRef);
-      onDisconnectRef.update({
-        isOnline: false,
-        lastSeen: Date.now()
-      });
+      // Limpiar el registro de intentos fallidos
+      this.#locationFetchAttempts.delete(pedidoId);
       
       return true;
     } catch (error) {
       console.error('Error al actualizar ubicación:', error);
-      throw error;
+      return false;
     }
   }
-  
-  // Iniciar seguimiento de ubicación (watchPosition)
-  startTracking(pedidoId, callback) {
-    if (!navigator.geolocation) {
-      throw new Error('Geolocalización no soportada en este navegador');
-    }
-    
-    if (!pedidoId) {
-      throw new Error('Se requiere ID de pedido para iniciar seguimiento');
-    }
-    
-    // Opciones de geolocalización
-    const options = {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0
-    };
-    
-    // Manejar actualización de posición
-    const handlePositionUpdate = async (position) => {
-      const { latitude, longitude, heading } = position.coords;
-      
-      const locationData = {
-        lat: latitude,
-        lng: longitude,
-        heading: heading || 0,
-        timestamp: Date.now()
-      };
-      
-      try {
-        // Actualizar ubicación en backend y Firebase
-        await this.updateLocation(pedidoId, locationData);
-        
-        // Llamar al callback con la nueva ubicación
-        if (typeof callback === 'function') {
-          callback(locationData);
-        }
-      } catch (error) {
-        console.error('Error al actualizar ubicación durante seguimiento:', error);
-      }
-    };
-    
-    // Manejar errores de geolocalización
-    const handlePositionError = (error) => {
-      console.error('Error de geolocalización:', error);
-      
-      let errorMessage;
-      switch (error.code) {
-        case error.PERMISSION_DENIED:
-          errorMessage = 'El usuario denegó la solicitud de geolocalización.';
-          break;
-        case error.POSITION_UNAVAILABLE:
-          errorMessage = 'La información de ubicación no está disponible.';
-          break;
-        case error.TIMEOUT:
-          errorMessage = 'La solicitud de ubicación expiró.';
-          break;
-        default:
-          errorMessage = 'Ocurrió un error desconocido al obtener la ubicación.';
-      }
-      
-      // Notificar error en callback
-      if (typeof callback === 'function') {
-        callback(null, errorMessage);
-      }
-    };
-    
-    // Iniciar watch position
-    const watchId = navigator.geolocation.watchPosition(
-      handlePositionUpdate,
-      handlePositionError,
-      options
-    );
-    
-    // Hacer solicitud inicial
-    navigator.geolocation.getCurrentPosition(
-      handlePositionUpdate,
-      handlePositionError,
-      options
-    );
-    
-    // Devolver función para detener seguimiento
-    return () => {
-      navigator.geolocation.clearWatch(watchId);
-      
-      // Establecer estado offline en Firebase
-      const locationRef = ref(db, `deliveries/${pedidoId}/location`);
-      set(locationRef, {
-        isOnline: false,
-        lastSeen: Date.now()
-      });
-    };
-  }
-  
-  // Obtener la ubicación actual desde Firebase o backend
+
+  // Obtener la ubicación actual
   async getCurrentLocation(pedidoId) {
     try {
-      if (!pedidoId) {
-        throw new Error('Se requiere ID de pedido para obtener ubicación');
+      if (!pedidoId) return null;
+      
+      // Verificar si ya hemos intentado obtener esta ubicación y falló
+      if (this.#locationFetchAttempts.has(pedidoId)) {
+        const attempts = this.#locationFetchAttempts.get(pedidoId);
+        const lastAttempt = attempts.lastAttempt;
+        
+        // Si se ha intentado recientemente (menos de 10 segundos), no volver a intentar
+        if (Date.now() - lastAttempt < 10000 && attempts.count > 2) {
+          console.log(`Omitiendo consulta repetida para pedido ${pedidoId}`);
+          return null;
+        }
       }
       
-      // Intentar obtener de Firebase primero (tiempo real)
-      const locationRef = ref(db, `deliveries/${pedidoId}/location`);
-      const snapshot = await get(locationRef);
-      
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        return {
-          lat: parseFloat(data.lat),
-          lng: parseFloat(data.lng),
-          heading: data.heading || 0,
-          timestamp: data.timestamp || Date.now()
-        };
+      // Intentar obtener de Firebase primero
+      try {
+        const locationRef = ref(db, `deliveries/${pedidoId}/location`);
+        const snapshot = await get(locationRef);
+        
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          if (data && data.lat && data.lng) {
+            // Limpiar el registro de intentos
+            this.#locationFetchAttempts.delete(pedidoId);
+            
+            return {
+              lat: parseFloat(data.lat),
+              lng: parseFloat(data.lng),
+              heading: data.heading || 0,
+              timestamp: data.timestamp || Date.now(),
+              isOnline: data.isOnline || false
+            };
+          }
+        }
+      } catch (firebaseError) {
+        console.log("Firebase no disponible, intentando backend");
       }
       
       // Si no está en Firebase, intentar con el backend
-      const response = await ApiService.ubicacion.obtener(pedidoId);
-      
-      if (response.data) {
-        return {
-          lat: parseFloat(response.data.latitud),
-          lng: parseFloat(response.data.longitud),
-          heading: response.data.heading || 0,
-          timestamp: new Date(response.data.fechaActualizacion).getTime()
-        };
+      try {
+        const response = await ApiService.ubicacion.obtener(pedidoId);
+        if (response?.data) {
+          // Limpiar el registro de intentos
+          this.#locationFetchAttempts.delete(pedidoId);
+          
+          return {
+            lat: parseFloat(response.data.latitud),
+            lng: parseFloat(response.data.longitud),
+            heading: response.data.heading || 0,
+            timestamp: new Date(response.data.fechaActualizacion).getTime()
+          };
+        }
+      } catch (apiError) {
+        // Si es un 404, registrar el intento
+        if (apiError.response?.status === 404) {
+          const attempts = this.#locationFetchAttempts.get(pedidoId) || { count: 0 };
+          this.#locationFetchAttempts.set(pedidoId, {
+            count: attempts.count + 1,
+            lastAttempt: Date.now()
+          });
+        } else {
+          console.error("Error al obtener ubicación del backend:", apiError);
+        }
       }
       
       return null;
@@ -175,31 +134,39 @@ class LocationService {
       return null;
     }
   }
-  
-  // Suscribirse a actualizaciones de ubicación en tiempo real
+
+  // Suscribirse a actualizaciones de ubicación
   subscribeToLocationUpdates(pedidoId, callback) {
     if (!pedidoId || typeof callback !== 'function') {
-      console.error('Parámetros inválidos para subscribeToLocationUpdates');
+      console.log('Parámetros inválidos para subscribeToLocationUpdates');
       return () => {}; // Función vacía por defecto
     }
     
     try {
-      // Referencia a la ubicación en Firebase
       const locationRef = ref(db, `deliveries/${pedidoId}/location`);
+      let lastData = null;
       
-      // Escuchar cambios en tiempo real
       const unsubscribe = onValue(locationRef, (snapshot) => {
         if (snapshot.exists()) {
           const data = snapshot.val();
-          
-          // Verificar si los datos son válidos
           if (data && data.lat && data.lng) {
-            callback({
+            const locationData = {
               lat: parseFloat(data.lat),
               lng: parseFloat(data.lng),
               heading: data.heading || 0,
-              timestamp: data.timestamp || Date.now()
-            });
+              timestamp: data.timestamp || Date.now(),
+              isOnline: data.isOnline || false
+            };
+            
+            // Solo notificar si los datos han cambiado significativamente
+            const hasChanged = !lastData || 
+              Math.abs(lastData.lat - locationData.lat) > 0.0001 || 
+              Math.abs(lastData.lng - locationData.lng) > 0.0001;
+            
+            if (hasChanged) {
+              lastData = locationData;
+              callback(locationData);
+            }
           }
         } else {
           // Ubicación no disponible
@@ -210,46 +177,17 @@ class LocationService {
         callback(null, error.message);
       });
       
-      // Devolver función para cancelar suscripción
+      // Intentar inicializar la ubicación de forma segura
+      setTimeout(() => {
+        this.getCurrentLocation(pedidoId).catch(error => {
+          console.error("Error al inicializar ubicación:", error);
+        });
+      }, 1000);
+      
       return unsubscribe;
     } catch (error) {
       console.error('Error al suscribirse a actualizaciones de ubicación:', error);
       return () => {}; // Función vacía en caso de error
-    }
-  }
-  
-  // Calcular distancia entre dos coordenadas (fórmula de Haversine)
-  calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Radio de la Tierra en km
-    const dLat = this.toRad(lat2 - lat1);
-    const dLon = this.toRad(lon2 - lon1);
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    const d = R * c; // Distancia en km
-    return d;
-  }
-  
-  // Conversión de grados a radianes
-  toRad(degrees) {
-    return degrees * Math.PI / 180;
-  }
-  
-  // Calcular tiempo estimado de llegada
-  calculateETA(distance, speedKmh = 30) {
-    if (!distance) return null;
-    
-    // Tiempo en minutos = distancia (km) / velocidad (km/h) * 60
-    const timeMinutes = Math.round((distance / speedKmh) * 60);
-    
-    if (timeMinutes < 1) {
-      return 'Menos de 1 minuto';
-    } else if (timeMinutes === 1) {
-      return '1 minuto';
-    } else {
-      return `${timeMinutes} minutos`;
     }
   }
 }

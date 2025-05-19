@@ -1,10 +1,10 @@
 import React, { useState, useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaMotorcycle, FaMapMarkerAlt, FaStore, FaMoneyBillWave, FaChevronRight, FaComments } from 'react-icons/fa';
+import { FaMotorcycle, FaMapMarkerAlt, FaStore, FaMoneyBillWave, FaChevronRight, FaCheck, FaExclamationTriangle } from 'react-icons/fa';
 import ApiService from '../../services/api';
 import '../../styles/PedidosDisponibles.css';
 import '../../styles/ChatPedido.css'
-
+import NotificationManager from '../shared/Notification';
 
 const PedidosDisponibles = () => {
   const [pedidos, setPedidos] = useState([]);
@@ -12,12 +12,11 @@ const PedidosDisponibles = () => {
   const [error, setError] = useState(null);
   const [tomandoPedido, setTomandoPedido] = useState(false);
   const [pedidoSeleccionadoId, setPedidoSeleccionadoId] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const navigate = useNavigate();
-  const navigateToChat = (pedidoId) => {
-    console.log("Navegando al chat del pedido:", pedidoId);
-    navigate(`/repartidor/chat/${pedidoId}`);
-  };
 
   useEffect(() => {
     fetchPedidosDisponibles();
@@ -42,37 +41,60 @@ const PedidosDisponibles = () => {
       console.error('Error al cargar pedidos disponibles:', error);
       setError('No se pudieron cargar los pedidos disponibles. Por favor, intente nuevamente.');
       setLoading(false);
+      window.showNotification('Error al cargar pedidos disponibles', 'error');
     }
   };
 
-  const handleTomarPedido = async (pedidoId) => {
+  // Nuevo método para mostrar la confirmación
+  const handleMostrarConfirmacion = (pedido) => {
+    setPedidoSeleccionado(pedido);
+    setErrorMessage('');
+    setShowConfirmModal(true);
+  };
+
+  const handleTomarPedido = async () => {
+    if(!pedidoSeleccionado) return;
     try {
-      setPedidoSeleccionadoId(pedidoId);
+      setPedidoSeleccionadoId(pedidoSeleccionado.id);
       setTomandoPedido(true);
+      setErrorMessage('');
       
-      const response = await ApiService.pedidos.tomarPedido(pedidoId);
+      const response = await ApiService.pedidos.tomarPedido(pedidoSeleccionado.id);
       
       if (response.success) {
         // Recargar la lista de pedidos disponibles
+        setShowConfirmModal(false);
         fetchPedidosDisponibles();
         
         // Mostrar notificación de éxito
-        alert('Pedido tomado con éxito. Dirígete al restaurante para recogerlo.');
+        window.showNotification('Pedido tomado con éxito. Dirígete al restaurante para recogerlo.', 'success');
+        
+        // Pequeño retraso para que la notificación sea visible
+        setTimeout(() => {
+          navigate("/repartidor/pedidos-activos");
+        }, 1000);
       } else {
-        alert(response.message || 'No se pudo tomar el pedido. Inténtelo nuevamente.');
+        setErrorMessage(response.message || 'No se pudo tomar el pedido. Inténtelo nuevamente.');
+        window.showNotification(response.message || 'No se pudo tomar el pedido. Inténtelo nuevamente.', 'error');
       }
       
-      setTomandoPedido(false);
-      setPedidoSeleccionadoId(null);
     } catch (error) {
       console.error('Error al tomar pedido:', error);
-      alert('Error al tomar el pedido. Por favor, intenta nuevamente.');
+      const errorMsg = error.response?.data.message || 'Error al tomar el pedido. Por favor, intenta nuevamente.';
+      setErrorMessage(errorMsg);
+      window.showNotification(errorMsg, 'error');
+    } finally {
       setTomandoPedido(false);
       setPedidoSeleccionadoId(null);
     }
   };
 
-  //Nuevo fragmento
+  const handleCerrarModal = () => {
+    setShowConfirmModal(false);
+    setPedidoSeleccionado(null);
+    setErrorMessage('');
+    setTomandoPedido(false);
+  };
 
   const formatearDireccion = (dir) => {
     if (!dir) return "Dirección no disponible";
@@ -99,6 +121,9 @@ const PedidosDisponibles = () => {
 
   return (
     <div className="pedidos-disponibles-container">
+      {/* Añadir NotificationManager */}
+      <NotificationManager />
+      
       <div className="pedidos-header">
         <h1>Pedidos Disponibles</h1>
         <p>Elige un pedido para entregar</p>
@@ -119,7 +144,7 @@ const PedidosDisponibles = () => {
                   <FaStore className="icon" />
                   <h3>{pedido.restaurante.nombre}</h3>
                 </div>
-                <span className="pedido-id">#{pedido.id}</span>
+                {/* Eliminado el ID del pedido */}
               </div>
               
               <div className="pedido-body">
@@ -128,7 +153,7 @@ const PedidosDisponibles = () => {
                   <div className="location-info">
                     <span className="direccion-label">Dirección de entrega:</span>
                     <p className="direccion-text">{formatearDireccion(pedido.direccionEntrega)}</p> 
-                    </div>
+                  </div>
                 </div>
                 
                 <div className="info-row">
@@ -151,8 +176,8 @@ const PedidosDisponibles = () => {
               <div className="pedido-footer">
                 <button 
                   className="tomar-pedido-btn"
-                  onClick={() => handleTomarPedido(pedido.id)}
-                  disabled={tomandoPedido && pedidoSeleccionadoId === pedido.id}
+                  onClick={() => handleMostrarConfirmacion(pedido)}
+                  disabled={tomandoPedido}
                 >
                   {tomandoPedido && pedidoSeleccionadoId === pedido.id ? (
                     <>
@@ -166,16 +191,64 @@ const PedidosDisponibles = () => {
                     </>
                   )}
                 </button>
-                <button className="chat-button"
-                onClick={() => navigateToChat(pedido.id)}
-                >
-                  <FaComments />
-                  <span>Chat</span>
-                </button>
-                
+                {/* Eliminado el botón de chat */}
               </div>
             </div>
           ))}
+        </div>
+      )}
+      
+      {/* Modal de confirmación */}
+      {showConfirmModal && pedidoSeleccionado && (
+        <div className='confirmation-modal-overlay'>
+          <div className='confirmation-modal'>
+            <h2>Confirmar Asignación</h2>
+
+            <div className='modal-pedido-info'>
+              <p><strong>Restaurante:</strong> {pedidoSeleccionado.restaurante.nombre}</p>
+              <p><strong>Dirección:</strong> {formatearDireccion(pedidoSeleccionado.direccionEntrega)}</p>
+              <p><strong>Total:</strong> ${pedidoSeleccionado.total}</p>
+            </div>
+
+            <div className="confirmation-question">
+              <FaExclamationTriangle className="question-icon" />
+              <p>¿Quieres asignarte a este pedido?</p>
+            </div>
+            
+            {errorMessage && (
+              <div className="error-message">
+                <FaExclamationTriangle />
+                <p>{errorMessage}</p>
+              </div>
+            )}
+            
+            <div className="modal-actions">
+              <button 
+                className="cancel-btn"
+                onClick={handleCerrarModal}
+                disabled={tomandoPedido}
+              >
+                Cancelar
+              </button>
+              <button 
+                className="confirm-btn" 
+                onClick={handleTomarPedido}
+                disabled={tomandoPedido}
+              >
+                {tomandoPedido ? (
+                  <>
+                    <div className="btn-spinner small"></div>
+                    <span>Asignando...</span>
+                  </>
+                ) : (
+                  <>
+                    <FaCheck />
+                    <span>Confirmar</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

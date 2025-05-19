@@ -471,6 +471,521 @@ exports.editarPedido = async (req, res) =>{
   }
 };
 
+// Método para obtener todos los pedidos de un restaurante
+exports.getPedidosRestaurante = async (req, res) => {
+  try {
+    const { restauranteId } = req.params;
+    const { estado, fechaDesde, fechaHasta } = req.query;
+    const adminId = req.user.id;
+
+    // Verificar que el restaurante existe y pertenece al admin
+    const restaurante = await prisma.restaurantes.findUnique({
+      where: { id: restauranteId }
+    });
+
+    if (!restaurante) {
+      return res.status(404).json({ message: 'Restaurante no encontrado' });
+    }
+
+    if (!restaurante.usuariosIds.includes(adminId)) {
+      return res.status(403).json({ message: 'No tienes permiso para acceder a este restaurante' });
+    }
+
+    // Construir la consulta con filtros opcionales
+    let where = {};
+    
+    // Para filtrar pedidos del restaurante, necesitamos verificar los productos
+    // Primero obtenemos todos los productos del restaurante
+    const productosRestaurante = await prisma.productos.findMany({
+      where: { restaurante_Id: restauranteId },
+      select: { id: true }
+    });
+    
+    const productosIds = productosRestaurante.map(p => p.id);
+    
+    // Buscamos pedidos que contengan estos productos
+    where.productos = {
+      some: {
+        productoId: { in: productosIds }
+      }
+    };
+
+    // Filtrar por estado si se proporciona
+    if (estado) {
+      where.estado = estado;
+    }
+
+    // Filtrar por rango de fechas si se proporciona
+    if (fechaDesde || fechaHasta) {
+      where.fechaDeCreacion = {};
+      
+      if (fechaDesde) {
+        where.fechaDeCreacion.gte = new Date(fechaDesde);
+      }
+      
+      if (fechaHasta) {
+        where.fechaDeCreacion.lte = new Date(fechaHasta);
+      }
+    }
+
+    // Obtener pedidos con la consulta construida
+    const pedidos = await prisma.pedidos.findMany({
+      where,
+      orderBy: {
+        fechaDeCreacion: 'desc'
+      },
+      include: {
+        calificaciones: true
+      }
+    });
+
+    // Para cada pedido, obtener información del cliente
+    const pedidosConCliente = await Promise.all(pedidos.map(async (pedido) => {
+      const cliente = await prisma.usuarios.findUnique({
+        where: { id: pedido.usuario_id },
+        select: {
+          id: true,
+          nombreCompleto: true,
+          telefono: true
+        }
+      });
+
+      // Obtener detalles de los productos (nombre, precio)
+      const productosConDetalles = await Promise.all(pedido.productos.map(async (item) => {
+        const producto = await prisma.productos.findUnique({
+          where: { id: item.productoId }
+        });
+        
+        return {
+          ...item,
+          nombre: producto?.nombre || 'Producto no disponible',
+          precio: producto?.precio || 0
+        };
+      }));
+
+      return {
+        ...pedido,
+        cliente,
+        productos: productosConDetalles
+      };
+    }));
+
+    res.status(200).json(pedidosConCliente);
+  } catch (error) {
+    console.error('Error al obtener pedidos del restaurante:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener pedidos del restaurante', 
+      error: error.message 
+    });
+  }
+};
+
+// Método para obtener pedidos pendientes de un restaurante
+exports.getPedidosPendientesRestaurante = async (req, res) => {
+  try {
+    const { restauranteId } = req.params;
+    const adminId = req.user.id;
+
+    // Verificar que el restaurante existe y pertenece al admin
+    const restaurante = await prisma.restaurantes.findUnique({
+      where: { id: restauranteId }
+    });
+
+    if (!restaurante) {
+      return res.status(404).json({ message: 'Restaurante no encontrado' });
+    }
+
+    if (!restaurante.usuariosIds.includes(adminId)) {
+      return res.status(403).json({ message: 'No tienes permiso para acceder a este restaurante' });
+    }
+
+    // Obtener todos los productos del restaurante
+    const productosRestaurante = await prisma.productos.findMany({
+      where: { restaurante_Id: restauranteId },
+      select: { id: true }
+    });
+    
+    const productosIds = productosRestaurante.map(p => p.id);
+    
+    // Buscar pedidos pendientes que contengan estos productos
+    const pedidosPendientes = await prisma.pedidos.findMany({
+      where: {
+        estado: 'Pendiente',
+        productos: {
+          some: {
+            productoId: { in: productosIds }
+          }
+        }
+      },
+      orderBy: {
+        fechaDeCreacion: 'asc' // Primero los más antiguos
+      }
+    });
+
+    // Para cada pedido, obtener información del cliente
+    const pedidosConCliente = await Promise.all(pedidosPendientes.map(async (pedido) => {
+      const cliente = await prisma.usuarios.findUnique({
+        where: { id: pedido.usuario_id },
+        select: {
+          id: true,
+          nombreCompleto: true,
+          telefono: true
+        }
+      });
+
+      // Obtener detalles de los productos (nombre, precio)
+      const productosConDetalles = await Promise.all(pedido.productos.map(async (item) => {
+        const producto = await prisma.productos.findUnique({
+          where: { id: item.productoId }
+        });
+        
+        return {
+          ...item,
+          nombre: producto?.nombre || 'Producto no disponible',
+          precio: producto?.precio || 0
+        };
+      }));
+
+      return {
+        ...pedido,
+        cliente,
+        productos: productosConDetalles
+      };
+    }));
+
+    res.status(200).json(pedidosConCliente);
+  } catch (error) {
+    console.error('Error al obtener pedidos pendientes:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener pedidos pendientes', 
+      error: error.message 
+    });
+  }
+};
+
+// Método para que el restaurante acepte un pedido
+exports.aceptarPedido = async (req, res) => {
+  try {
+    const { pedidoId } = req.params;
+    const adminId = req.user.id;
+    
+    // Buscar el pedido
+    const pedido = await prisma.pedidos.findUnique({
+      where: { id: pedidoId }
+    });
+    
+    if (!pedido) {
+      return res.status(404).json({ message: 'Pedido no encontrado' });
+    }
+    
+    // Verificar que el pedido esté en estado Pendiente
+    if (pedido.estado !== 'Pendiente') {
+      return res.status(400).json({ message: 'Solo se pueden aceptar pedidos en estado Pendiente' });
+    }
+    
+    // Obtener el primer producto del pedido para identificar el restaurante
+    const primerProducto = await prisma.productos.findUnique({
+      where: { id: pedido.productos[0].productoId }
+    });
+    
+    if (!primerProducto) {
+      return res.status(404).json({ message: 'No se encontró información del producto' });
+    }
+    
+    // Obtener el restaurante
+    const restaurante = await prisma.restaurantes.findUnique({
+      where: { id: primerProducto.restaurante_Id }
+    });
+    
+    // Verificar que el restaurante pertenezca al admin
+    if (!restaurante || !restaurante.usuariosIds.includes(adminId)) {
+      return res.status(403).json({ message: 'No tienes permiso para gestionar este pedido' });
+    }
+    
+    // Actualizar el estado del pedido a "En_Preparacion" (agregamos este estado)
+    const pedidoActualizado = await prisma.pedidos.update({
+      where: { id: pedidoId },
+      data: { estado: 'En_Preparacion' }
+    });
+    
+    res.status(200).json({
+      message: 'Pedido aceptado correctamente',
+      pedido: pedidoActualizado
+    });
+  } catch (error) {
+    console.error('Error al aceptar pedido:', error);
+    res.status(500).json({ 
+      message: 'Error al aceptar el pedido', 
+      error: error.message 
+    });
+  }
+};
+
+// Método para que el restaurante rechace un pedido
+exports.rechazarPedido = async (req, res) => {
+  try {
+    const { pedidoId } = req.params;
+    const { motivo } = req.body;
+    const adminId = req.user.id;
+    
+    // Buscar el pedido
+    const pedido = await prisma.pedidos.findUnique({
+      where: { id: pedidoId }
+    });
+    
+    if (!pedido) {
+      return res.status(404).json({ message: 'Pedido no encontrado' });
+    }
+    
+    // Verificar que el pedido esté en estado Pendiente
+    if (pedido.estado !== 'Pendiente') {
+      return res.status(400).json({ message: 'Solo se pueden rechazar pedidos en estado Pendiente' });
+    }
+    
+    // Obtener el primer producto del pedido para identificar el restaurante
+    const primerProducto = await prisma.productos.findUnique({
+      where: { id: pedido.productos[0].productoId }
+    });
+    
+    if (!primerProducto) {
+      return res.status(404).json({ message: 'No se encontró información del producto' });
+    }
+    
+    // Obtener el restaurante
+    const restaurante = await prisma.restaurantes.findUnique({
+      where: { id: primerProducto.restaurante_Id }
+    });
+    
+    // Verificar que el restaurante pertenezca al admin
+    if (!restaurante || !restaurante.usuariosIds.includes(adminId)) {
+      return res.status(403).json({ message: 'No tienes permiso para gestionar este pedido' });
+    }
+    
+    // Actualizar el estado del pedido a "Cancelado"
+    const pedidoActualizado = await prisma.pedidos.update({
+      where: { id: pedidoId },
+      data: { 
+        estado: 'Cancelado',
+        motivoRechazo: motivo || 'Rechazado por el restaurante'
+      }
+    });
+    
+    res.status(200).json({
+      message: 'Pedido rechazado correctamente',
+      pedido: pedidoActualizado
+    });
+  } catch (error) {
+    console.error('Error al rechazar pedido:', error);
+    res.status(500).json({ 
+      message: 'Error al rechazar el pedido', 
+      error: error.message 
+    });
+  }
+};
+
+// Método para marcar un pedido como preparado (listo para entrega)
+exports.marcarPedidoPreparado = async (req, res) => {
+  try {
+    const { pedidoId } = req.params;
+    const adminId = req.user.id;
+    
+    // Buscar el pedido
+    const pedido = await prisma.pedidos.findUnique({
+      where: { id: pedidoId }
+    });
+    
+    if (!pedido) {
+      return res.status(404).json({ message: 'Pedido no encontrado' });
+    }
+    
+    // Verificar que el pedido esté en estado En_Preparacion
+    if (pedido.estado !== 'En_Preparacion') {
+      return res.status(400).json({ message: 'Solo se pueden marcar como preparados los pedidos en estado En_Preparacion' });
+    }
+    
+    // Obtener el primer producto del pedido para identificar el restaurante
+    const primerProducto = await prisma.productos.findUnique({
+      where: { id: pedido.productos[0].productoId }
+    });
+    
+    if (!primerProducto) {
+      return res.status(404).json({ message: 'No se encontró información del producto' });
+    }
+    
+    // Obtener el restaurante
+    const restaurante = await prisma.restaurantes.findUnique({
+      where: { id: primerProducto.restaurante_Id }
+    });
+    
+    // Verificar que el restaurante pertenezca al admin
+    if (!restaurante || !restaurante.usuariosIds.includes(adminId)) {
+      return res.status(403).json({ message: 'No tienes permiso para gestionar este pedido' });
+    }
+    
+    // Verificar si ya hay un repartidor asignado
+    if (!pedido.repartidor_Id) {
+      return res.status(400).json({ message: 'El pedido necesita un repartidor asignado antes de marcarlo como preparado' });
+    }
+    
+    // Actualizar el estado del pedido a "Preparado"
+    const pedidoActualizado = await prisma.pedidos.update({
+      where: { id: pedidoId },
+      data: { estado: 'Preparado' }
+    });
+    
+    res.status(200).json({
+      message: 'Pedido marcado como preparado correctamente',
+      pedido: pedidoActualizado
+    });
+  } catch (error) {
+    console.error('Error al marcar pedido como preparado:', error);
+    res.status(500).json({ 
+      message: 'Error al marcar el pedido como preparado', 
+      error: error.message 
+    });
+  }
+};
+
+// Método para obtener estadísticas de pedidos para un restaurante
+exports.getEstadisticasRestaurante = async (req, res) => {
+  try {
+    const { restauranteId } = req.params;
+    const { periodo } = req.query; // 'hoy', 'semana', 'mes', 'año'
+    const adminId = req.user.id;
+    
+    // Verificar que el restaurante existe y pertenece al admin
+    const restaurante = await prisma.restaurantes.findUnique({
+      where: { id: restauranteId }
+    });
+    
+    if (!restaurante) {
+      return res.status(404).json({ message: 'Restaurante no encontrado' });
+    }
+    
+    if (!restaurante.usuariosIds.includes(adminId)) {
+      return res.status(403).json({ message: 'No tienes permiso para acceder a este restaurante' });
+    }
+    
+    // Obtener todos los productos del restaurante
+    const productosRestaurante = await prisma.productos.findMany({
+      where: { restaurante_Id: restauranteId },
+      select: { id: true }
+    });
+    
+    const productosIds = productosRestaurante.map(p => p.id);
+    
+    // Determinar el rango de fechas según el período
+    let fechaDesde = new Date();
+    switch (periodo) {
+      case 'hoy':
+        fechaDesde.setHours(0, 0, 0, 0);
+        break;
+      case 'semana':
+        fechaDesde.setDate(fechaDesde.getDate() - 7);
+        break;
+      case 'mes':
+        fechaDesde.setMonth(fechaDesde.getMonth() - 1);
+        break;
+      case 'año':
+        fechaDesde.setFullYear(fechaDesde.getFullYear() - 1);
+        break;
+      default:
+        // Por defecto, mostrar estadísticas del último mes
+        fechaDesde.setMonth(fechaDesde.getMonth() - 1);
+    }
+    
+    // Buscar todos los pedidos del restaurante en el período
+    const pedidos = await prisma.pedidos.findMany({
+      where: {
+        fechaDeCreacion: {
+          gte: fechaDesde
+        },
+        productos: {
+          some: {
+            productoId: { in: productosIds }
+          }
+        }
+      }
+    });
+    
+    // Calcular estadísticas
+    const totalPedidos = pedidos.length;
+    const pedidosPendientes = pedidos.filter(p => p.estado === 'Pendiente').length;
+    const pedidosEnPreparacion = pedidos.filter(p => p.estado === 'En_Preparacion').length;
+    const pedidosEnCamino = pedidos.filter(p => p.estado === 'En_Camino').length;
+    const pedidosEntregados = pedidos.filter(p => p.estado === 'Entregado').length;
+    const pedidosCancelados = pedidos.filter(p => p.estado === 'Cancelado').length;
+    
+    // Calcular ingreso total
+    const totalIngresos = pedidos
+      .filter(p => p.estado === 'Entregado')
+      .reduce((sum, p) => sum + p.total, 0);
+    
+    // Calcular promedio de calificaciones si hay
+    let promedioCalificacion = 0;
+    const pedidosCalificados = pedidos.filter(p => p.calificaciones && p.calificaciones.length > 0);
+    
+    if (pedidosCalificados.length > 0) {
+      const sumaCalificaciones = pedidosCalificados.reduce((sum, p) => {
+        const calificacion = p.calificaciones[0];
+        return sum + calificacion.calificacionPedido;
+      }, 0);
+      
+      promedioCalificacion = sumaCalificaciones / pedidosCalificados.length;
+    }
+    
+    // Obtener productos más vendidos
+    const productosVendidos = {};
+    pedidos.forEach(pedido => {
+      pedido.productos.forEach(item => {
+        if (!productosVendidos[item.productoId]) {
+          productosVendidos[item.productoId] = 0;
+        }
+        productosVendidos[item.productoId] += item.cantidad;
+      });
+    });
+    
+    // Convertir a array y ordenar
+    const productosArray = Object.entries(productosVendidos).map(([id, cantidad]) => ({ id, cantidad }));
+    productosArray.sort((a, b) => b.cantidad - a.cantidad);
+    
+    // Obtener detalles de los 5 productos más vendidos
+    const topProductos = await Promise.all(
+      productosArray.slice(0, 5).map(async (item) => {
+        const producto = await prisma.productos.findUnique({
+          where: { id: item.id }
+        });
+        
+        return {
+          id: item.id,
+          nombre: producto?.nombre || 'Producto no disponible',
+          cantidad: item.cantidad,
+          ingresos: (producto?.precio || 0) * item.cantidad
+        };
+      })
+    );
+    
+    res.status(200).json({
+      periodo,
+      totalPedidos,
+      pedidosPendientes,
+      pedidosEnPreparacion,
+      pedidosEnCamino,
+      pedidosEntregados,
+      pedidosCancelados,
+      totalIngresos,
+      promedioCalificacion,
+      topProductos
+    });
+  } catch (error) {
+    console.error('Error al obtener estadísticas:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener estadísticas', 
+      error: error.message 
+    });
+  }
+};
+
 //Nuevos métodos para el frontend del repartidor desde aqui:
 
 // Método para obtener todos los pedidos disponibles (sin repartidor asignado)
@@ -761,4 +1276,18 @@ exports.getHistorialRepartidor = async (req, res) => {
       error: error.message 
     });
   }
+};
+// En pedidosController.js
+exports.listarPedidosUsuario = async (req, res) => {
+  // Simplemente redirigir al método existente
+  return exports.getPedidosCliente(req, res);
+};
+exports.obtenerPedido = async (req, res) => {
+  // Puedes simplemente redirigir al método existente
+  return exports.getPedidoDetalle(req, res);
+};
+// En pedidosController.js
+exports.asignarRepartidor = async (req, res) => {
+  // Puedes redirigir al método existente
+  return exports.asignarPedido(req, res);
 };

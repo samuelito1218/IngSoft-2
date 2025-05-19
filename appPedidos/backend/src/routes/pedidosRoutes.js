@@ -3,6 +3,8 @@ const router = express.Router();
 const pedidosController = require('../controllers/pedidosController');
 const { authenticate, authorize } = require('../middlewares/authMiddleware');
 
+
+router.get('/', authenticate, pedidosController.getPedidosCliente);
 // Rutas para repartidores
 router.get(
   "/disponibles",
@@ -10,6 +12,7 @@ router.get(
   authorize("Repartidor"), 
   pedidosController.getPedidosDisponibles
 );
+
 
 router.get(
   "/repartidor/activos",
@@ -54,7 +57,7 @@ router.put(
   authorize('Repartidor'),
   pedidosController.asignarPedido
 );
-
+router.put('/:id/repartidor', authenticate, authorize('Administrador'), pedidosController.asignarPedido);
 router.put(
   '/en-camino/:pedidoId',
   authenticate,
@@ -89,4 +92,50 @@ router.get(
   pedidosController.getPedidoDetalle  
 );
 
+// Rutas para restaurantes
+router.get(
+  "/restaurante/:restauranteId",
+  authenticate,
+  authorize("Admin"),
+  pedidosController.getPedidosRestaurante
+);
+
+router.get(
+  "/restaurante/:restauranteId/pendientes",
+  authenticate,
+  authorize("Admin"),
+  pedidosController.getPedidosPendientesRestaurante
+);
+
+router.put(
+  "/aceptar/:pedidoId",
+  authenticate,
+  authorize("Admin"),
+  pedidosController.aceptarPedido
+);
+
+router.put(
+  "/rechazar/:pedidoId",
+  authenticate,
+  authorize("Admin"),
+  pedidosController.rechazarPedido
+);
+
+router.put(
+  "/preparado/:pedidoId",
+  authenticate,
+  authorize("Admin"),
+  pedidosController.marcarPedidoPreparado
+);
+
+router.get(
+  "/restaurante/:restauranteId/estadisticas",
+  authenticate,
+  authorize("Admin"),
+  pedidosController.getEstadisticasRestaurante
+);
+//router.get('/:id', authenticate, pedidosController.obtenerPedido);
+router.put('/:id/repartidor', authenticate, authorize('Administrador'), pedidosController.asignarRepartidor);
+
 module.exports = router;
+router.get('/:id', authenticate, pedidosController.getPedidoDetalle);

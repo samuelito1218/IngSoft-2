@@ -1,108 +1,355 @@
-/* AddRestaurant.css */
-
-/* Contenedor general */
 .add-restaurant-container {
-  font-family: 'Inter', sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
-/* Inputs y textarea */
-.add-restaurant-container input[type="text"],
-.add-restaurant-container textarea {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #cbd5e0;
-  border-radius: 4px;
-  font-size: 1rem;
-  transition: border-color 0.2s;
-}
-.add-restaurant-container input[type="text"]:focus,
-.add-restaurant-container textarea:focus {
-  outline: none;
-  border-color: #ff7424;
+.form-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
 }
 
-/* File selector button */
-input[type="file"] {
-  width: 100%;
-  margin-bottom: 1rem;
-}
-input[type="file"]::file-selector-button {
-  padding: 0.5rem 1rem;
-  background-color: #ff7424;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-input[type="file"]::file-selector-button:hover {
-  background-color: #e0631c;
+.form-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
 }
 
-/* Botón agregar sucursal */
-.add-branch-btn {
-  padding: 0.5rem 1rem;
-  background-color: #ff7424;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin-top: 1rem;
-  margin-bottom: 1.5rem; /* Espacio adicional abajo */
-}
-.add-branch-btn:hover {
-  background-color: #e0631c;
-}
-
-/* Botón eliminar sucursal */
-.remove-branch-btn {
-  background-color: #ff7424;
-  color: #fff;
-  border: none;
+.back-button {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
-  width: 1.5rem;
-  height: 1.5rem;
-  text-align: center;
-  line-height: 1.5rem;
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  color: #666;
+  font-size: 16px;
   cursor: pointer;
-  transition: background-color 0.2s;
-  margin-left: 0.5rem;
-}
-.remove-branch-btn:hover {
-  background-color: #e0631c;
+  transition: all 0.2s;
 }
 
-/* Botón de envío */
-.submit-btn {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: #ff7424;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-.submit-btn:hover {
-  background-color: #e0631c;
+.back-button:hover {
+  background-color: #f5f5f5;
+  border-color: #ccc;
+  color: #333;
 }
 
-/* Mensajes */
+.error-message {
+  padding: 16px;
+  background-color: #ffebee;
+  color: #d32f2f;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
 .success-message {
-  background-color: #e6fffa;
-  color: #2c7a7b;
-  border: 1px solid #b2f5ea;
-  padding: 0.75rem 1rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-  text-align: center;
-  font-weight: 600;
+  padding: 16px;
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border-radius: 8px;
+  margin-bottom: 24px;
 }
-.message.error {
-  color: #e53e3e;
-  margin-top: 1rem;
+
+.restaurant-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-section {
+  background-color: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.form-section h3 {
+  margin: 0 0 24px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.add-branch-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #ff4b2b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-branch-btn:hover {
+  background-color: #e63e1a;
+  transform: translateY(-2px);
+}
+
+.image-upload-section {
+  margin-bottom: 24px;
+}
+
+.image-upload-placeholder {
+  width: 100%;
+  height: 200px;
+  border: 2px dashed #e0e0e0;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: #f9f9f9;
+}
+
+.image-upload-placeholder:hover {
+  border-color: #ff4b2b;
+  background-color: #fff9f8;
+}
+
+.placeholder-icon {
+  font-size: 40px;
+  color: #ccc;
+  margin-bottom: 12px;
+}
+
+.image-upload-placeholder p {
+  margin: 0;
+  color: #888;
+  font-size: 14px;
+}
+
+.image-preview-container {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.remove-image-btn:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1);
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #555;
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+  color: #333;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: #ff4b2b;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 75, 43, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.branch-container {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.branch-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.branch-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.remove-branch-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.remove-branch-btn:hover {
+  background-color: #d32f2f;
+  transform: scale(1.1);
+}
+
+.branch-fields {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.branch-fields .form-group:last-child {
+  grid-column: span 2;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.cancel-button,
+.submit-button {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.cancel-button {
+  background-color: #f5f5f5;
+  color: #555;
+  border: 1px solid #e0e0e0;
+}
+
+.cancel-button:hover:not(:disabled) {
+  background-color: #e0e0e0;
+}
+
+.submit-button {
+  background-color: #ff4b2b;
+  color: white;
+  border: none;
+  box-shadow: 0 4px 8px rgba(255, 75, 43, 0.2);
+}
+
+.submit-button:hover:not(:disabled) {
+  background-color: #e63e1a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(255, 75, 43, 0.25);
+}
+
+.cancel-button:disabled,
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .branch-fields {
+    grid-template-columns: 1fr;
+  }
+  
+  .branch-fields .form-group:last-child {
+    grid-column: span 1;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .cancel-button, 
+  .submit-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .form-section {
+    padding: 16px;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .add-branch-btn {
+    width: 100%;
+  }
+  
+  .image-upload-placeholder, 
+  .image-preview-container {
+    height: 160px;
+  }
 }

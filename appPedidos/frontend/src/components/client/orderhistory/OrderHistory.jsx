@@ -8,6 +8,7 @@ import {
 } from 'react-icons/fa';
 import { useAuth } from '../../../hooks/useAuth';
 import ApiService from '../../../services/api';
+import OrderService from '../../../services/OrderService';
 import './OrderHistory.css';
 
 const OrderHistory = () => {

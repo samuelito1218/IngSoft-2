@@ -6,6 +6,7 @@ import {
 } from 'react-icons/fa';
 import { useAuth } from '../../hooks/useAuth';
 import './layouts.css';
+import FloatingChatButton from '../shared/FloatingChatButton';
 
 const RepartidorLayout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -152,6 +153,7 @@ const RepartidorLayout = ({ children }) => {
           <p>&copy; {new Date().getFullYear()} FastFood - Todos los derechos reservados</p>
         </div>
       </footer>
+      <FloatingChatButton />
     </div>
   );
 };

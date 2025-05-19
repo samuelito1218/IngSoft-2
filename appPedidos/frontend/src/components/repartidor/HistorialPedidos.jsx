@@ -3,7 +3,7 @@ import { FaHistory, FaStore, FaUser, FaCalendarAlt, FaComments } from 'react-ico
 import { useNavigate } from 'react-router-dom';
 import ApiService from '../../services/api';
 import '../../styles/HistorialPedidos.css';
-import '../../styles/ChatPedido.css';
+//import '../../styles/ChatPedido.css';
 
 const HistorialPedidos = () => {
   const [pedidos, setPedidos] = useState([]);
@@ -11,10 +11,10 @@ const HistorialPedidos = () => {
   const [error, setError] = useState(null);
 
   const navigate = useNavigate();
-  const navigateToChat = (pedidoId) => {
+  /*const navigateToChat = (pedidoId) => {
     console.log("Navegando al chat del pedido:", pedidoId);
     navigate(`/repartidor/chat/${pedidoId}`);
-  };
+  };*/
   
   useEffect(() => {
     const fetchHistorial = async () => {
@@ -109,12 +109,7 @@ const HistorialPedidos = () => {
         </div>
       )}
 
-      <button className="chat-button"
-                    onClick={() => navigateToChat(pedido.id)}
-                    >
-                      <FaComments />
-                      <span>Chat</span>
-                    </button>
+      
     </div>
   );
 };
