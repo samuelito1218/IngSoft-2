@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const usuariosController = require("../controllers/usuariosController");
 const { authenticate } = require('../middlewares/authMiddleware');
-
+//
 // Rutas explícitas (específicas) primero
 router.get('/perfil', authenticate, usuariosController.getUserProfile);
 router.put('/perfil', authenticate, usuariosController.updateUserProfile);

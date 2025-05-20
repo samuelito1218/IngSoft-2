@@ -1,4 +1,4 @@
-// src/components/client/MapTest.jsx
+// src/components/client/MapTest.jssx
 import React, { useState, useEffect } from 'react';
 import MapComponent from '../shared/LeafletMapComponent';
 import { FaMapMarkerAlt, FaCheck, FaTimes } from 'react-icons/fa';

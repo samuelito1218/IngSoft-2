@@ -1,6 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 //const { ObjectId } = require('mongodb');
-
+//
 const prisma = new PrismaClient();
 // Método para obtener el historial de pedidos de un cliente
 exports.getPedidosCliente = async (req, res) => {

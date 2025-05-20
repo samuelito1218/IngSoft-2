@@ -1,4 +1,4 @@
-// src/components/shared/LeafletMapComponent.jsx
+// src/components/shared/LeafletMapComponent.jsx//
 import React, { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';

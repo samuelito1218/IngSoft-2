@@ -1,3 +1,4 @@
+//
 class PaymentStrategy {
     constructor() {
       if (this.constructor === PaymentStrategy) {

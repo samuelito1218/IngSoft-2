@@ -5,7 +5,7 @@ import './RestaurantCard.css';
 const DEFAULT_IMAGE = '/images/restaurant-placeholder.jpg';
 
 const RestaurantCard = ({ restaurant, onClick }) => {
-  // Adaptador para manejar diferentes formatos de datos
+  // Adaptador para manejar diferentes formatos de s
   const restaurantData = {
     nombre: restaurant.nombre || 'Restaurante sin nombre',
     descripcion: restaurant.descripcion || '',

@@ -1,4 +1,4 @@
-// src/services/CloudinaryService.js - Con compresión de imágenes
+// src/services/CloudinaryService.js - Con compresión de imágenes//
 import ApiService from './api';
 
 const CLOUDINARY_UPLOAD_PRESET = 'perfil_usuarios';
@@ -67,52 +67,33 @@ const CloudinaryService = {
     },
 
     // Método original para imágenes de perfil
-    async uploadProfileImage(file) {
-      try {
-        if (!file) {
-          throw new Error('Se requiere un archivo');
-        }
-  
-        // Comprimir imagen si es demasiado grande
-        let fileToUpload = file;
-        if (file.size > MAX_FILE_SIZE) {
-          fileToUpload = await this.compressImage(file);
-          console.log(`Imagen comprimida: ${file.size} → ${fileToUpload.size} bytes`);
-        }
-        
-        // Preparar formData para la subida
-        const formData = new FormData();
-        formData.append('file', fileToUpload);
-        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-  
-        // Subir a Cloudinary
-        const response = await fetch(
-          `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-          {
-            method: 'POST',
-            body: formData,
-          }
-        );
-  
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          console.error('Error detallado de Cloudinary:', errorData);
-          throw new Error(`Error al subir imagen a Cloudinary: ${errorData.error?.message || response.statusText}`);
-        }
-  
-        const data = await response.json();
-        
-        // Actualizar perfil en tu backend con la nueva URL
-        await ApiService.usuarios.actualizarImagen({
-          imageUrl: data.secure_url
-        });
-        
-        return data.secure_url;
-      } catch (error) {
-        console.error('Error al subir imagen de perfil:', error);
-        throw error;
-      }
-    },
+    // Método original para imágenes de perfil
+async uploadProfileImage(file) {
+  try {
+    if (!file) {
+      throw new Error('Se requiere un archivo');
+    }
+    
+    // Usar el método general uploadImage que ya funciona
+    const secureUrl = await this.uploadImage(file, 'perfiles');
+
+    const formDataToBackend = new FormData();
+    formDataToBackend.append('imageUrl', secureUrl);
+    
+    // Actualizar el perfil en el backend usando FormData
+    try {
+      await ApiService.usuarios.actualizarImagen({
+        imageUrl: secureUrl});
+    } catch (backendError) {
+      console.warn('No se pudo actualizar la imagen en el backend, pero se subió correctamente a Cloudinary', backendError);
+    }
+    
+    return secureUrl;
+  } catch (error) {
+    console.error('Error al subir imagen de perfil:', error);
+    throw error;
+  }
+},
 
     // Método general para subir cualquier imagen a Cloudinary - CORREGIDO con compresión
     async uploadImage(file, folder = '') {

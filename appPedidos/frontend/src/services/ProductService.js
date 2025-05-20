@@ -1,4 +1,4 @@
-// src/services/ProductService.js (Servicio mejorado)
+// src/services/ProductService.js (Servicio mejorado)//
 import { api } from './api';
 
 const ProductService = {

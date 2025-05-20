@@ -6,6 +6,7 @@ import { useAuth } from './hooks/useAuth';
 import ChatService from './services/ChatService';
 import MapTest from './components/client/MapTest';
 // Componentes de autenticación
+//
 import Login from './pages/Login';
 import Register from './components/Register';
 import RecoverPassword from './components/RecoverPassword';

@@ -1,4 +1,4 @@
-// src/contexts/AuthContext.jsx - Implementación adaptada a tu backend actual
+// src/contexts/AuthContext.jssx - Implementación adaptada a tu backend actual
 import React, { createContext, useState, useEffect } from 'react';
 
 export const AuthContext = createContext();

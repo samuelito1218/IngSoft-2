@@ -1,4 +1,4 @@
-// src/components/shared/ChatComponent.jsx - Versión mejorada
+// src/components/shared/ChatComponent.jsx - Versión mejorada//
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import ChatService from '../../services/ChatService';

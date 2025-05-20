@@ -1,4 +1,4 @@
-// src/components/client/ProfileComponent.jsx
+// src/components/client/ProfileComponent.jssx
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import ProfileService from '../../services/ProfileService';

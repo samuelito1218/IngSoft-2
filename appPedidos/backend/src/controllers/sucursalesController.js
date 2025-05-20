@@ -1,7 +1,7 @@
 // backend/src/controllers/sucursalesController.js
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-
+//
 exports.crearSucursal = async (req, res) => {
   try {
     const { nombre, direccion, comuna, restaurante_Id } = req.body;

@@ -40,9 +40,35 @@ const AdminDashboard = () => {
         setLoading(true);
         setError(null);
         
-        // 1. Obtener restaurantes del usuario
-        const restaurantsResponse = await api.get('/restaurantes/mine');
-        const userRestaurants = restaurantsResponse.data || [];
+        // 1. Obtener restaurantes del usuario usando el endpoint correcto
+        let userRestaurants = [];
+        
+        try {
+          console.log("Intentando obtener restaurantes desde /restaurantes/mine");
+          const restaurantsResponse = await api.get("/restaurantes/mine");
+          console.log("Respuesta de /restaurantes/mine:", restaurantsResponse.data);
+          userRestaurants = restaurantsResponse.data || [];
+        } catch (firstError) {
+          console.error("Error con /restaurantes/mine:", firstError);
+          
+          try {
+            console.log("Intentando con ruta alternativa /restaurantes/mis-restaurantes");
+            const altResponse = await api.get("/restaurantes/mis-restaurantes");
+            console.log("Respuesta de /restaurantes/mis-restaurantes:", altResponse.data);
+            
+            // Si la respuesta tiene un campo 'restaurantes', usamos ese
+            if (altResponse.data && altResponse.data.restaurantes) {
+              userRestaurants = altResponse.data.restaurantes;
+            } else {
+              userRestaurants = altResponse.data || [];
+            }
+          } catch (secondError) {
+            console.error("Error con /restaurantes/mis-restaurantes:", secondError);
+            throw new Error("No se pudieron obtener los restaurantes del usuario");
+          }
+        }
+        
+        console.log("Restaurantes obtenidos:", userRestaurants);
         setRestaurants(userRestaurants);
         
         // Inicializar estadísticas

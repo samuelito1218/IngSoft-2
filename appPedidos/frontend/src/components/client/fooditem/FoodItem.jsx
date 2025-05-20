@@ -1,4 +1,4 @@
-// src/components/client/FoodItem.jsx
+// src/componentss/client/FoodItem.jsx
 import React, { useState, useContext } from 'react';
 import { FaPlus, FaMinus, FaShoppingCart } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';

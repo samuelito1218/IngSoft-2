@@ -1,3 +1,4 @@
+//
 import React from 'react';
 import { FaRegStar, FaMapMarkerAlt, FaEdit, FaTrashAlt, FaUtensils } from 'react-icons/fa';
 import './RestaurantCard.css';

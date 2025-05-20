@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import "../../styles/Notificacion.css";
-// Componente de notificación que se puede reutilizar en toda la aplicación
+// Componente de notificación que se puede reutilizar en toda la aplicación//
 const Notification = ({ message, type = 'success', duration = 3000, onClose }) => {
   const [visible, setVisible] = useState(true);
 

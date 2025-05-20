@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaTimes, FaCamera, FaUtensils } from 'react-icons/fa';
 import CloudinaryService from '../../../services/CloudinaryService';
 import './ProductForm.css';
-
+//
 const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) => {
   const [form, setForm] = useState({
     nombre: '',

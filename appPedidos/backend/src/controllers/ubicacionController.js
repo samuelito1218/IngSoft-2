@@ -1,7 +1,7 @@
 // ubicacionController.js
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-
+//
 // Obtener ubicación de un pedido
 exports.obtenerUbicacionPedido = async (req, res) => {
   try {

@@ -1,5 +1,6 @@
 // src/services/notification/NotificationObserver.js
 // Interfaz para observadores de notificaciones
+//
 class NotificationObserver {
     constructor() {
       if (this.constructor === NotificationObserver) {

@@ -1,4 +1,4 @@
-// src/components/payment/PaymentMethodSelector.jsx
+// src/components/payment/PaymentMethodSelector.jsx//
 import React, { useState } from 'react';
 import { FaMoneyBillWave, FaCreditCard } from 'react-icons/fa';
 import '../../styles/Payment.css';

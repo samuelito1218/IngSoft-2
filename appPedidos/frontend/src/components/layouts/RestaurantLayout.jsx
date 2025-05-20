@@ -1,4 +1,4 @@
-// src/components/layouts/RestaurantLayout.jsx
+// src/components/layouts/RestaurantLayout.jsx//
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FaHome, FaUtensils, FaClipboardList, FaStore, FaUserCog, FaBars, FaTimes, FaBell, FaSignOutAlt } from 'react-icons/fa';

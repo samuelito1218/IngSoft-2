@@ -1,4 +1,4 @@
-// src/components/client/ExploreMenu.jsx
+// src/components/client/ExploreMenu.jssx
 import React from 'react';
 import '../../styles/ExploreMenu.css';
 import { 

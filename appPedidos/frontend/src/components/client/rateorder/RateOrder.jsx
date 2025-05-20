@@ -4,7 +4,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaStar, FaRegStar, FaClock, FaUser, FaMotorcycle } from 'react-icons/fa';
 import { useAuth } from '../../../hooks/useAuth';
 import ApiService from '../../../services/api';
+import axios from 'axios'; //Nueva importación
 import './RateOrder.css';
+
 
 const RateOrder = () => {
   const { pedidoId } = useParams();
@@ -130,86 +132,98 @@ const RateOrder = () => {
   
   // Enviar calificación
   const handleSubmit = async () => {
+  try {
+    setSubmitting(true);
+    setError(null);
+    
+    // Crear objeto de calificación
+    const calificacionData = {
+      calificacionRepartidor: Number(repartidorRating),
+      calificacionPedido: Number(pedidoRating),
+      comentarios: comentarios.trim()
+    };
+    
+    console.log(`Enviando calificación para pedido ${pedidoId}:`, calificacionData);
+    
+    // Intentar con ApiService
     try {
-      setSubmitting(true);
-      setError(null);
+      const response = await ApiService.pedidos.calificar(pedidoId, calificacionData);
+      console.log('Respuesta del servidor (calificar):', response);
       
-      // Crear objeto de calificación
-      const calificacionData = {
-        calificacionRepartidor: repartidorRating,
-        calificacionPedido: pedidoRating,
-        comentarios: comentarios.trim()
-      };
-      
-      console.log(`Enviando calificación para pedido ${pedidoId}:`, calificacionData);
-      
-      // Intentar primer método de API (vía ApiService)
-      let success = false;
-      try {
-        const response = await ApiService.pedidos.calificar(pedidoId, calificacionData);
-        console.log('Respuesta del servidor (calificar):', response);
-        
-        if (response.data && (response.data.message || response.status === 200 || response.status === 201)) {
-          success = true;
-        }
-      } catch (apiError) {
-        console.error('Error con ApiService.pedidos.calificar:', apiError);
-        
-        // Si falla, intentar con el OrderService
-        if (typeof OrderService !== 'undefined' && typeof OrderService.rateOrder === 'function') {
-          try {
-            const orderServiceResponse = await OrderService.rateOrder(pedidoId, calificacionData);
-            console.log('Respuesta de OrderService:', orderServiceResponse);
-            
-            if (orderServiceResponse.success) {
-              success = true;
-            } else {
-              throw new Error(orderServiceResponse.message || 'Error al calificar con OrderService');
-            }
-          } catch (orderServiceError) {
-            console.error('Error con OrderService.rateOrder:', orderServiceError);
-            // Falló también el segundo intento, lanzar error
-            throw apiError; // Re-lanzar el error original
-          }
-        } else {
-          // Si OrderService no está disponible, intentar directamente con axios
-          try {
-            const axiosResponse = await axios.post(
-              `${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/calificaciones/calificar/${pedidoId}`, 
-              calificacionData,
-              {
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-              }
-            );
-            
-            console.log('Respuesta directa de axios:', axiosResponse);
-            if (axiosResponse.data) {
-              success = true;
-            }
-          } catch (axiosError) {
-            console.error('Error con llamada directa de axios:', axiosError);
-            // Falló también el tercer intento, lanzar error
-            throw apiError; // Re-lanzar el error original
-          }
-        }
-      }
-      
-      if (success) {
+      if (response.data && (response.data.message || response.status === 200 || response.status === 201)) {
         setSuccess(true);
-      } else {
-        throw new Error('No se pudo procesar la calificación');
+        setSubmitting(false);
+        return; // Salir si es exitoso
+      }
+    } catch (apiError) {
+      console.error('Error con ApiService.pedidos.calificar:', apiError);
+      
+      // Verificar errores específicos que podrían dar pistas
+      if (apiError.response) {
+        console.log('Respuesta de error:', apiError.response.data);
+        console.log('Estado del error:', apiError.response.status);
+        console.log('Headers de respuesta:', apiError.response.headers);
+
+        console.log('Error detallado:', JSON.stringify(apiError, null, 2));
+        
+        // Manejar errores específicos del servidor
+        if (apiError.response.status === 400 && apiError.response.data.message) {
+          console.log("Error interno del servidor, verificar los logs del servidor");
+          setError(apiError.response.data.message);
+          setSubmitting(false);
+          return; // Salir para mostrar el mensaje de error específico
+        }
       }
       
-      setSubmitting(false);
-    } catch (error) {
-      console.error('Error al enviar calificación:', error);
-      setError('No se pudo enviar la calificación. Intente nuevamente.');
-      setSubmitting(false);
+      // Intentar directamente con axios como último recurso
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No hay token de autenticación');
+        }
+        
+        const axiosResponse = await axios.post(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/calificaciones/calificar/${pedidoId}`, 
+          calificacionData,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        
+        console.log('Respuesta directa de axios:', axiosResponse);
+        if (axiosResponse.data) {
+          setSuccess(true);
+          setSubmitting(false);
+          return;
+        }
+      } catch (axiosError) {
+        console.error('Error con llamada directa de axios:', axiosError);
+        
+        if (axiosError.response && axiosError.response.data && axiosError.response.data.message) {
+          // Usar el mensaje de error del servidor si está disponible
+          setError(axiosError.response.data.message);
+        } else {
+          // Mensaje genérico
+          setError('No se pudo enviar la calificación. Intente nuevamente.');
+        }
+        
+        setSubmitting(false);
+        return;
+      }
     }
-  };
+    
+    // Si llegamos aquí, algo falló sin un error específico
+    setError('No se pudo procesar la calificación. Intente nuevamente más tarde.');
+    setSubmitting(false);
+  } catch (error) {
+    console.error('Error al enviar calificación:', error);
+    setError('Ocurrió un error inesperado. Intente nuevamente.');
+    setSubmitting(false);
+  }
+};
   
   // Volver a la página anterior
   const handleBack = () => {

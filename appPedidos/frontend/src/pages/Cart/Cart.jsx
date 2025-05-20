@@ -1,5 +1,5 @@
 
-// src/components/client/Cart.jsx
+// src/components/client/Cart.jssx
 import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaTrash, FaPlus, FaMinus, FaShoppingCart } from 'react-icons/fa';

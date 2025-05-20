@@ -1,4 +1,4 @@
-// src/components/shared/FloatingChatButton.jsx
+// src/components/shared/FloatingChatButton.jsx//
 import React, { useState, useEffect } from 'react';
 import { FaComments, FaTimes, FaPaperPlane } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';

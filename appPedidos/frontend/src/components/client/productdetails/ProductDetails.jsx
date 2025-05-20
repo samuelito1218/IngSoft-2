@@ -1,4 +1,4 @@
-// src/components/client/ProductDetails.jsx
+// src/components/client/ProductDetailss.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaPlus, FaMinus, FaStore, FaShoppingCart } from 'react-icons/fa';

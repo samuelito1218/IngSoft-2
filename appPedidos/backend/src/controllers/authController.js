@@ -8,7 +8,7 @@ const path = require('path');
 
 const prisma = new PrismaClient();
 const saltRounds = 10;
-
+//
 // Configuración del servicio de correo
 // Note: En un ambiente real, esto debería estar en un archivo de configuración 
 // y usar credenciales reales de un servicio como Sendgrid, Mailgun, etc.

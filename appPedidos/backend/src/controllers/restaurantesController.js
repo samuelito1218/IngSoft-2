@@ -1,15 +1,21 @@
 const {PrismaClient} = require('@prisma/client');
 const prisma = new PrismaClient();
-
+//
 // listado de los restaurantes del admin logueado
 exports.obtenerMisRestaurantes = async (req, res) => {
     try {
         const userId = req.user.id;
         console.log("id del admin: "+userId)
         const restaurantes = await prisma.restaurantes.findMany({
-          where: { ownerId: userId },
-          orderBy: { nombre: 'asc' },
+          where: {
+                OR: [
+                    { ownerId: userId },              // Buscar donde el usuario es propietario
+                    { usuariosIds: { has: userId } }  // O donde el usuario está en usuariosIds
+                ]
+            },
+            orderBy: { nombre: 'asc' },
         });
+        console.log(`Se encontraron ${restaurantes.length} restaurantes para el admin ${userId}`);
         res.json(restaurantes);
       } catch (error) {
         console.error('Error interno al obtener restaurantes:', error);

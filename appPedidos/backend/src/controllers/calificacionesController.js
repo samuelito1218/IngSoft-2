@@ -3,6 +3,10 @@ const prisma = new PrismaClient();
 
 exports.calificarPedido = async (req, res) => {
   try {
+
+    console.log('Iniciando calificación de pedido con parámetros:', req.params);
+    console.log('Body recibido:', req.body);
+
     const { pedidoId } = req.params;
     const { calificacionRepartidor, calificacionPedido, comentarios } = req.body;
     const usuario_id = req.user.id;
@@ -34,26 +38,36 @@ exports.calificarPedido = async (req, res) => {
     if (pedido.estado !== 'Entregado') {
       return res.status(400).json({ message: 'Solo se pueden calificar pedidos entregados' });
     }
+
+    console.log("Verificando calificación", pedidoId);
     
     const calificacionExistente = await prisma.calificaciones.findFirst({
-      where: { pedido_id: pedidoId }
+      where: { pedidoId: pedidoId }
     });
     
     if (calificacionExistente) {
       return res.status(400).json({ message: 'Este pedido ya ha sido calificado' });
     }
     
+    console.log('Creando calificación con datos:', {
+      pedidoId,  // CORREGIDO: usar pedidoId
+      calificacionRepartidor,
+      calificacionPedido,
+      comentarios
+    });
+
     const calificacion = await prisma.calificaciones.create({
       data: {
-        pedido_id: pedidoId,
-        usuario_id,
-        repartidor_Id: pedido.repartidor_Id,
+        pedidoId: pedidoId,
+        //usuario_id,
+        //repartidor_Id: pedido.repartidor_Id,
         calificacionRepartidor,
         calificacionPedido,
         comentarios: comentarios || '',
-        fechaCreacion: new Date()
+        //fechaCreacion: new Date()
       }
     });
+    console.log('Calificación creada:', calificacion);
     
     res.status(201).json({
       message: 'Calificación guardada correctamente',
@@ -61,6 +75,7 @@ exports.calificarPedido = async (req, res) => {
     });
   } catch (error) {
     console.error('Error al calificar pedido:', error);
+    console.error('Stack trace:', error.stack);
     res.status(500).json({ message: 'Error al guardar la calificación', error: error.message });
   }
 };

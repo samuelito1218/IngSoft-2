@@ -1,4 +1,4 @@
-// Archivo App.jsx completo (Rutas actualizadas)
+// Archivo App.jsx completo (Rutas actualizadas)//
 
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'; 

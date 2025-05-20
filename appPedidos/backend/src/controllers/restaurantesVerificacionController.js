@@ -245,3 +245,4 @@ exports.aprobarVerificacion = async (req, res) => {
     ({ message: 'Error al aprobar la verificación', error: error.message });
 }
 };
+//

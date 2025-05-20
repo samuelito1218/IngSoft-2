@@ -2,7 +2,7 @@ import { api } from './api';
 
 const RestaurantService = {
   /**
-   * Obtener lista de restaurantes
+   * Obtener lista de restaurantes//
    */
   getRestaurants: async () => {
     try {

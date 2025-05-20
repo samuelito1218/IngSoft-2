@@ -1,4 +1,4 @@
-// src/components/client/ClientHome.jsx
+// src/components/client/ClientHome.jssx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth';

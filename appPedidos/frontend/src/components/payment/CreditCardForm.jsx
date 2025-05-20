@@ -1,4 +1,4 @@
-// src/components/payment/CreditCardForm.jsx
+// src/components/payment/CreditCardForm.jsx//
 import React, { useState } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { FaLock } from 'react-icons/fa';

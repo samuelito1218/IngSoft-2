@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-
+//
 const restaurantesVerificacionController = require('../controllers/restaurantesVerificacionController');
 // Cambia esto:
 // const { authMiddleware } = require('../middlewares/authMiddleware');

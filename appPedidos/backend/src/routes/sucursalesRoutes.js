@@ -3,7 +3,7 @@ const express = require('express');
 const router  = express.Router();
 const { authenticate } = require('../middlewares/authMiddleware');
 const ctrl    = require('../controllers/sucursalesController');
-
+//
 // POST /api/sucursales
 router.post('/', authenticate, ctrl.crearSucursal);
 

@@ -1,7 +1,7 @@
 // Mover este archivo a una subcarpeta para evitar conflictos
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-
+//
 // Controlador dedicado solo para direcciones
 exports.listarDirecciones = async (req, res) => {
   try {

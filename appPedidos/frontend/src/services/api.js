@@ -1,4 +1,8 @@
+//VERSION SAMUELllll
+
+
 import axios from 'axios';
+import MisRestaurantes from '../components/admin/MisRestaurantes';
 
 // Definir la URL base de la API
 const API_URL = 'http://localhost:5000/api'; 
@@ -53,9 +57,8 @@ const ApiService = {
   usuarios: {
     perfil: () => apiClient.get('/usuarios/perfil'),
     actualizar: (userData) => apiClient.put('/usuarios/perfil', userData),
-    actualizarImagen: (formData) => apiClient.post('/usuarios/perfil/imagen', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    }),
+    actualizarImagen: (imageData) => apiClient.post('/usuarios/perfil/imagen', imageData),
+    
     obtenerUsuario: (userId) => apiClient.get(`/usuarios/${userId}`)
   },
   
@@ -67,7 +70,9 @@ const ApiService = {
   
   // Restaurantes
   restaurantes: {
-    listar: () => apiClient.get('admin/restaurantes'),
+    listar: () => apiClient.get('/admin/restaurantes'),
+    miRestaurantes: ()=> apiClient.get("/mis-restaurantes"),
+    listar: () => apiClient.get('/restaurantes'),
     detalle: (id) => apiClient.get(`/restaurantes/${id}`),
     productos: (id) => apiClient.get(`/restaurantes/${id}/productos`),
     crear: (data) => apiClient.post('/restaurantes', data),

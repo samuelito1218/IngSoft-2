@@ -3,7 +3,7 @@ const router = express.Router();
 const pedidosController = require('../controllers/pedidosController');
 const { authenticate, authorize } = require('../middlewares/authMiddleware');
 
-
+//
 router.get('/', authenticate, pedidosController.getPedidosCliente);
 // Rutas para repartidores
 router.get(
