@@ -1,4 +1,4 @@
-// src/components/layouts/ClientLayout.jsx//
+// src/components/layouts/ClientLayout.jsx - CON IMAGEN DE PERFIL CORREGIDA
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -14,6 +14,7 @@ const ClientLayout = ({ children }) => {
   const location = useLocation();
   const [showMenu, setShowMenu] = useState(false);
   const [cartItemsCount, setCartItemsCount] = useState(0);
+  const [imageError, setImageError] = useState(false);
   
   // Obtener cantidad de items en carrito desde localStorage
   useEffect(() => {
@@ -78,6 +79,42 @@ const ClientLayout = ({ children }) => {
   const closeMenu = () => {
     setShowMenu(false);
   };
+
+  // Manejar error de imagen de perfil
+  const handleImageError = (e) => {
+    console.log('Error cargando imagen de perfil del cliente:', e);
+    setImageError(true);
+    // Ocultar la imagen problemática
+    e.target.style.display = 'none';
+  };
+
+  // Obtener iniciales del usuario
+  const getUserInitials = () => {
+    if (user?.nombreCompleto) {
+      const names = user.nombreCompleto.split(' ');
+      if (names.length >= 2) {
+        return `${names[0].charAt(0)}${names[1].charAt(0)}`.toUpperCase();
+      }
+      return names[0].charAt(0).toUpperCase();
+    }
+    return 'U';
+  };
+
+  // Verificar si debe mostrar imagen
+  const shouldShowImage = () => {
+    return user?.imageUrl && 
+           !imageError && 
+           user.imageUrl !== 'undefined' && 
+           user.imageUrl !== 'null' && 
+           user.imageUrl.trim() !== '';
+  };
+
+  // Manejar click en perfil
+  const handleUserInfoClick = (e) => {
+    e.preventDefault();
+    closeMenu();
+    navigate('/cliente/perfil');
+  };
   
   return (
     <div className="layout-container">
@@ -129,20 +166,57 @@ const ClientLayout = ({ children }) => {
             </nav>
             
             <div className="user-section">
-              <Link 
-                to="/cliente/perfil" 
-                className={isActive('/cliente/perfil') ? 'active' : ''}
-                onClick={closeMenu}
+              {/* SECCIÓN DE USUARIO CON IMAGEN DE PERFIL CORREGIDA */}
+              <div 
+                className={`user-info ${isActive('/cliente/perfil') ? 'active' : ''}`}
+                onClick={handleUserInfoClick}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleUserInfoClick(e);
+                  }
+                }}
+                style={{ cursor: 'pointer', textDecoration: 'none' }}
               >
-                <div className="user-info">
-                  <div className="user-avatar">
-                    {user?.nombreCompleto?.charAt(0) || 'U'}
-                  </div>
-                  <div className="user-name">
-                    {user?.nombreCompleto || 'Usuario'}
-                  </div>
+                {/* AVATAR COMPLETAMENTE CONTROLADO */}
+                <div 
+                  className="user-avatar"
+                  data-initials={getUserInitials()}
+                >
+                  {shouldShowImage() ? (
+                    <img 
+                      src={user.imageUrl} 
+                      alt={`${user?.nombreCompleto || 'Usuario'} profile`}
+                      onError={handleImageError}
+                      onLoad={() => setImageError(false)}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: '50%',
+                        display: 'block'
+                      }}
+                    />
+                  ) : (
+                    <span style={{ 
+                      color: 'white', 
+                      fontSize: '16px', 
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '100%',
+                      height: '100%'
+                    }}>
+                      {getUserInitials()}
+                    </span>
+                  )}
                 </div>
-              </Link>
+                <div className="user-name">
+                  {user?.nombreCompleto || 'Usuario'}
+                </div>
+              </div>
               
               <button className="logout-button" onClick={handleLogout}>
                 <FaSignOutAlt />

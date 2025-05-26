@@ -1,4 +1,4 @@
-//
+// src/components/layouts/RepartidorLayout.jsx - CON IMAGEN DE PERFIL CORREGIDA
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -15,6 +15,7 @@ const RepartidorLayout = ({ children }) => {
   const location = useLocation();
   const [showMenu, setShowMenu] = useState(false);
   const [activePedidos, setActivePedidos] = useState(0);
+  const [imageError, setImageError] = useState(false);
   
   // Verificar si una ruta está activa
   const isActive = (path) => {
@@ -60,6 +61,42 @@ const RepartidorLayout = ({ children }) => {
   // Cerrar menú al hacer clic en un enlace
   const closeMenu = () => {
     setShowMenu(false);
+  };
+
+  // Manejar error de imagen de perfil
+  const handleImageError = (e) => {
+    console.log('Error cargando imagen de perfil del repartidor:', e);
+    setImageError(true);
+    // Ocultar la imagen problemática
+    e.target.style.display = 'none';
+  };
+
+  // Obtener iniciales del usuario
+  const getUserInitials = () => {
+    if (user?.nombreCompleto) {
+      const names = user.nombreCompleto.split(' ');
+      if (names.length >= 2) {
+        return `${names[0].charAt(0)}${names[1].charAt(0)}`.toUpperCase();
+      }
+      return names[0].charAt(0).toUpperCase();
+    }
+    return 'R';
+  };
+
+  // Verificar si debe mostrar imagen
+  const shouldShowImage = () => {
+    return user?.imageUrl && 
+           !imageError && 
+           user.imageUrl !== 'undefined' && 
+           user.imageUrl !== 'null' && 
+           user.imageUrl.trim() !== '';
+  };
+
+  // Manejar click en perfil
+  const handleUserInfoClick = (e) => {
+    e.preventDefault();
+    closeMenu();
+    navigate('/repartidor/perfil');
   };
   
   return (
@@ -121,20 +158,57 @@ const RepartidorLayout = ({ children }) => {
             </nav>
             
             <div className="user-section">
-              <Link 
-                to="/repartidor/perfil" 
-                className={isActive('/repartidor/perfil') ? 'active' : ''}
-                onClick={closeMenu}
+              {/* SECCIÓN DE USUARIO CON IMAGEN DE PERFIL CORREGIDA */}
+              <div 
+                className={`user-info ${isActive('/repartidor/perfil') ? 'active' : ''}`}
+                onClick={handleUserInfoClick}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleUserInfoClick(e);
+                  }
+                }}
+                style={{ cursor: 'pointer', textDecoration: 'none' }}
               >
-                <div className="user-info">
-                  <div className="user-avatar">
-                    {user?.nombreCompleto?.charAt(0) || 'R'}
-                  </div>
-                  <div className="user-name">
-                    {user?.nombreCompleto || 'Repartidor'}
-                  </div>
+                {/* AVATAR COMPLETAMENTE CONTROLADO */}
+                <div 
+                  className="user-avatar"
+                  data-initials={getUserInitials()}
+                >
+                  {shouldShowImage() ? (
+                    <img 
+                      src={user.imageUrl} 
+                      alt={`${user?.nombreCompleto || 'Repartidor'} profile`}
+                      onError={handleImageError}
+                      onLoad={() => setImageError(false)}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: '50%',
+                        display: 'block'
+                      }}
+                    />
+                  ) : (
+                    <span style={{ 
+                      color: 'white', 
+                      fontSize: '16px', 
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '100%',
+                      height: '100%'
+                    }}>
+                      {getUserInitials()}
+                    </span>
+                  )}
                 </div>
-              </Link>
+                <div className="user-name">
+                  {user?.nombreCompleto || 'Repartidor'}
+                </div>
+              </div>
               
               <button className="logout-button" onClick={handleLogout}>
                 <FaSignOutAlt />
