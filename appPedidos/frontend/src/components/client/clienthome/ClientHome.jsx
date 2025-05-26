@@ -1,7 +1,8 @@
-// src/components/client/ClientHome.jssx
+// src/components/client/ClientHome.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth';
+import { useMultipleRatings } from '../../../hooks/useRating';
 import ExploreMenu from '../ExploreMenu';
 import RestaurantCard from '../restaurantcard/RestaurantCard';
 import OrderActiveAlert from '../orderactivealert/OrderActiveAlert';
@@ -22,109 +23,127 @@ const ClientHome = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   
+  // Obtener IDs de restaurantes para las calificaciones
+  const restaurantIds = restaurants.map(restaurant => restaurant.id);
+  
+  // Usar el hook para obtener múltiples calificaciones
+  const { ratings, loading: ratingsLoading } = useMultipleRatings(restaurantIds);
+  
   // Cargar restaurantes al iniciar
   useEffect(() => {
-  const fetchRestaurants = async () => {
-  try {
-    setLoading(true);
-    
-    // Usar una estructura try/catch independiente para cada llamada API
-    let restaurantsData = [];
-    
-    try {
-      const response = await ApiService.restaurantes.listar();
-      console.log('Respuesta completa:', response);
-      console.log('Data:', response.data);
-      console.log('¿Es un array?', Array.isArray(response.data));
-      console.log('Longitud:', response.data ? response.data.length : 'N/A');
-      
-      // Manejo más flexible de la respuesta
-      if (response && response.data) {
-        // Si es un array directamente
-        if (Array.isArray(response.data)) {
-          restaurantsData = response.data;
-        } 
-        // Si la respuesta tiene una propiedad 'restaurantes' o similar
-        else if (response.data.restaurantes && Array.isArray(response.data.restaurantes)) {
-          restaurantsData = response.data.restaurantes;
+    const fetchRestaurants = async () => {
+      try {
+        setLoading(true);
+        
+        // Usar una estructura try/catch independiente para cada llamada API
+        let restaurantsData = [];
+        
+        try {
+          const response = await ApiService.restaurantes.listar();
+          console.log('Respuesta completa:', response);
+          console.log('Data:', response.data);
+          console.log('¿Es un array?', Array.isArray(response.data));
+          console.log('Longitud:', response.data ? response.data.length : 'N/A');
+          
+          // Manejo más flexible de la respuesta
+          if (response && response.data) {
+            // Si es un array directamente
+            if (Array.isArray(response.data)) {
+              restaurantsData = response.data;
+            } 
+            // Si la respuesta tiene una propiedad 'restaurantes' o similar
+            else if (response.data.restaurantes && Array.isArray(response.data.restaurantes)) {
+              restaurantsData = response.data.restaurantes;
+            }
+            // Si es un objeto simple, convertirlo en array
+            else if (typeof response.data === 'object' && !Array.isArray(response.data)) {
+              restaurantsData = [response.data];
+            }
+          }
+          
+          // Asegurarse de que los restaurantes tengan las propiedades necesarias
+          restaurantsData = restaurantsData.map(r => ({
+            id: r.id || `temp-${Math.random()}`,
+            nombre: r.nombre || 'Restaurante sin nombre',
+            descripcion: r.descripcion || '',
+            imageUrl: r.imageUrl || null,
+            imagen: r.imagen || null,
+            categorias: Array.isArray(r.categorias) ? r.categorias : ['General'],
+            tiempoEntrega: r.tiempoEntrega || '30-45 min',
+            ubicaciones: r.ubicaciones || [],
+            envioGratis: r.envioGratis || false
+          }));
+          
+          console.log('Restaurantes procesados:', restaurantsData);
+        } catch (apiError) {
+          console.error('Error en API de restaurantes:', apiError);
+          
+          // Agregar al menos un restaurante ficticio si hay un error
+          restaurantsData = [{
+            id: 'demo-1',
+            nombre: 'Restaurante Demo',
+            descripcion: 'Este es un restaurante de demostración mientras se cargan los datos reales.',
+            imageUrl: null,
+            imagen: null,
+            categorias: ['General'],
+            tiempoEntrega: '30-45 min',
+            ubicaciones: [],
+            envioGratis: false
+          }];
+          console.log('Usando restaurante de demostración:', restaurantsData);
         }
-        // Si es un objeto simple, convertirlo en array
-        else if (typeof response.data === 'object' && !Array.isArray(response.data)) {
-          restaurantsData = [response.data];
+        
+        // Si después de todo no hay restaurantes, agregar uno ficticio
+        if (restaurantsData.length === 0) {
+          restaurantsData = [{
+            id: 'demo-2',
+            nombre: 'Restaurante FastFood',
+            descripcion: 'No se encontraron restaurantes. Este es un ejemplo para fines de prueba.',
+            imageUrl: null,
+            imagen: null,
+            categorias: ['General'],
+            tiempoEntrega: '30-45 min',
+            ubicaciones: [],
+            envioGratis: false
+          }];
+          console.log('No se encontraron restaurantes, usando datos de respaldo:', restaurantsData);
         }
+        
+        setRestaurants(restaurantsData);
+        setFilteredRestaurants(restaurantsData);
+        
+        // Extraer categorías únicas de manera segura
+        const uniqueCategories = [...new Set(
+          restaurantsData.flatMap(restaurant => 
+            restaurant.categorias || ['General']
+          )
+        )];
+        
+        setCategories(['All', ...uniqueCategories]);
+        
+        // Pedido activo en bloque try/catch separado
+        try {
+          const pedidoResponse = await ApiService.pedidos.activo();
+          console.log('Respuesta de pedido activo:', pedidoResponse);
+          if (pedidoResponse && pedidoResponse.data && pedidoResponse.data.pedido) {
+            setActivePedido(pedidoResponse.data);
+            console.log('Pedido activo encontrado:', pedidoResponse.data);
+          }
+        } catch (pedidoError) {
+          console.error('Error al cargar pedido activo:', pedidoError);
+          // No bloqueamos la UI por este error
+        }
+        
+        setLoading(false);
+      } catch (globalError) {
+        console.error('Error general:', globalError);
+        setError('No se pudieron cargar los datos. Intente nuevamente.');
+        setLoading(false);
       }
-      
-      // Asegurarse de que los restaurantes tengan las propiedades necesarias
-      restaurantsData = restaurantsData.map(r => ({
-        id: r.id || `temp-${Math.random()}`,
-        nombre: r.nombre || 'Restaurante sin nombre',
-        descripcion: r.descripcion || '',
-        imageUrl: r.imageUrl || null,
-        categorias: Array.isArray(r.categorias) ? r.categorias : ['General']
-      }));
-      
-      console.log('Restaurantes procesados:', restaurantsData);
-    } catch (apiError) {
-      console.error('Error en API de restaurantes:', apiError);
-      
-      // Agregar al menos un restaurante ficticio si hay un error
-      restaurantsData = [{
-        id: 'demo-1',
-        nombre: 'Restaurante Demo',
-        descripcion: 'Este es un restaurante de demostración mientras se cargan los datos reales.',
-        imageUrl: null,
-        categorias: ['General']
-      }];
-      console.log('Usando restaurante de demostración:', restaurantsData);
-    }
+    };
     
-    // Si después de todo no hay restaurantes, agregar uno ficticio
-    if (restaurantsData.length === 0) {
-      restaurantsData = [{
-        id: 'demo-2',
-        nombre: 'Restaurante FastFood',
-        descripcion: 'No se encontraron restaurantes. Este es un ejemplo para fines de prueba.',
-        imageUrl: null,
-        categorias: ['General']
-      }];
-      console.log('No se encontraron restaurantes, usando datos de respaldo:', restaurantsData);
-    }
-    
-    setRestaurants(restaurantsData);
-    setFilteredRestaurants(restaurantsData);
-    
-    // Extraer categorías únicas de manera segura
-    const uniqueCategories = [...new Set(
-      restaurantsData.flatMap(restaurant => 
-        restaurant.categorias || ['General']
-      )
-    )];
-    
-    setCategories(['All', ...uniqueCategories]);
-    
-    // Pedido activo en bloque try/catch separado
-    try {
-      const pedidoResponse = await ApiService.pedidos.activo();
-      console.log('Respuesta de pedido activo:', pedidoResponse);
-      if (pedidoResponse && pedidoResponse.data && pedidoResponse.data.pedido) {
-        setActivePedido(pedidoResponse.data);
-        console.log('Pedido activo encontrado:', pedidoResponse.data);
-      }
-    } catch (pedidoError) {
-      console.error('Error al cargar pedido activo:', pedidoError);
-      // No bloqueamos la UI por este error
-    }
-    
-    setLoading(false);
-  } catch (globalError) {
-    console.error('Error general:', globalError);
-    setError('No se pudieron cargar los datos. Intente nuevamente.');
-    setLoading(false);
-  }
-};
-  
-  fetchRestaurants();
-}, []);
+    fetchRestaurants();
+  }, []);
   
   // Filtrar restaurantes cuando cambia la categoría o el término de búsqueda
   useEffect(() => {
@@ -231,13 +250,30 @@ const ClientHome = () => {
           </div>
         ) : (
           <div className="restaurants-grid">
-            {filteredRestaurants.map(restaurant => (
-              <RestaurantCard
-                key={restaurant.id}
-                restaurant={restaurant}
-                onClick={() => handleRestaurantClick(restaurant.id)}
-              />
-            ))}
+            {filteredRestaurants.map(restaurant => {
+              // Combinar datos del restaurante con su calificación
+              const restaurantWithRating = {
+                ...restaurant,
+                // Agregar datos de calificación si están disponibles
+                calificacionPromedio: ratings[restaurant.id]?.calificacionPromedio || 0,
+                totalCalificaciones: ratings[restaurant.id]?.totalCalificaciones || 0,
+                ratingLoading: ratingsLoading
+              };
+              
+              return (
+                <RestaurantCard
+                  key={restaurant.id}
+                  restaurant={restaurantWithRating}
+                  onClick={() => handleRestaurantClick(restaurant.id)}
+                />
+              );
+            })}
+          </div>
+        )}
+        
+        {ratingsLoading && (
+          <div className="ratings-loading-indicator">
+            <p>Cargando calificaciones...</p>
           </div>
         )}
       </div>

@@ -1,7 +1,6 @@
-//
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '../services/api';
+import ApiService from '../services/api';
 import '../styles/ResetPassword.css';
 
 function ResetPassword() {
@@ -11,39 +10,64 @@ function ResetPassword() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Nuevo estado para mostrar/ocultar confirmación
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [animateForm, setAnimateForm] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
+  
+  // Nuevo estado para validaciones individuales
+  const [validations, setValidations] = useState({
+    minLength: false,
+    hasUppercase: false,
+    passwordsMatch: false
+  });
 
   useEffect(() => {
     setAnimateForm(true);
   }, []);
 
+  // Validar cada requisito individualmente
   useEffect(() => {
+    const minLength = password.length >= 8;
+    const hasUppercase = /[A-Z]/.test(password);
+    const passwordsMatch = password === confirmPassword && password !== '';
+    
+    setValidations({
+      minLength,
+      hasUppercase,
+      passwordsMatch
+    });
+    
     // Evaluar la fuerza de la contraseña
     if (password.length === 0) {
       setPasswordStrength(0);
-    } else if (password.length < 6) {
+    } else if (!minLength || !hasUppercase) {
       setPasswordStrength(1); // Débil
-    } else if (password.length >= 6 && /[A-Z]/.test(password) && /[0-9]/.test(password)) {
+    } else if (minLength && hasUppercase && /[0-9]/.test(password)) {
       setPasswordStrength(3); // Fuerte
     } else {
       setPasswordStrength(2); // Media
     }
-  }, [password]);
+  }, [password, confirmPassword]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden');
+    // Validar todos los requisitos antes de enviar
+    if (!validations.minLength) {
+      setError('La contraseña debe tener al menos 8 caracteres');
       return;
     }
     
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
+    if (!validations.hasUppercase) {
+      setError('La contraseña debe tener al menos una letra mayúscula');
+      return;
+    }
+    
+    if (!validations.passwordsMatch) {
+      setError('Las contraseñas no coinciden');
       return;
     }
     
@@ -51,10 +75,8 @@ function ResetPassword() {
       setIsLoading(true);
       setError('');
       
-      await api.post('/auth/reset-password', { 
-        token, 
-        newPassword: password 
-      });
+      // Usar el método correcto del ApiService
+      await ApiService.auth.resetPasswordForgot(token, password);
       
       setSuccess(true);
     } catch (error) {
@@ -115,7 +137,7 @@ function ResetPassword() {
             <form onSubmit={handleSubmit} className="reset-form">
               <div className="form-description">
                 <span className="info-icon">🔐</span>
-                <p>Tu nueva contraseña debe tener al menos 6 caracteres. Te recomendamos incluir letras mayúsculas, minúsculas y números.</p>
+                <p>Tu nueva contraseña debe tener al menos 8 caracteres e incluir al menos una letra mayúscula.</p>
               </div>
               
               <div className="input-group">
@@ -137,6 +159,24 @@ function ResetPassword() {
                   </button>
                 </div>
                 
+                {/* Requisitos de la contraseña */}
+                {password && (
+                  <div className="password-requirements">
+                    <div className={`requirement ${validations.minLength ? 'valid' : 'invalid'}`}>
+                      <span className="requirement-icon">
+                        {validations.minLength ? '✓' : '✗'}
+                      </span>
+                      <span>Mínimo 8 caracteres</span>
+                    </div>
+                    <div className={`requirement ${validations.hasUppercase ? 'valid' : 'invalid'}`}>
+                      <span className="requirement-icon">
+                        {validations.hasUppercase ? '✓' : '✗'}
+                      </span>
+                      <span>Al menos una letra mayúscula</span>
+                    </div>
+                  </div>
+                )}
+                
                 {password && (
                   <div className="password-strength">
                     <div className="strength-bars">
@@ -153,13 +193,34 @@ function ResetPassword() {
                 <div className="input-container">
                   <span className="input-icon">🔐</span>
                   <input 
-                    type={showPassword ? "text" : "password"} 
+                    type={showConfirmPassword ? "text" : "password"} 
                     placeholder="Confirmar nueva contraseña" 
                     value={confirmPassword} 
                     onChange={(e) => setConfirmPassword(e.target.value)} 
                     required 
                   />
+                  <button 
+                    type="button" 
+                    className="toggle-password"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? "👁️" : "👁️‍🗨️"}
+                  </button>
                 </div>
+                
+                {/* Validación de coincidencia de contraseñas */}
+                {confirmPassword && (
+                  <div className={`password-match ${validations.passwordsMatch ? 'valid' : 'invalid'}`}>
+                    <span className="match-icon">
+                      {validations.passwordsMatch ? '✓' : '✗'}
+                    </span>
+                    <span>
+                      {validations.passwordsMatch 
+                        ? 'Las contraseñas coinciden' 
+                        : 'Las contraseñas no coinciden'}
+                    </span>
+                  </div>
+                )}
               </div>
               
               {error && <div className="error-message">{error}</div>}
@@ -167,7 +228,7 @@ function ResetPassword() {
               <button 
                 type="submit" 
                 className="primary-button" 
-                disabled={isLoading}
+                disabled={isLoading || !validations.minLength || !validations.hasUppercase || !validations.passwordsMatch}
               >
                 {isLoading ? (
                   <span className="loading-text">

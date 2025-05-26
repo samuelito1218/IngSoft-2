@@ -1,4 +1,4 @@
-// src/services/ProfileService.js//
+// src/services/ProfileService.js
 import ApiService from './api';
 import CloudinaryService from './CloudinaryService';
 
@@ -31,6 +31,23 @@ const ProfileService = {
     }
   },
 
+  // Modificar en ProfileService.js
+  async changePassword(newPassword) {
+    try {
+      if (!newPassword) {
+        throw new Error('La nueva contraseña es requerida');
+      }
+      
+      // Usar la ruta específica para cambio de contraseña
+      const response = await ApiService.usuarios.cambiarContrasena({ newPassword });
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error al cambiar contraseña:', error);
+      throw error;
+    }
+  },
+
   // Actualizar perfil del usuario
   async updateUserProfile(profileData) {
     try {
@@ -47,7 +64,8 @@ const ProfileService = {
         comuna: parseInt(profileData.comuna)
       };
       
-      const response = await ApiService.usuarios.actualizarPerfil(dataToSend);
+      // Cambiado de actualizarPerfil a actualizar para coincidir con ApiService
+      const response = await ApiService.usuarios.actualizar(dataToSend);
       return response.data.usuario || response.data;
     } catch (error) {
       console.error('Error al actualizar perfil:', error);

@@ -4,76 +4,96 @@ const restaurantesController = require("../controllers/restaurantesController");
 const { authenticate /*authorize*/ } = require('../middlewares/authMiddleware');
 //
 
-// GET /restaurants/mine → devuelve sólo los del owner logueado
-router.get('/mine', authenticate, restaurantesController.obtenerMisRestaurantes);
-
+// Listar todos los restaurantes
 router.get(
   "/",
-  restaurantesController.listarRestaurantes // Necesitarás crear este método
-);
-// Ruta para crear un restaurante
-router.post(
-    "/crear",
-    authenticate,
-    //authorize("Admin", "admin"),
-    restaurantesController.crearRestaurante
-);
-router.put(
-    "/:restauranteId/imagen",
-    authenticate,
-    restaurantesController.actualizarImagen
-);
-// Ruta para agregar una ubicación (antes era sucursal)
-router.post(
-    "/:restauranteId/agregar-ubicacion",
-    authenticate,
-    restaurantesController.agregarUbicacion // Cambiado de agregarSucursal
+  restaurantesController.listarRestaurantes
 );
 
-// Ruta para eliminar una ubicación
-router.delete(
-    "/eliminar-ubicacion/:restauranteId/:ubicacionIndex", // Cambiado el formato
-    authenticate,
-    restaurantesController.eliminarUbicacion // Cambiado de eliminarSucursal
-);
 
-// Ruta para listar las ubicaciones de un restaurante
+// Obtener restaurantes del usuario logueado
+router.get('/mine', authenticate, restaurantesController.obtenerMisRestaurantes);
+
+// Ruta alternativa para obtener mis restaurantes (para compatibilidad)
 router.get(
-    "/:restauranteId/ubicaciones", // Cambiado de sucursales
-    authenticate,
-    restaurantesController.listarUbicacionesPorRestaurante // Cambiado
+  "/mis-restaurantes",
+  authenticate,
+  restaurantesController.obtenerMisRestaurantes
 );
 
-// Ruta para listar restaurantes
-router.get(
-    "/mis-restaurantes",
-    authenticate,
-    restaurantesController.listarMisRestaurantes
-);
-//obtener los detalles de un restaurante específico
+// Obtener detalles de un restaurante específico
 router.get(
   "/:id",
   restaurantesController.obtenerRestaurante
 );
-// Ruta para actualizar restaurante
-router.put(
-    "/editar/:restauranteId",
-    authenticate,
-    restaurantesController.editarRestaurante
-);
-// Ruta para listar productos de un restaurante
+
+// Listar productos de un restaurante
 router.get(
   "/:restauranteId/productos",
   restaurantesController.listarProductosPorRestaurante
 );
-// Ruta para eliminar un restaurante
-router.delete(
-    "/eliminar/:restauranteId",
-    authenticate,
-    restaurantesController.eliminarRestaurante
+
+// ==== RUTAS DE RESTAURANTES (REQUIEREN AUTENTICACIÓN) ====
+
+
+
+
+
+// Crear un restaurante
+router.post(
+  "/crear",
+  authenticate,
+  restaurantesController.crearRestaurante
 );
 
+// Actualizar imagen de un restaurante
+router.put(
+  "/:restauranteId/imagen",
+  authenticate,
+  restaurantesController.actualizarImagen
+);
 
+// Editar un restaurante
+router.put(
+  "/editar/:restauranteId",
+  authenticate,
+  restaurantesController.editarRestaurante
+);
 
+// Eliminar un restaurante
+router.delete(
+  "/eliminar/:restauranteId",
+  authenticate,
+  restaurantesController.eliminarRestaurante
+);
 
+// ==== RUTAS DE SUCURSALES ====
+
+// Crear una sucursal
+router.post(
+  "/sucursales", 
+  authenticate, 
+  restaurantesController.crearSucursal
+);
+
+// Listar sucursales de un restaurante
+router.get(
+  "/:restauranteId/sucursales", 
+  authenticate, 
+  restaurantesController.listarSucursalesPorRestaurante
+);
+
+// Actualizar una sucursal
+router.put(
+  "/sucursales/:id", 
+  authenticate, 
+  restaurantesController.actualizarSucursal
+);
+
+// Eliminar una sucursal
+router.delete(
+  "/sucursales/:id", 
+  authenticate, 
+  restaurantesController.eliminarSucursal
+);
 module.exports = router;

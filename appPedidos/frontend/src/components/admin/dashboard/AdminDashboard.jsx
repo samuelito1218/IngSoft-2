@@ -76,8 +76,7 @@ const AdminDashboard = () => {
         let pendingOrders = 0;
         let totalOrders = 0;
         let totalIncome = 0;
-        let ratingSum = 0;
-        let ratingCount = 0;
+        let averageRating = 0;
         
         // Seleccionar el primer restaurante por defecto
         if (userRestaurants.length > 0) {
@@ -95,7 +94,7 @@ const AdminDashboard = () => {
             }
           }
           
-          // 3. Obtener pedidos y estadísticas del restaurante seleccionado
+          // 3. Obtener pedidos del restaurante seleccionado
           try {
             const ordersResponse = await api.get(`/pedidos/restaurante/${userRestaurants[0].id}`);
             if (ordersResponse.data) {
@@ -109,28 +108,6 @@ const AdminDashboard = () => {
               const completedOrders = orders.filter(order => order.estado === 'Entregado');
               totalIncome = completedOrders.reduce((sum, order) => sum + order.total, 0);
               
-              // Calcular calificación promedio
-              const ordersWithRatings = orders.filter(
-                order => order.calificaciones && order.calificaciones.length > 0
-              );
-              
-              if (ordersWithRatings.length > 0) {
-                let sum = 0;
-                let count = 0;
-                
-                ordersWithRatings.forEach(order => {
-                  order.calificaciones.forEach(rating => {
-                    sum += rating.calificacionPedido;
-                    count++;
-                  });
-                });
-                
-                if (count > 0) {
-                  ratingSum = sum;
-                  ratingCount = count;
-                }
-              }
-              
               // Guardar pedidos recientes
               setRecentOrders(
                 orders
@@ -141,6 +118,17 @@ const AdminDashboard = () => {
           } catch (err) {
             console.error(`Error al obtener pedidos del restaurante ${userRestaurants[0].id}:`, err);
           }
+
+          // 4. OBTENER CALIFICACIÓN DINÁMICA DEL RESTAURANTE
+          try {
+            const calificacionesResponse = await api.get(`/calificaciones/restaurante/${userRestaurants[0].id}`);
+            if (calificacionesResponse.data && calificacionesResponse.data.restaurante) {
+              averageRating = calificacionesResponse.data.restaurante.calificacionPromedio || 0;
+            }
+          } catch (err) {
+            console.error(`Error al obtener calificaciones del restaurante ${userRestaurants[0].id}:`, err);
+            averageRating = 0; // Valor por defecto si hay error
+          }
         }
         
         // Actualizar estadísticas
@@ -150,7 +138,7 @@ const AdminDashboard = () => {
           pendingOrders,
           totalOrders,
           totalIncome,
-          averageRating: ratingCount > 0 ? (ratingSum / ratingCount).toFixed(1) : 0
+          averageRating // USAR CALIFICACIÓN DINÁMICA
         });
         
         setLoading(false);
@@ -174,9 +162,9 @@ const AdminDashboard = () => {
       let pendingOrders = 0;
       let totalOrders = 0;
       let totalIncome = 0;
-      let ratingSum = 0;
-      let ratingCount = 0;
+      let averageRating = 0;
       
+      // Obtener pedidos
       const ordersResponse = await api.get(`/pedidos/restaurante/${restaurantId}`);
       if (ordersResponse.data) {
         const orders = ordersResponse.data;
@@ -189,34 +177,23 @@ const AdminDashboard = () => {
         const completedOrders = orders.filter(order => order.estado === 'Entregado');
         totalIncome = completedOrders.reduce((sum, order) => sum + order.total, 0);
         
-        // Calcular calificación promedio
-        const ordersWithRatings = orders.filter(
-          order => order.calificaciones && order.calificaciones.length > 0
-        );
-        
-        if (ordersWithRatings.length > 0) {
-          let sum = 0;
-          let count = 0;
-          
-          ordersWithRatings.forEach(order => {
-            order.calificaciones.forEach(rating => {
-              sum += rating.calificacionPedido;
-              count++;
-            });
-          });
-          
-          if (count > 0) {
-            ratingSum = sum;
-            ratingCount = count;
-          }
-        }
-        
         // Guardar pedidos recientes
         setRecentOrders(
           orders
             .sort((a, b) => new Date(b.fechaDeCreacion) - new Date(a.fechaDeCreacion))
             .slice(0, 5)
         );
+      }
+
+      // OBTENER CALIFICACIÓN DINÁMICA
+      try {
+        const calificacionesResponse = await api.get(`/calificaciones/restaurante/${restaurantId}`);
+        if (calificacionesResponse.data && calificacionesResponse.data.restaurante) {
+          averageRating = calificacionesResponse.data.restaurante.calificacionPromedio || 0;
+        }
+      } catch (err) {
+        console.error(`Error al obtener calificaciones del restaurante ${restaurantId}:`, err);
+        averageRating = 0;
       }
       
       // Actualizar estadísticas
@@ -225,7 +202,7 @@ const AdminDashboard = () => {
         pendingOrders,
         totalOrders,
         totalIncome,
-        averageRating: ratingCount > 0 ? (ratingSum / ratingCount).toFixed(1) : 0
+        averageRating // USAR CALIFICACIÓN DINÁMICA
       }));
     } catch (err) {
       console.error(`Error al obtener datos del restaurante ${restaurantId}:`, err);
@@ -361,7 +338,7 @@ const AdminDashboard = () => {
           </div>
           <div className="stat-info">
             <h3>Calificación Promedio</h3>
-            <p className="stat-value">{stats.averageRating} <small>/ 5</small></p>
+            <p className="stat-value">{stats.averageRating ? stats.averageRating.toFixed(1) : '0.0'} <small>/ 5</small></p>
           </div>
         </div>
       </div>
@@ -407,7 +384,7 @@ const AdminDashboard = () => {
                 
                 <div 
                   className="action-card"
-                  onClick={() => navigate(`/admin/restaurantes/${selectedRestaurant}`)}
+                  onClick={() => navigate(`/admin/estadisticas`)}
                 >
                   <div className="action-icon">
                     <FaChartLine />
@@ -425,9 +402,6 @@ const AdminDashboard = () => {
             <div className="dashboard-section flex-1">
               <div className="section-header">
                 <h3>Mis Restaurantes</h3>
-                <button className="add-button" onClick={handleCreateRestaurant}>
-                  <FaPlus /> Nuevo
-                </button>
               </div>
               
               <div className="restaurants-list">

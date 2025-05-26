@@ -1,5 +1,4 @@
-
-// src/components/client/Cart.jssx
+// src/components/client/Cart.jsx - Versión mejorada
 import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaTrash, FaPlus, FaMinus, FaShoppingCart } from 'react-icons/fa';
@@ -10,6 +9,19 @@ import { useAuth } from '../../hooks/useAuth';
 import './Cart.css';
 
 const DEFAULT_IMAGE = '/images/food-placeholder.jpg';
+
+// Función helper para obtener la URL de imagen correcta (igual que en FoodItem)
+const getImageUrl = (product) => {
+  const imageFields = ['imagen', 'imageUrl', 'image', 'foto', 'picture'];
+  
+  for (const field of imageFields) {
+    if (product[field] && product[field].trim() !== '') {
+      return product[field];
+    }
+  }
+  
+  return DEFAULT_IMAGE;
+};
 
 const Cart = () => {
   const { 
@@ -26,6 +38,7 @@ const Cart = () => {
   const [activePedido, setActivePedido] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [imageErrors, setImageErrors] = useState(new Set());
   
   // Verificar si hay un pedido activo
   React.useEffect(() => {
@@ -54,6 +67,14 @@ const Cart = () => {
     }).format(price);
   };
   
+  // Manejar error de imagen
+  const handleImageError = (itemId, e) => {
+    if (!imageErrors.has(itemId)) {
+      setImageErrors(prev => new Set([...prev, itemId]));
+      e.target.src = DEFAULT_IMAGE;
+    }
+  };
+  
   // Manejar cambio de cantidad
   const handleQuantityChange = (id, newQuantity) => {
     if (newQuantity > 0) {
@@ -64,6 +85,12 @@ const Cart = () => {
   // Eliminar item del carrito
   const handleRemoveItem = (id) => {
     removeItemCompletely(id);
+    // Limpiar error de imagen cuando se elimina el item
+    setImageErrors(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(id);
+      return newSet;
+    });
   };
   
   // Volver a la página anterior
@@ -143,61 +170,71 @@ const Cart = () => {
       ) : (
         <>
           <div className="cart-items">
-            {cartItems.map(item => (
-              <div key={item.id} className="cart-item">
-                <div 
-                  className="item-image" 
-                  onClick={() => viewProductDetails(item.id)}
-                >
-                  <img 
-                    src={item.imagen || DEFAULT_IMAGE} 
-                    alt={item.nombre}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = DEFAULT_IMAGE;
-                    }}
-                  />
-                </div>
-                
-                <div className="item-info">
-                  <div className="item-header">
-                    <h3 onClick={() => viewProductDetails(item.id)}>
-                      {item.nombre}
-                    </h3>
-                    <button 
-                      className="remove-button"
-                      onClick={() => handleRemoveItem(item.id)}
-                    >
-                      <FaTrash />
-                    </button>
+            {cartItems.map(item => {
+              const imageUrl = imageErrors.has(item.id) ? DEFAULT_IMAGE : getImageUrl(item);
+              
+              return (
+                <div key={item.id} className="cart-item">
+                  <div 
+                    className="item-image" 
+                    onClick={() => viewProductDetails(item.id)}
+                  >
+                    <img 
+                      src={imageUrl}
+                      alt={item.nombre || 'Producto'}
+                      onError={(e) => handleImageError(item.id, e)}
+                      loading="lazy"
+                    />
                   </div>
                   
-                  <p className="item-price">{formatPrice(item.precio)}</p>
-                  
-                  <div className="item-actions">
-                    <div className="quantity-control">
+                  <div className="item-info">
+                    <div className="item-header">
+                      <h3 onClick={() => viewProductDetails(item.id)}>
+                        {item.nombre || 'Producto sin nombre'}
+                      </h3>
                       <button 
-                        className="quantity-button" 
-                        onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                        className="remove-button"
+                        onClick={() => handleRemoveItem(item.id)}
+                        title="Eliminar producto"
+                        aria-label={`Eliminar ${item.nombre} del carrito`}
                       >
-                        <FaMinus />
-                      </button>
-                      <span className="quantity">{item.quantity}</span>
-                      <button 
-                        className="quantity-button"
-                        onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                      >
-                        <FaPlus />
+                        <FaTrash />
                       </button>
                     </div>
                     
-                    <span className="item-total">
-                      {formatPrice(item.precio * item.quantity)}
-                    </span>
+                    <p className="item-price">{formatPrice(item.precio || 0)}</p>
+                    
+                    <div className="item-actions">
+                      <div className="quantity-control">
+                        <button 
+                          className="quantity-button" 
+                          onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                          title="Disminuir cantidad"
+                          aria-label="Disminuir cantidad"
+                        >
+                          <FaMinus />
+                        </button>
+                        <span className="quantity" aria-label={`Cantidad: ${item.quantity}`}>
+                          {item.quantity}
+                        </span>
+                        <button 
+                          className="quantity-button"
+                          onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                          title="Aumentar cantidad"
+                          aria-label="Aumentar cantidad"
+                        >
+                          <FaPlus />
+                        </button>
+                      </div>
+                      
+                      <span className="item-total">
+                        {formatPrice((item.precio || 0) * item.quantity)}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           
           <div className="cart-summary">

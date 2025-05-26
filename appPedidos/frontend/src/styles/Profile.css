@@ -39,9 +39,17 @@
   }
   
   .success-message {
-    background-color: rgba(46, 204, 113, 0.1);
-    color: #2ecc71;
-    border-left: 4px solid #2ecc71;
+    display: flex;
+    align-items: center;
+    margin: 15px 0;
+    padding: 12px 16px;
+    background-color: rgba(39, 174, 96, 0.1);
+    border-left: 4px solid #27ae60;
+    border-radius: 4px;
+    color: #2c3e50;
+    font-weight: 500;
+    animation: fadeInDown 0.5s ease-out;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
   
   .profile-content {
@@ -344,3 +352,159 @@
       width: 100%;
     }
   }
+  /* Estilos para el formulario de cambio de contraseña */
+.password-form-container {
+  margin-top: 20px;
+  background-color: #f5f5f5;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.password-form-container h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.password-error {
+  color: #e74c3c;
+  background-color: rgba(231, 76, 60, 0.1);
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.password-button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  margin-left: 10px;
+}
+
+.password-button:hover {
+  background-color: #2980b9;
+}
+.success-icon {
+  margin-right: 10px;
+  font-size: 20px;
+  color: #27ae60;
+  background-color: rgba(39, 174, 96, 0.1);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.success-content {
+  flex: 1;
+}
+
+.animated-success {
+  animation: fadeInDown 0.5s ease-out, pulse 2s infinite;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(39, 174, 96, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(39, 174, 96, 0);
+  }
+}
+
+/* Estilos para el mensaje de error en el formulario de contraseña */
+.password-error {
+  padding: 10px;
+  margin-bottom: 15px;
+  background-color: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  border-radius: 4px;
+  border-left: 4px solid #e74c3c;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Mejorar estilos del formulario de contraseña */
+.password-form-container {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #3498db;
+  transition: all 0.3s ease;
+}
+
+.password-form-container h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #2c3e50;
+  font-size: 18px;
+}
+
+.password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Mejorar estilos del botón de contraseña */
+.password-button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  margin-left: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.password-button:hover {
+  background-color: #2980b9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.password-button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}

@@ -390,4 +390,133 @@
   .status-bar {
     flex: 1;
   }
+
+  /* Agregar al final de tu Statistics.css existente */
+
+/* Sección de calificaciones */
+.rating-summary {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #e9ecef;
+}
+
+.rating-overview {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.rating-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.star {
+  font-size: 24px;
+  color: #ddd;
+  transition: color 0.2s;
+}
+
+.star.filled {
+  color: #ffd700;
+}
+
+.rating-number {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+}
+
+.rating-count {
+  font-size: 16px;
+  color: #666;
+}
+
+/* Calificaciones recientes */
+.recent-ratings h4 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.ratings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rating-item {
+  background: white;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.rating-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.rating-stars-small {
+  display: flex;
+  gap: 1px;
+}
+
+.star-small {
+  font-size: 16px;
+  color: #ddd;
+}
+
+.star-small.filled {
+  color: #ffd700;
+}
+
+.rating-date {
+  font-size: 14px;
+  color: #666;
+}
+
+.rating-comment {
+  font-size: 14px;
+  color: #555;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.no-ratings {
+  text-align: center;
+  padding: 30px;
+  color: #666;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+/* Responsive para calificaciones */
+@media (max-width: 768px) {
+  .rating-overview {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .rating-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .star {
+    font-size: 20px;
+  }
+  
+  .rating-number {
+    font-size: 20px;
+  }
+}
 }

@@ -4,12 +4,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { 
   FaArrowLeft, FaPlus, FaStore, FaUtensils, FaEdit, 
   FaMapMarkerAlt, FaClipboardList, FaCheck, FaTimes, 
-  FaClock, FaTruck, FaSearch, FaTrash, FaCamera 
+  FaClock, FaTruck, FaSearch, FaTrash, FaCamera, FaBuilding 
 } from 'react-icons/fa';
 import { useAuth } from '../../../hooks/useAuth';
 import { api } from '../../../services/api';
 import ProductForm from '../productos/ProductForm';
 import CloudinaryService from '../../../services/CloudinaryService';
+import SucursalesManagement from '../SucursalesManagement'; //Nuevo
 import './RestaurantDetail.css';
 
 const RestaurantDetail = () => {
@@ -23,6 +24,7 @@ const RestaurantDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showSucursalesModal, setShowSucursalesModal] = useState(false);
   
   // Estados para productos
   const [products, setProducts] = useState([]);
@@ -48,6 +50,16 @@ const RestaurantDetail = () => {
   
   // Estado para imagen
   const [isUploading, setIsUploading] = useState(false);
+
+  //Función para abrir modal de sucursales
+  const handleOpenSucursales = () => {
+  setShowSucursalesModal(true);
+};
+  //Función para cerrar modal de sucursales
+  const handleCloseSucursales = () => {
+  setShowSucursalesModal(false);
+};
+
   
   // Obtener datos del restaurante
   useEffect(() => {
@@ -62,6 +74,26 @@ const RestaurantDetail = () => {
         
         // Obtener productos del restaurante
         const productsResponse = await api.get(`/restaurantes/${restaurantId}/productos`);
+        console.log("🔍 RESPUESTA COMPLETA DE PRODUCTOS:", productsResponse.data);
+
+        // Debug cada producto individualmente
+      if (productsResponse.data && productsResponse.data.length > 0) {
+        productsResponse.data.forEach((product, index) => {
+          console.log(`📦 PRODUCTO ${index + 1}:`, {
+            id: product.id,
+            nombre: product.nombre,
+            imagen: product.imagen,
+            imageUrl: product.imageUrl,
+            image: product.image,
+            foto: product.foto,
+            picture: product.picture,
+            media: product.media,
+            // Mostrar TODAS las propiedades
+            todasLasPropiedades: Object.keys(product)
+          });
+        });
+      }
+
         setProducts(productsResponse.data || []);
         setFilteredProducts(productsResponse.data || []);
         
@@ -338,14 +370,29 @@ const RestaurantDetail = () => {
             {filteredProducts.map(product => (
               <tr key={product.id}>
                 <td className="image-column">
-                  {product.imagen ? (
-                    <img src={product.imagen} alt={product.nombre} className="product-image" />
-                  ) : (
-                    <div className="image-placeholder">
-                      <FaUtensils />
-                    </div>
-                  )}
-                </td>
+  <div className="product-image-container">
+    {product.imageUrl ? (
+      <img 
+        src={product.imageUrl} 
+        alt={product.nombre} 
+        className="product-image"
+        title={`Ver imagen de ${product.nombre}`}
+        loading="lazy"
+        onError={(e) => {
+          console.error("Error cargando imagen de Cloudinary:", {
+            producto: product.nombre,
+            url: e.target.src,
+            status: e.target.complete
+          });
+        }}
+      />
+    ) : (
+      <div className="image-placeholder">
+        <FaUtensils />
+      </div>
+    )}
+  </div>
+</td>
                 <td>{product.nombre}</td>
                 <td>{product.especificaciones || 'Sin descripción'}</td>
                 <td>{formatPrice(product.precio)}</td>
@@ -514,25 +561,37 @@ const RestaurantDetail = () => {
         </button>
         
         <div className="restaurant-info">
-          <h2>{restaurant.nombre}</h2>
-          
-          <div className="restaurant-meta">
-            {restaurant.categorias && restaurant.categorias.length > 0 && (
-              <div className="meta-item">
-                <span className="category-tag">{restaurant.categorias.join(', ')}</span>
-              </div>
-            )}
-            
-            {restaurant.ubicaciones && restaurant.ubicaciones.length > 0 && (
-              <div className="meta-item">
-                <FaMapMarkerAlt className="meta-icon" />
-                <span>
-                  {restaurant.ubicaciones.map(ub => ub.comuna).join(', ')}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
+  <div className="restaurant-title-section">
+    <h2>{restaurant.nombre}</h2>
+    
+    {/* ✅ BOTÓN GESTIÓN DE SUCURSALES */}
+    <button 
+      className="manage-branches-btn"
+      onClick={handleOpenSucursales}
+      title="Gestionar Sucursales"
+    >
+      <FaBuilding />
+      <span>Gestionar Sucursales</span>
+    </button>
+  </div>
+  
+  <div className="restaurant-meta">
+    {restaurant.categorias && restaurant.categorias.length > 0 && (
+      <div className="meta-item">
+        <span className="category-tag">{restaurant.categorias.join(', ')}</span>
+      </div>
+    )}
+    
+    {restaurant.ubicaciones && restaurant.ubicaciones.length > 0 && (
+      <div className="meta-item">
+        <FaMapMarkerAlt className="meta-icon" />
+        <span>
+          {restaurant.ubicaciones.map(ub => ub.comuna).join(', ')}
+        </span>
+      </div>
+    )}
+  </div>
+</div>
         
         <button className="edit-button" onClick={handleEditRestaurant}>
           <FaEdit /> Editar Restaurante
@@ -734,8 +793,17 @@ const RestaurantDetail = () => {
             </div>
           </div>
         </div>
+
       )}
+      {showSucursalesModal && (
+  <SucursalesManagement
+    restaurante={restaurant}
+    onClose={handleCloseSucursales}
+  />
+)}
     </div>
+
+    
   );
 };
 

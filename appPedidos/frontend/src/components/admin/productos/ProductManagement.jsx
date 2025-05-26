@@ -1,5 +1,4 @@
-//
-// src/components/admin/productos/ProductManagement.jsx
+// ProductManagement.jsx - SOLUCIÓN RÁPIDA COMPLETA
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaPlus, FaEdit, FaTrash, FaSearch } from 'react-icons/fa';
@@ -9,8 +8,11 @@ import ProductForm from './ProductForm';
 import './ProductManagement.css';
 
 export default function ProductManagement() {
-  const { restauranteId } = useParams();
-  const { token } = useAuth();
+  // ✅ SOLUCIÓN: Obtener el ID de cualquier forma posible
+  const params = useParams();
+  const restaurantId = params.restaurantId || params.restauranteId || params.id;
+  
+  const { token, user, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   
   const [restaurant, setRestaurant] = useState(null);
@@ -35,14 +37,26 @@ export default function ProductManagement() {
       try {
         setLoading(true);
         
+        if (!token || !isAuthenticated) {
+          setError('No se pudo autenticar. Por favor, inicie sesión de nuevo.');
+          setLoading(false);
+          return;
+        }
+        
+        if (!restaurantId) {
+          setError('ID de restaurante no válido.');
+          setLoading(false);
+          return;
+        }
+        
         // Obtener información del restaurante
-        const restaurantRes = await api.get(`/restaurantes/${restauranteId}`, {
+        const restaurantRes = await api.get(`/restaurantes/${restaurantId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setRestaurant(restaurantRes.data);
         
         // Obtener productos del restaurante
-        const productsRes = await api.get(`/restaurantes/${restauranteId}/productos`, {
+        const productsRes = await api.get(`/restaurantes/${restaurantId}/productos`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -51,13 +65,25 @@ export default function ProductManagement() {
         setLoading(false);
       } catch (err) {
         console.error("Error al cargar datos:", err);
-        setError('No se pudieron cargar los datos. Por favor, intente de nuevo.');
+        if (err.response?.status === 401) {
+          setError('Sesión expirada. Por favor, inicie sesión de nuevo.');
+        } else if (err.response?.status === 404) {
+          setError('Restaurante no encontrado o no tienes permisos para acceder.');
+        } else {
+          setError('No se pudieron cargar los datos. Por favor, intente de nuevo.');
+        }
         setLoading(false);
       }
     };
     
-    fetchData();
-  }, [restauranteId, token]);
+    // Solo ejecutar si tenemos token y no estamos cargando auth
+    if (token && !authLoading && restaurantId) {
+      fetchData();
+    } else if (!authLoading && !token) {
+      setLoading(false);
+      setError('No se pudo autenticar. Por favor, inicie sesión de nuevo.');
+    }
+  }, [restaurantId, token, isAuthenticated, authLoading]);
 
   // Filtrar productos cuando cambia el término de búsqueda
   useEffect(() => {
@@ -66,7 +92,7 @@ export default function ProductManagement() {
     } else {
       const filtered = products.filter(product => 
         product.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.especificaciones.toLowerCase().includes(searchTerm.toLowerCase())
+        (product.especificaciones && product.especificaciones.toLowerCase().includes(searchTerm.toLowerCase()))
       );
       setFilteredProducts(filtered);
     }
@@ -122,14 +148,21 @@ export default function ProductManagement() {
   // Guardar producto (nuevo o editado)
   const handleSaveProduct = async (productData) => {
     try {
+      if (!token || !isAuthenticated) {
+        throw new Error('No hay token de autenticación válido. Por favor, inicie sesión de nuevo.');
+      }
+      
       let savedProduct;
       
       if (isEditing && currentProduct) {
         // Actualizar producto existente
         const res = await api.put(`/productos/${currentProduct.id}`, productData, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         });
-        savedProduct = res.data.producto;
+        savedProduct = res.data.producto || res.data;
         
         // Actualizar en la lista
         setProducts(prevProducts => 
@@ -137,22 +170,37 @@ export default function ProductManagement() {
         );
       } else {
         // Crear nuevo producto
-        const res = await api.post('/productos', {
+        const dataWithRestaurant = {
           ...productData,
-          restaurante_Id: restauranteId
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
+          restaurante_Id: restaurantId
+        };
+        
+        const res = await api.post('/productos', dataWithRestaurant, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         });
-        savedProduct = res.data.producto;
+        savedProduct = res.data.producto || res.data;
         
         // Agregar a la lista
         setProducts(prevProducts => [...prevProducts, savedProduct]);
       }
       
       setShowProductModal(false);
+      setCurrentProduct(null);
+      setIsEditing(false);
+      
     } catch (err) {
       console.error("Error al guardar producto:", err);
-      setError('No se pudo guardar el producto. Por favor, intente de nuevo.');
+      
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.error ||
+                          err.message || 
+                          'No se pudo guardar el producto. Por favor, intente de nuevo.';
+      
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
@@ -164,6 +212,28 @@ export default function ProductManagement() {
       minimumFractionDigits: 0
     }).format(price);
   };
+
+  // Si estamos cargando la autenticación
+  if (authLoading) {
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+        <p>Verificando autenticación...</p>
+      </div>
+    );
+  }
+
+  // Si no está autenticado
+  if (!isAuthenticated || !token) {
+    return (
+      <div className="error-container">
+        <p>No tienes acceso a esta página. Por favor, inicia sesión.</p>
+        <button onClick={() => navigate('/login')} className="retry-button">
+          Ir a Login
+        </button>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -242,13 +312,21 @@ export default function ProductManagement() {
               {filteredProducts.map(product => (
                 <tr key={product.id}>
                   <td className="image-column">
-                    {product.imagen ? (
-                      <img src={product.imagen} alt={product.nombre} className="product-image" />
-                    ) : (
-                      <div className="image-placeholder">
-                        <span>Sin Imagen</span>
-                      </div>
-                    )}
+                    <div className="product-image-wrapper">
+                      {product.imagen || product.imageUrl ? (
+                        <img 
+                          src={product.imagen || product.imageUrl} 
+                          alt={product.nombre} 
+                          className="product-image"
+                          title={`Ver imagen de ${product.nombre}`}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="image-placeholder">
+                          <span>Sin Imagen</span>
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td>{product.nombre}</td>
                   <td>{product.especificaciones || 'Sin descripción'}</td>
@@ -285,7 +363,7 @@ export default function ProductManagement() {
               isEditing={isEditing}
               onSave={handleSaveProduct}
               onCancel={() => setShowProductModal(false)}
-              restauranteId={restauranteId}
+              restauranteId={restaurantId}
             />
           </div>
         </div>

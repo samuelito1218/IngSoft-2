@@ -1,10 +1,11 @@
-// src/contexts/AuthContext.jssx - Implementación adaptada a tu backend actual
+// src/contexts/AuthContext.jsx - SOLUCIÓN FINAL
 import React, { createContext, useState, useEffect } from 'react';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);  // ✅ AGREGADO
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   
@@ -12,42 +13,37 @@ export const AuthProvider = ({ children }) => {
   const API_URL = 'http://localhost:5000/api';
 
   const saveUserToLocalStorage = (user) => {
-  localStorage.setItem('user_data', JSON.stringify(user));
-};
+    localStorage.setItem('user_data', JSON.stringify(user));
+  };
   
   // Verificar token al cargar
   useEffect(() => {
-    
-    //Nuevas funciones para la persistencia del usuario
-    
-
-
-    const getUserFromLocalStorage = () =>{
+    const getUserFromLocalStorage = () => {
       const data = localStorage.getItem("user_data");
       return data ? JSON.parse(data) : null;
     }
 
     const verifyToken = async () => {
-      const token = localStorage.getItem('token');
+      const storedToken = localStorage.getItem('token');
       
-      if (!token) {
+      if (!storedToken) {
         setLoading(false);
         return;
       }
       
       console.log('Token encontrado, verificando autenticación...');
+      setToken(storedToken);  // ✅ ESTABLECER TOKEN
       
       try {
         const response = await fetch(`${API_URL}/auth/me`, {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${storedToken}`
           }
         });
         
         if (response.status === 200) {
           const data = await response.json();
           console.log('Verificación exitosa, datos del usuario:', data);
-          //Se manejan 2 estructuras
           const userData = data.user || data;
 
           const storedUser = getUserFromLocalStorage();
@@ -62,34 +58,33 @@ export const AuthProvider = ({ children }) => {
             setUser(userData);
           }
           setIsAuthenticated(true);
-        } else{
-          //En caso de que falle la api, se usan los datos locales de la sesión
-
+        } else {
           const storedUser = getUserFromLocalStorage();
           if(storedUser){
             setUser(storedUser);
             setIsAuthenticated(true);
-          } else{
+          } else {
             localStorage.removeItem('token');
+            setToken(null);  // ✅ LIMPIAR TOKEN
           }
         }
       } catch (error) {
-      console.error('Error de verificación:', error);
-      //localStorage.removeItem('token');
-
-      const storedUser = getUserFromLocalStorage();
-      if(storedUser){
-        setUser(storedUser);
-        setIsAuthenticated(true);
+        console.error('Error de verificación:', error);
+        
+        const storedUser = getUserFromLocalStorage();
+        if(storedUser){
+          setUser(storedUser);
+          setIsAuthenticated(true);
+        } else {
+          setToken(null);  // ✅ LIMPIAR TOKEN
+        }
+      } finally {
+        setLoading(false);
       }
-      
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  verifyToken();
-}, []);
+    };
+    
+    verifyToken();
+  }, []);
   
   // Iniciar sesión
   const login = async (credentials) => {
@@ -105,16 +100,14 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
       
       if (response.status === 200) {
-        const { token, user } = data;
-        localStorage.setItem('token', token);
-        
-        //Nueva implementación para persistencia
-
+        const { token: userToken, user } = data;
+        localStorage.setItem('token', userToken);
         saveUserToLocalStorage(user);
 
+        setToken(userToken);  // ✅ ESTABLECER TOKEN
         setUser(user);
         setIsAuthenticated(true);
-        return { success: true, user, token }; // Añadir token aquí
+        return { success: true, user, token: userToken };
       } else {
         return { 
           success: false, 
@@ -132,12 +125,10 @@ export const AuthProvider = ({ children }) => {
   
   // Cerrar sesión
   const logout = () => {
-    
-    //Nueva función para mantener persistencia
-
     localStorage.removeItem('token');
     localStorage.removeItem("user_data");
 
+    setToken(null);  // ✅ LIMPIAR TOKEN
     setUser(null);
     setIsAuthenticated(false);
   };
@@ -156,8 +147,9 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
       
       if (response.status === 201) {
-        const { token, user } = data;
-        localStorage.setItem('token', token);
+        const { token: userToken, user } = data;
+        localStorage.setItem('token', userToken);
+        setToken(userToken);  // ✅ ESTABLECER TOKEN
         setUser(user);
         setIsAuthenticated(true);
         return { success: true, user };
@@ -228,6 +220,7 @@ export const AuthProvider = ({ children }) => {
   
   const value = {
     user,
+    token,  // ✅ INCLUIR TOKEN EN VALUE
     loading,
     isAuthenticated,
     login,

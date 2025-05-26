@@ -1,8 +1,16 @@
-/**/
+/*
+ * ProductForm.css
+ * Estilos para el formulario de productos
+ */
+
+/* Estilos base del contenedor */
 .product-form-container {
   padding: 24px;
+  max-height: calc(90vh - 48px);
+  overflow-y: auto;
 }
 
+/* Estilos del encabezado */
 .form-header {
   display: flex;
   justify-content: space-between;
@@ -37,6 +45,7 @@
   color: #333;
 }
 
+/* Estilos para mensajes de error */
 .error-message {
   padding: 12px 16px;
   background-color: #ffebee;
@@ -46,6 +55,7 @@
   font-size: 14px;
 }
 
+/* Estilos para sección de imágenes */
 .image-upload-section {
   margin-bottom: 24px;
 }
@@ -137,6 +147,7 @@
   cursor: not-allowed;
 }
 
+/* Estilos para grupos de formularios */
 .form-group {
   margin-bottom: 20px;
 }
@@ -174,6 +185,7 @@
   min-height: 100px;
 }
 
+/* Estilos para el campo de precio */
 .price-input-container {
   position: relative;
 }
@@ -191,6 +203,147 @@
   padding-left: 24px;
 }
 
+/* Estilos para el selector de categoría */
+.custom-select-container {
+  position: relative;
+  width: 100%;
+}
+
+.custom-select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 16px;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.custom-select:focus {
+  outline: none;
+  border-color: #ff5722;
+  box-shadow: 0 0 0 2px rgba(255, 87, 34, 0.2);
+}
+
+.select-arrow {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+  pointer-events: none;
+}
+
+/* Estilos para el dropdown de sucursales */
+
+.sucursal-dropdown-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: 60px; /* Agregar espacio suficiente para el dropdown */
+}
+
+.sucursal-dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #555;
+}
+
+.sucursal-dropdown-header:hover {
+  border-color: #ff4b2b;
+}
+
+.dropdown-arrow {
+  color: #666;
+  transition: transform 0.3s ease;
+}
+
+.sucursal-dropdown-container.open .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.sucursal-dropdown-menu {
+  position: absolute;
+  bottom: calc(100% + 4px); /* Cambiar a 'bottom' para que se abra hacia arriba */
+  left: 0;
+  width: 100%;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1001;
+  border: 1px solid #e0e0e0;
+}
+
+.sucursal-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.sucursal-option:hover:not(.selected) {
+  background-color: #f8f9fa;
+}
+
+.sucursal-option.selected {
+  background-color: #2196F3;
+  color: white;
+}
+
+.sucursal-option:last-child {
+  border-bottom: none;
+}
+
+.option-content {
+  flex: 1;
+}
+
+.selected-indicator {
+  color: white;
+  font-weight: bold;
+  margin-left: 8px;
+  font-size: 16px;
+}
+
+.sucursal-option:not(.selected) .selected-indicator {
+  display: none;
+}
+
+/* Estilos para los mensajes de carga y sin sucursales */
+.loading-spinner {
+  padding: 16px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.no-sucursales-message {
+  padding: 16px;
+  text-align: center;
+  color: #e74c3c;
+  background-color: #fef2f0;
+  border-radius: 8px;
+  border: 1px solid #fadbd8;
+}
+
+/* Estilos para los botones de acción */
 .form-actions {
   display: flex;
   justify-content: flex-end;

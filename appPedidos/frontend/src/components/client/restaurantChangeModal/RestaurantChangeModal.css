@@ -1,0 +1,270 @@
+/* src/components/client/restaurantchangemodal/RestaurantChangeModal.css */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  position: relative;
+  padding: 25px 25px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  text-align: center;
+}
+
+.warning-icon {
+  width: 60px;
+  height: 60px;
+  background-color: #fff3e0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 15px;
+  font-size: 24px;
+  color: #ff9800;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #333;
+}
+
+.close-button {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #999;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.close-button:hover {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.modal-body {
+  padding: 25px;
+}
+
+.restaurant-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 25px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  gap: 15px;
+}
+
+.current-restaurant,
+.new-restaurant {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.restaurant-icon {
+  font-size: 24px;
+  padding: 12px;
+  border-radius: 10px;
+  color: white;
+}
+
+.restaurant-icon.current {
+  background-color: #ff6b6b;
+}
+
+.restaurant-icon.new {
+  background-color: #4ecdc4;
+}
+
+.restaurant-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.restaurant-details .label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.restaurant-details .name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.arrow {
+  font-size: 24px;
+  color: #999;
+  font-weight: bold;
+}
+
+.warning-message {
+  background-color: #fff8e1;
+  border: 1px solid #ffecb3;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.warning-message p {
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+  color: #666;
+}
+
+.warning-message p:last-child {
+  margin-bottom: 0;
+}
+
+.warning-message strong {
+  color: #333;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  padding: 0 25px 25px;
+}
+
+.cancel-button,
+.confirm-button {
+  flex: 1;
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  outline: none;
+}
+
+.cancel-button {
+  background-color: #f5f5f5;
+  color: #666;
+  border: 1px solid #e0e0e0;
+}
+
+.cancel-button:hover {
+  background-color: #eeeeee;
+  color: #333;
+  transform: translateY(-1px);
+}
+
+.confirm-button {
+  background-color: #ff4b2b;
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 75, 43, 0.25);
+}
+
+.confirm-button:hover {
+  background-color: #e63e1a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 75, 43, 0.35);
+}
+
+.confirm-button:active {
+  transform: translateY(0);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: 10px;
+  }
+  
+  .modal-header {
+    padding: 20px 20px 15px;
+  }
+  
+  .modal-body {
+    padding: 20px;
+  }
+  
+  .restaurant-info {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+  
+  .current-restaurant,
+  .new-restaurant {
+    justify-content: center;
+  }
+  
+  .arrow {
+    transform: rotate(90deg);
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+    padding: 0 20px 20px;
+  }
+  
+  .cancel-button,
+  .confirm-button {
+    width: 100%;
+  }
+}

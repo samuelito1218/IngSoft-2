@@ -1,4 +1,4 @@
-// src/components/client/ProfileComponent.jssx
+// src/components/client/ProfileComponent.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import ProfileService from '../../services/ProfileService';
@@ -19,6 +19,14 @@ function Profile() {
     direccion: '',
     comuna: '',
   });
+  
+  // Estado para cambio de contraseña
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordError, setPasswordError] = useState('');
   
   const [uploadingImage, setUploadingImage] = useState(false);
   
@@ -61,6 +69,69 @@ function Profile() {
       ...prev,
       [name]: value
     }));
+  };
+  
+  // Método para manejar cambios en el formulario de contraseña
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  // Método para manejar el envío del formulario de contraseña
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    
+    // Restablecer mensajes de error
+    setPasswordError('');
+    
+    // Validar que las contraseñas coincidan
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError('Las contraseñas no coinciden');
+      return;
+    }
+    
+    // Validar longitud mínima de contraseña
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      
+      // Llamar al servicio con la nueva contraseña
+      await ProfileService.changePassword(passwordData.newPassword);
+      
+      // Limpiar formulario
+      setPasswordData({
+        newPassword: '',
+        confirmPassword: ''
+      });
+      
+      // Cerrar formulario de contraseña
+      setShowPasswordForm(false);
+      
+      // Mostrar mensaje de éxito más destacado
+      setSuccessMessage('¡Contraseña actualizada exitosamente! Tu cuenta ahora está protegida con la nueva contraseña.');
+      
+      // Limpiar mensaje después de 5 segundos (tiempo aumentado para mejor visibilidad)
+      setTimeout(() => {
+        setSuccessMessage('');
+      }, 5000);
+      
+    } catch (error) {
+      console.error('Error al cambiar contraseña:', error);
+      if (error.response && error.response.data && error.response.data.message) {
+        setPasswordError(error.response.data.message);
+      } else {
+        setPasswordError('Error al cambiar contraseña. Intente nuevamente.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   const handleSubmit = async (e) => {
@@ -162,9 +233,11 @@ function Profile() {
         </div>
       )}
       
+      {/* Mensaje de éxito mejorado con ícono */}
       {successMessage && (
-        <div className="success-message">
-          {successMessage}
+        <div className="success-message animated-success">
+          <div className="success-icon">✓</div>
+          <div className="success-content">{successMessage}</div>
         </div>
       )}
       
@@ -334,7 +407,74 @@ function Profile() {
                 >
                   Editar perfil
                 </button>
+                
+                {/* Botón para cambiar contraseña */}
+                <button
+                  className="password-button"
+                  onClick={() => setShowPasswordForm(!showPasswordForm)}
+                >
+                  Cambiar contraseña
+                </button>
               </div>
+              
+              {/* Formulario para cambiar contraseña */}
+              {showPasswordForm && (
+                <div className="password-form-container">
+                  <h4>Cambiar contraseña</h4>
+                  
+                  {passwordError && (
+                    <div className="password-error">{passwordError}</div>
+                  )}
+                  
+                  <form onSubmit={handleChangePassword} className="password-form">
+                    <div className="form-group">
+                      <label>Nueva contraseña</label>
+                      <input
+                        type="password"
+                        name="newPassword"
+                        value={passwordData.newPassword}
+                        onChange={handlePasswordChange}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>Confirmar nueva contraseña</label>
+                      <input
+                        type="password"
+                        name="confirmPassword"
+                        value={passwordData.confirmPassword}
+                        onChange={handlePasswordChange}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="form-actions">
+                      <button
+                        type="button"
+                        className="cancel-button"
+                        onClick={() => setShowPasswordForm(false)}
+                        disabled={isLoading}
+                      >
+                        Cancelar
+                      </button>
+                      
+                      <button
+                        type="submit"
+                        className="save-button"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <span className="spinner-small"></span>
+                            Guardando...
+                          </>
+                        ) : 'Actualizar contraseña'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
             </div>
           )}
         </div>

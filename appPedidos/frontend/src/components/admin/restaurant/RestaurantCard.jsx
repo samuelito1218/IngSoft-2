@@ -1,99 +1,137 @@
-//
-import React from 'react';
-import { FaRegStar, FaMapMarkerAlt, FaEdit, FaTrashAlt, FaUtensils } from 'react-icons/fa';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../hooks/useAuth';
+import { api } from '../../../services/api';
+import { FaEdit, FaTrash, FaUtensils, FaExternalLinkAlt, FaStore, FaBuilding } from 'react-icons/fa';
+import SucursalesManagement from '../SucursalesManagement';
 import './RestaurantCard.css';
 
-const DEFAULT_IMAGE = '/images/restaurant-placeholder.jpg';
+const RestaurantCard = ({ restaurant, onRestaurantDeleted, onError }) => {
+  const { token } = useAuth();
+  const navigate = useNavigate();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-const RestaurantCard = ({ restaurant, onClick, onEdit, onDelete, onManageProducts }) => {
-  const handleClick = () => {
-    if (onClick) {
-      onClick(restaurant.id);
-    }
+  // Ver detalle de restaurante (con productos y pedidos)
+  const handleViewDetails = () => {
+    navigate(`/admin/restaurantes/${restaurant.id}`);
   };
 
+  // Manejar edición de restaurante
   const handleEdit = (e) => {
     e.stopPropagation();
-    if (onEdit) {
-      onEdit(restaurant.id);
-    }
+    navigate(`/admin/restaurantes/editar/${restaurant.id}`);
   };
 
-  const handleDelete = (e) => {
+  // Mostrar modal de confirmación para eliminar
+  const confirmDelete = (e) => {
     e.stopPropagation();
-    if (onDelete) {
-      onDelete(restaurant);
+    setShowDeleteModal(true);
+  };
+
+  // Eliminar restaurante
+  const handleDelete = async () => {
+    try {
+      await api.delete(`/restaurantes/eliminar/${restaurant.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Notificar al componente padre que el restaurante fue eliminado
+      if (onRestaurantDeleted) {
+        onRestaurantDeleted(restaurant.id);
+      }
+
+      setShowDeleteModal(false);
+    } catch (err) {
+      console.error('Error al eliminar el restaurante:', err);
+      if (onError) {
+        onError('No se pudo eliminar el restaurante. Por favor, intente de nuevo.');
+      }
     }
   };
 
+  // Manejar gestión de productos
   const handleManageProducts = (e) => {
     e.stopPropagation();
-    if (onManageProducts) {
-      onManageProducts(restaurant.id);
-    }
+    navigate(`/admin/productos/${restaurant.id}`);
   };
 
   return (
-    <div className="restaurant-card" onClick={handleClick}>
-      <div className="restaurant-image">
-        <img 
-          src={restaurant.imageUrl || DEFAULT_IMAGE} 
-          alt={restaurant.nombre}
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = DEFAULT_IMAGE;
-          }}
-        />
-      </div>
-      
-      <div className="restaurant-info">
-        <h3 className="restaurant-name">{restaurant.nombre}</h3>
-        
-        {restaurant.descripcion && (
-          <p className="restaurant-description">{restaurant.descripcion}</p>
-        )}
-        
-        <div className="restaurant-meta">
-          <div className="meta-item">
-            <FaRegStar className="meta-icon" />
-            <span>5.0</span>
-          </div>
-          
-          {restaurant.categorias && restaurant.categorias.length > 0 && (
-            <div className="meta-item">
-              <span className="category-tag">{restaurant.categorias[0]}</span>
-              {restaurant.categorias.length > 1 && (
-                <span className="categories-more">+{restaurant.categorias.length - 1}</span>
-              )}
-            </div>
-          )}
-          
-          {restaurant.ubicaciones && restaurant.ubicaciones.length > 0 && (
-            <div className="meta-item">
-              <FaMapMarkerAlt className="meta-icon" />
-              <span>{restaurant.ubicaciones[0].comuna || 'No especificada'}</span>
+    <>
+      <div className="restaurant-card" onClick={handleViewDetails}>
+        <div className="restaurant-image">
+          {restaurant.imageUrl ? (
+            <img src={restaurant.imageUrl} alt={restaurant.nombre} />
+          ) : (
+            <div className="image-placeholder">
+              <FaStore />
             </div>
           )}
         </div>
-      </div>
-      
-      <div className="restaurant-actions">
-        <button className="action-button products" onClick={handleManageProducts || handleClick} title="Gestionar productos">
-          <FaUtensils />
-          <span>Productos</span>
-        </button>
         
-        <button className="action-button edit" onClick={handleEdit || handleClick} title="Editar restaurante">
-          <FaEdit />
-          <span>Editar</span>
-        </button>
+        <div className="restaurant-content">
+          <h3>{restaurant.nombre}</h3>
+          <p className="restaurant-description">{restaurant.descripcion || 'Sin descripción'}</p>
+          {restaurant.categorias && restaurant.categorias.length > 0 && (
+            <div className="restaurant-categories">
+              {restaurant.categorias.map((cat, idx) => (
+                <span key={idx} className="category-tag">{cat}</span>
+              ))}
+            </div>
+          )}
+        </div>
         
-        <button className="action-button delete" onClick={handleDelete} title="Eliminar restaurante">
-          <FaTrashAlt />
-          <span>Eliminar</span>
-        </button>
+        <div className="restaurant-actions">
+          <button 
+            className="action-button edit" 
+            onClick={handleEdit}
+            title="Editar restaurante"
+          >
+            <FaEdit />
+          </button>
+          
+          <button 
+            className="action-button products" 
+            onClick={handleManageProducts}
+            title="Gestionar productos"
+          >
+            <FaUtensils />
+          </button>
+          
+          <button 
+            className="action-button delete" 
+            onClick={confirmDelete}
+            title="Eliminar restaurante"
+          >
+            <FaTrash />
+          </button>
+        </div>
       </div>
-    </div>
+
+      {/* Modal de confirmación para eliminar */}
+      {showDeleteModal && (
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <h3>Confirmar Eliminación</h3>
+            <p>¿Está seguro que desea eliminar el restaurante <strong>{restaurant.nombre}</strong>?</p>
+            <p className="warning-text">Esta acción no se puede deshacer y eliminará también todos los productos asociados.</p>
+            <div className="modal-actions">
+              <button 
+                className="cancel-button" 
+                onClick={() => setShowDeleteModal(false)}
+              >
+                Cancelar
+              </button>
+              <button 
+                className="delete-button" 
+                onClick={handleDelete}
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

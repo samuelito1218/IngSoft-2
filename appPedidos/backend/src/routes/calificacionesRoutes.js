@@ -22,4 +22,10 @@ router.get(
   calificacionesController.getCalificacionesUsuario
 );
 
+//Nuevas rutas
+
+router.get('/restaurante/:restauranteId', calificacionesController.getCalificacionesRestaurante);
+router.get('/restaurante/:restauranteId/estadisticas', calificacionesController.getEstadisticasRestauranteConCalificaciones);
+router.get('/restaurantes', calificacionesController.getRestaurantesConCalificaciones);
+
 module.exports = router;

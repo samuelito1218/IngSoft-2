@@ -1,11 +1,12 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const bcrypt = require('bcrypt');
 //
 exports.getUserProfile = async (req, res) => {
   try {
     const userId = req.user.id;
     
-    const usuario = await prisma.usuarios.findUnique({
+    const usuario = await prisma.Usuarios.findUnique({
       where: { id: userId },
       select: {
         id: true,
@@ -54,7 +55,7 @@ exports.getUserById = async (req, res) => {
     const { id } = req.params;
     
     // Buscar usuario por ID
-    const usuario = await prisma.usuarios.findUnique({
+    const usuario = await prisma.Usuarios.findUnique({
       where: { id },
       select: {
         id: true,
@@ -97,7 +98,7 @@ exports.updateUserProfile = async (req, res) => {
     }
     
     // Primero, buscar el usuario actual para obtener su cédula
-    const usuarioActual = await prisma.usuarios.findUnique({
+    const usuarioActual = await prisma.Usuarios.findUnique({
       where: { id: userId }
     });
     
@@ -106,7 +107,7 @@ exports.updateUserProfile = async (req, res) => {
     }
     
     // Actualizar usuario con todos los campos necesarios
-    const usuarioActualizado = await prisma.usuarios.update({
+    const usuarioActualizado = await prisma.Usuarios.update({
       where: { id: userId },
       data: {
         nombreCompleto,
@@ -155,7 +156,7 @@ exports.updateProfileImage = async (req, res) => {
     }
     
     // Actualizar URL de imagen en la base de datos
-    const usuarioActualizado = await prisma.usuarios.update({
+    const usuarioActualizado = await prisma.Usuarios.update({
       where: { id: userId },
       data: { imageUrl }
     });
@@ -184,7 +185,7 @@ exports.obtenerDirecciones = async (req, res) => {
     console.log(`Buscando usuario con ID: ${req.user.id}`);
     
     // Utilizar findUnique con el ID como parámetro de búsqueda
-    const usuario = await prisma.usuarios.findUnique({
+    const usuario = await prisma.Usuarios.findUnique({
       where: { 
         id: req.user.id 
       },
@@ -249,7 +250,7 @@ exports.guardarDireccion = async (req, res) => {
     console.log(`Buscando usuario con ID: ${req.user.id}`);
     
     // Primero, verificar si el usuario existe
-    const usuarioExistente = await prisma.usuarios.findUnique({
+    const usuarioExistente = await prisma.Usuarios.findUnique({
       where: { 
         id: req.user.id 
       }
@@ -272,7 +273,7 @@ exports.guardarDireccion = async (req, res) => {
     console.log('Nueva dirección a guardar:', nuevaDireccion);
     
     // Actualizar el usuario - tenemos que manejar el historialDirecciones como un array
-    const usuarioActualizado = await prisma.usuarios.update({
+    const usuarioActualizado = await prisma.Usuarios.update({
       where: { 
         id: req.user.id 
       },
@@ -319,5 +320,42 @@ exports.obtenerPedidosUsuario = async (req, res) => {
       message: 'Error al obtener pedidos', 
       error: error.message 
     });
+  }
+};
+// Añade esta función a usuariosController.js
+exports.cambiarContrasena = async (req, res) => {
+  console.log("Función cambiarContrasena ejecutándose con:", req.body);
+  
+  try {
+    const userId = req.user.id;
+    const { newPassword } = req.body;
+    
+    if (!newPassword) {
+      return res.status(400).json({ message: 'La nueva contraseña es requerida' });
+    }
+    
+    // Buscar el usuario
+    const usuario = await prisma.Usuarios.findUnique({
+      where: { id: userId }
+    });
+    
+    if (!usuario) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    
+    // Encriptar nueva contraseña
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    // Actualizar la contraseña
+    await prisma.Usuarios.update({
+      where: { id: userId },
+      data: { contrase_a: hashedPassword }
+    });
+    
+    console.log("Contraseña actualizada correctamente para usuario:", userId);
+    res.status(200).json({ message: 'Contraseña actualizada correctamente' });
+  } catch (error) {
+    console.error('Error al cambiar contraseña:', error);
+    res.status(500).json({ message: 'Error al cambiar contraseña', error: error.message });
   }
 };

@@ -74,83 +74,273 @@ exports.listarProductosPorRestaurante = async (req, res) => {
 };
 
 // Método para crear un producto
+
+// Método para crear un producto - VERSIÓN CORREGIDA
+// Método para crear un producto - VERSIÓN CON DEBUGGING COMPLETO
+// Método para crear un producto - ADAPTADO A TU ESQUEMA
 exports.crearProducto = async (req, res) => {
+  console.log("=== INICIANDO CREACIÓN DE PRODUCTO ===");
+  console.log("Body recibido:", JSON.stringify(req.body, null, 2));
+  
   try {
-    const { nombre, especificaciones, precio, restaurante_Id } = req.body;
+    const { nombre, precio, especificaciones, categoria, imageUrl, sucursalesIds, restaurante_Id, todasLasSucursales } = req.body;
     
-    // Validar datos requeridos
-    if (!nombre || !especificaciones || precio === undefined || !restaurante_Id) {
+    // Validaciones según tu esquema de MongoDB
+    if (!nombre || !nombre.trim()) {
       return res.status(400).json({ 
-        message: "Faltan datos requeridos. Se necesita nombre, especificaciones, precio y restaurante_Id" 
+        message: 'El nombre es obligatorio según el esquema de BD'
       });
     }
+
+    if (precio === undefined || precio === null || precio === '') {
+      return res.status(400).json({ 
+        message: 'El precio es obligatorio según el esquema de BD'
+      });
+    }
+
+    // ✅ IMPORTANTE: especificaciones es OBLIGATORIO en tu BD
+    if (!especificaciones || !especificaciones.trim()) {
+      return res.status(400).json({ 
+        message: 'Las especificaciones son obligatorias según el esquema de BD'
+      });
+    }
+
+    // ✅ IMPORTANTE: categoria es OBLIGATORIO en tu BD
+    if (!categoria || !categoria.trim()) {
+      return res.status(400).json({ 
+        message: 'La categoría es obligatoria según el esquema de BD'
+      });
+    }
+
+    // Validar que la categoría esté en el enum permitido
+    const categoriasPermitidas = ['Hamburguesa', 'Pizza', 'Sushi', 'Ensaladas', 'Perro', 'Picadas', 'Postres', 'Otras'];
+    if (!categoriasPermitidas.includes(categoria)) {
+      return res.status(400).json({ 
+        message: 'Categoría no válida',
+        categoriasPermitidas,
+        categoriaRecibida: categoria
+      });
+    }
+
+    if (!restaurante_Id || !restaurante_Id.trim()) {
+      return res.status(400).json({ 
+        message: 'El restaurante_Id es obligatorio'
+      });
+    }
+
+    // Validar precio (debe ser double según tu esquema)
+    const precioNumero = parseFloat(precio);
+    if (isNaN(precioNumero) || precioNumero <= 0) {
+      return res.status(400).json({ 
+        message: 'El precio debe ser un número decimal válido mayor a cero',
+        received: precio,
+        parsed: precioNumero
+      });
+    }
+
+    // Verificar usuario autenticado
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'Usuario no autenticado' });
+    }
     
-    // Verificar que el restaurante existe
+    console.log("=== BUSCANDO RESTAURANTE ===");
+    
+    // Verificar restaurante y permisos
     const restaurante = await prisma.restaurantes.findUnique({
-      where: { id: restaurante_Id }
+      where: { id: restaurante_Id },
+      include: { sucursales: true }
     });
     
     if (!restaurante) {
-      return res.status(404).json({ message: "Restaurante no encontrado" });
+      return res.status(404).json({ message: 'Restaurante no encontrado' });
     }
+    
+    if (restaurante.ownerId !== req.user.id) {
+      return res.status(403).json({ message: 'No tienes permiso para añadir productos a este restaurante' });
+    }
+    
+    console.log("=== PROCESANDO SUCURSALES ===");
+    
+    // Determinar sucursales (obligatorio según tu esquema)
+    let sucursales_Ids = [];
+    
+    if (todasLasSucursales === true) {
+      sucursales_Ids = restaurante.sucursales.map(s => s.id);
+      console.log("Todas las sucursales:", sucursales_Ids);
+    } else if (Array.isArray(sucursalesIds) && sucursalesIds.length > 0) {
+      const sucursalesDelRestaurante = restaurante.sucursales.map(s => s.id);
+      sucursales_Ids = sucursalesIds.filter(id => sucursalesDelRestaurante.includes(id));
+      
+      if (sucursales_Ids.length === 0) {
+        return res.status(400).json({ 
+          message: 'Debes seleccionar al menos una sucursal válida (obligatorio según el esquema de BD)',
+          sucursalesDisponibles: sucursalesDelRestaurante,
+          sucursalesRecibidas: sucursalesIds
+        });
+      }
+    } else {
+      return res.status(400).json({ 
+        message: 'Las sucursales son obligatorias según el esquema de BD',
+        todasLasSucursales,
+        sucursalesIds: sucursalesIds
+      });
+    }
+    
+    console.log("Sucursales finales:", sucursales_Ids);
+    
+    // ✅ Preparar datos según TU esquema exacto
+    const datosProducto = {
+      nombre: String(nombre).trim(),
+      precio: Number(precioNumero), // Double según tu esquema
+      especificaciones: String(especificaciones).trim(), // ✅ OBLIGATORIO
+      categoria: String(categoria).trim(), // ✅ Singular, no plural
+      imageUrl: imageUrl ? String(imageUrl).trim() : null,
+      restaurante_Id: String(restaurante_Id),
+      sucursales_Ids: sucursales_Ids
+    };
+    
+    console.log("=== DATOS FINALES PARA PRISMA ===");
+    console.log(JSON.stringify(datosProducto, null, 2));
+    
+    // Verificar tipos según tu esquema
+    console.log("Validación de tipos:");
+    console.log("- nombre (string):", typeof datosProducto.nombre);
+    console.log("- precio (number/double):", typeof datosProducto.precio);
+    console.log("- especificaciones (string):", typeof datosProducto.especificaciones);
+    console.log("- categoria (string):", typeof datosProducto.categoria);
+    console.log("- imageUrl (string|null):", typeof datosProducto.imageUrl);
+    console.log("- restaurante_Id (string):", typeof datosProducto.restaurante_Id);
+    console.log("- sucursales_Ids (array):", Array.isArray(datosProducto.sucursales_Ids));
+    
+    console.log("=== CREANDO PRODUCTO CON PRISMA ===");
     
     // Crear el producto
     const nuevoProducto = await prisma.productos.create({
-      data: {
-        nombre,
-        especificaciones,
-        precio: parseFloat(precio),
-        restaurante_Id
-      }
+      data: datosProducto
     });
     
+    console.log("=== PRODUCTO CREADO EXITOSAMENTE ===");
+    console.log(JSON.stringify(nuevoProducto, null, 2));
+    
     res.status(201).json({
-      message: "Producto creado exitosamente",
+      message: 'Producto creado exitosamente',
       producto: nuevoProducto
     });
+    
   } catch (error) {
-    console.error("Error al crear producto:", error);
-    res.status(500).json({
-      message: "Error interno al crear el producto",
-      error: error.message
+    console.error('=== ERROR COMPLETO ===');
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error code:', error.code);
+    console.error('Error stack:', error.stack);
+    
+    // Errores específicos de Prisma
+    if (error.code === 'P2002') {
+      return res.status(400).json({ 
+        message: 'Ya existe un producto con esos datos',
+        error: error.message,
+        errorCode: error.code
+      });
+    }
+    
+    if (error.code === 'P2025') {
+      return res.status(404).json({ 
+        message: 'Restaurante no encontrado',
+        error: error.message,
+        errorCode: error.code
+      });
+    }
+    
+    if (error.name === 'PrismaClientValidationError') {
+      return res.status(400).json({ 
+        message: 'Error de validación: Los datos no coinciden con el esquema de la BD',
+        error: error.message,
+        errorName: error.name,
+        details: 'Verifica que todos los campos obligatorios estén presentes y sean del tipo correcto'
+      });
+    }
+    
+    // Error genérico
+    res.status(500).json({ 
+      message: 'Error al crear el producto', 
+      error: error.message,
+      errorName: error.name,
+      errorCode: error.code || 'UNKNOWN'
     });
   }
 };
 
 // Método para actualizar un producto
-exports.actualizarProducto = async (req, res) => {
+// Controlador para editar un producto
+exports.editarProducto = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { nombre, especificaciones, precio } = req.body;
+    const { productoId } = req.params;
+    const { nombre, precio, especificaciones, categoria, imageUrl, sucursalesIds, todasLasSucursales } = req.body;
     
     // Verificar que el producto existe
     const producto = await prisma.productos.findUnique({
-      where: { id }
+      where: { id: productoId },
+      include: {
+        restaurante: true
+      }
     });
     
     if (!producto) {
-      return res.status(404).json({ message: "Producto no encontrado" });
+      return res.status(404).json({ message: 'Producto no encontrado' });
+    }
+    
+    // Verificar permisos (que el usuario sea dueño del restaurante)
+    if (producto.restaurante.ownerId !== req.user.id) {
+      return res.status(403).json({ message: 'No tienes permiso para editar este producto' });
+    }
+    
+    // Obtener todas las sucursales del restaurante
+    const sucursalesRestaurante = await prisma.sucursales.findMany({
+      where: { restaurante_Id: producto.restaurante_Id }
+    });
+    
+    // Determinar a qué sucursales asignar el producto
+    let sucursales_Ids = [...producto.sucursales_Ids]; // Mantener las sucursales existentes por defecto
+    
+    if (todasLasSucursales) {
+      // Si se seleccionó "todas las sucursales", asignamos a todas
+      sucursales_Ids = sucursalesRestaurante.map(s => s.id);
+    } else if (Array.isArray(sucursalesIds)) {
+      // Verificar que las sucursales seleccionadas pertenezcan al restaurante
+      const sucursalesDelRestaurante = sucursalesRestaurante.map(s => s.id);
+      const sucursalesValidas = sucursalesIds.filter(id => sucursalesDelRestaurante.includes(id));
+      
+      if (sucursalesValidas.length === 0) {
+        return res.status(400).json({ 
+          message: 'Debes seleccionar al menos una sucursal válida' 
+        });
+      }
+      
+      sucursales_Ids = sucursalesValidas;
     }
     
     // Actualizar el producto
     const productoActualizado = await prisma.productos.update({
-      where: { id },
+      where: { id: productoId },
       data: {
         nombre: nombre || producto.nombre,
+        precio: precio ? parseInt(precio) : producto.precio,
         especificaciones: especificaciones || producto.especificaciones,
-        precio: precio !== undefined ? parseFloat(precio) : producto.precio
+        categoria: categoria || producto.categoria,
+        imageUrl: imageUrl || producto.imageUrl,
+        sucursales_Ids
       }
     });
     
     res.status(200).json({
-      message: "Producto actualizado exitosamente",
+      message: 'Producto actualizado exitosamente',
       producto: productoActualizado
     });
   } catch (error) {
-    console.error("Error al actualizar producto:", error);
-    res.status(500).json({
-      message: "Error interno al actualizar el producto",
-      error: error.message
+    console.error('Error al editar producto:', error);
+    res.status(500).json({ 
+      message: 'Error al editar el producto', 
+      error: error.message 
     });
   }
 };
@@ -181,6 +371,40 @@ exports.eliminarProducto = async (req, res) => {
     console.error("Error al eliminar producto:", error);
     res.status(500).json({
       message: "Error interno al eliminar el producto",
+      error: error.message
+    });
+  }
+};
+
+// Obtener productos de una sucursal específica
+exports.listarProductosPorSucursal = async (req, res) => {
+  try {
+    const { sucursalId } = req.params;
+    
+    // Verificar que la sucursal existe
+    const sucursal = await prisma.sucursales.findUnique({
+      where: { id: sucursalId }
+    });
+    
+    if (!sucursal) {
+      return res.status(404).json({ message: 'Sucursal no encontrada' });
+    }
+    
+    // Buscar productos que incluyan esta sucursal en su array de sucursales_Ids
+    const productos = await prisma.productos.findMany({
+      where: {
+        sucursales_Ids: {
+          has: sucursalId
+        }
+      },
+      orderBy: { nombre: 'asc' }
+    });
+    
+    res.status(200).json(productos);
+  } catch (error) {
+    console.error('Error al listar productos de la sucursal:', error);
+    res.status(500).json({
+      message: 'Error al listar productos',
       error: error.message
     });
   }

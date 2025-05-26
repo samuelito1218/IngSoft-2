@@ -1,45 +1,111 @@
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaCamera, FaUtensils } from 'react-icons/fa';
+import { FaTimes, FaCamera, FaUtensils, FaStore, FaChevronDown, FaCheck  } from 'react-icons/fa';
 import CloudinaryService from '../../../services/CloudinaryService';
+import { api } from '../../../services/api';
+import { useAuth } from '../../../hooks/useAuth';
 import './ProductForm.css';
-//
+
 const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) => {
+  const { token } = useAuth();
+  
   const [form, setForm] = useState({
     nombre: '',
     especificaciones: '',
     precio: '',
     image: null,
     imageUrl: '',
+    categoria: '',
+    sucursales_Ids: [],
+    todasLasSucursales: false
   });
   
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
+  
+  // Estados para sucursales y categorías
+  const [sucursales, setSucursales] = useState([]);
+  const [loadingSucursales, setLoadingSucursales] = useState(true);
+  const [showSucursalDropdown, setShowSucursalDropdown] = useState(false);
+  
+  // Lista de categorías
+  const categorias = ['Hamburguesa', 'Pizza', 'Sushi', 'Ensaladas', 'Perro', 'Picadas', 'Postres', 'Otras'];
+
+  // Cargar sucursales cuando se inicia el componente
+  useEffect(() => {
+    const fetchSucursales = async () => {
+      try {
+        setLoadingSucursales(true);
+        const response = await api.get(`/restaurantes/${restauranteId}/sucursales`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSucursales(response.data || []);
+        setLoadingSucursales(false);
+      } catch (error) {
+        console.error("Error al cargar sucursales:", error);
+        setError("No se pudieron cargar las sucursales. Por favor, intente de nuevo.");
+        setLoadingSucursales(false);
+      }
+    };
+    
+    fetchSucursales();
+  }, [restauranteId, token]);
 
   // Si estamos editando, cargar datos del producto
   useEffect(() => {
     if (isEditing && product) {
+      // Verificar si todas las sucursales están seleccionadas
+      const todasSeleccionadas = 
+        sucursales.length > 0 && 
+        product.sucursales_Ids && 
+        sucursales.every(s => product.sucursales_Ids.includes(s.id));
+      
       setForm({
         nombre: product.nombre || '',
         especificaciones: product.especificaciones || '',
         precio: product.precio ? String(product.precio) : '',
         image: null,
-        imageUrl: product.imagen || '',
+        imageUrl: product.imageUrl || '',
+        categoria: product.categoria || 'Otras',
+        sucursales_Ids: product.sucursales_Ids || [],
+        todasLasSucursales: todasSeleccionadas
       });
       
-      if (product.imagen) {
-        setPreview(product.imagen);
+      if (product.imageUrl) {
+        setPreview(product.imageUrl);
       }
     }
-  }, [isEditing, product]);
+  }, [isEditing, product, sucursales]);
 
   // Manejar cambios en los campos del formulario
   const handleChange = e => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     
-    // Para precio, solo permitir números y un punto decimal
-    if (name === 'precio') {
+    if (type === 'checkbox') {
+      if (name === 'todasLasSucursales') {
+        setForm(prev => ({
+          ...prev,
+          todasLasSucursales: checked,
+          sucursales_Ids: checked ? [] : prev.sucursales_Ids
+        }));
+      } else if (name.startsWith('sucursal-')) {
+        const sucursalId = name.replace('sucursal-', '');
+        let nuevasSucursales = [...form.sucursales_Ids];
+        
+        if (checked) {
+          nuevasSucursales.push(sucursalId);
+        } else {
+          nuevasSucursales = nuevasSucursales.filter(id => id !== sucursalId);
+        }
+        
+        setForm(prev => ({
+          ...prev,
+          sucursales_Ids: nuevasSucursales,
+          todasLasSucursales: false
+        }));
+      }
+    } else if (name === 'precio') {
       // Permitir números y hasta un punto decimal
       if (value === '' || /^[0-9]*(\.[0-9]{0,2})?$/.test(value)) {
         setForm(prev => ({ ...prev, [name]: value }));
@@ -63,7 +129,7 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
     };
     reader.readAsDataURL(file);
     
-    // Opcional: Subir imagen inmediatamente
+    // Subir imagen inmediatamente
     try {
       setUploadingImage(true);
       const imageUrl = await CloudinaryService.uploadImage(file, 'productos');
@@ -71,8 +137,6 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
       setUploadingImage(false);
     } catch (error) {
       console.error("Error al subir imagen:", error);
-      // No establecemos error, solo permitimos que el usuario continúe
-      // La imagen se intentará subir nuevamente al guardar
       setUploadingImage(false);
     }
   };
@@ -90,7 +154,7 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
     setError('');
 
     try {
-      // Validar campos requeridos
+      // Validaciones según tu esquema de BD
       if (!form.nombre.trim()) {
         throw new Error('El nombre del producto es obligatorio');
       }
@@ -98,34 +162,76 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
       if (!form.precio || parseFloat(form.precio) <= 0) {
         throw new Error('El precio debe ser un valor válido mayor a cero');
       }
+      
+      // especificaciones es obligatorio según tu esquema
+      if (!form.especificaciones.trim()) {
+        throw new Error('La descripción del producto es obligatoria');
+      }
 
-      // Subir imagen si se seleccionó una nueva y no se subió anteriormente
+      // categoria es obligatorio según tu esquema
+      if (!form.categoria || form.categoria.trim() === '') {
+        throw new Error('La categoría es obligatoria');
+      }
+      
+      // Validar selección de sucursales
+      if (!form.todasLasSucursales && form.sucursales_Ids.length === 0) {
+        throw new Error('Debe seleccionar al menos una sucursal');
+      }
+
+      // Subir imagen si se seleccionó una nueva
       let imagenFinal = form.imageUrl;
       if (form.image && !form.imageUrl) {
         try {
+          setUploadingImage(true);
           imagenFinal = await CloudinaryService.uploadImage(form.image, 'productos');
+          setUploadingImage(false);
         } catch (error) {
           console.error("Error al subir imagen:", error);
-          // Continuamos aunque falle la imagen
+          setUploadingImage(false);
         }
       }
 
-      // Crear objeto con datos del producto
+      // Crear objeto según tu esquema exacto
       const productData = {
         nombre: form.nombre.trim(),
-        especificaciones: form.especificaciones.trim(),
-        precio: parseInt(parseFloat(form.precio) * 100) / 100, // Convertir a número con 2 decimales
-        imagen: imagenFinal,
-        restaurante_Id: restauranteId
+        especificaciones: form.especificaciones.trim(), // Obligatorio
+        precio: parseFloat(form.precio), 
+        imageUrl: imagenFinal || null,
+        categoria: form.categoria.trim(), // Singular, obligatorio
+        restaurante_Id: restauranteId,
+        sucursalesIds: form.sucursales_Ids,
+        todasLasSucursales: form.todasLasSucursales
       };
 
-      // Guardar el producto
-      onSave(productData);
+      console.log("Datos que se envían al backend:", productData);
+      
+      // Llamar a la función onSave
+      await onSave(productData);
+      
+      setLoading(false);
     } catch (error) {
+      console.error("Error en handleSubmit:", error);
       setError(error.message);
       setLoading(false);
     }
   };
+
+  // Cerrar dropdown cuando se hace clic afuera
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        showSucursalDropdown && 
+        !event.target.closest('.sucursal-dropdown-container')
+      ) {
+        setShowSucursalDropdown(false);
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSucursalDropdown]);
 
   return (
     <div className="product-form-container">
@@ -188,13 +294,14 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
         </div>
 
         <div className="form-group">
-          <label htmlFor="especificaciones">Descripción</label>
+          <label htmlFor="especificaciones">Descripción*</label>
           <textarea
             id="especificaciones"
             name="especificaciones"
             value={form.especificaciones}
             onChange={handleChange}
-            placeholder="Describa el producto"
+            required
+            placeholder="Describa el producto (obligatorio)"
             rows={3}
           ></textarea>
         </div>
@@ -214,6 +321,108 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
             />
           </div>
         </div>
+        
+        <div className="form-group">
+          <label htmlFor="categoria">Categoría*</label>
+          <div className="custom-select-container">
+            <select
+              id="categoria"
+              name="categoria"
+              value={form.categoria}
+              onChange={handleChange}
+              required
+              className="custom-select"
+            >
+              <option value="">Seleccionar categoría</option>
+              {categorias.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+            <FaChevronDown className="select-arrow" />
+          </div>
+        </div>
+        
+        <div className="form-group">
+          <label>Disponibilidad en Sucursales*</label>
+          
+          {loadingSucursales ? (
+            <div className="loading-spinner">Cargando sucursales...</div>
+          ) : sucursales.length === 0 ? (
+            <div className="no-sucursales-message">
+              No hay sucursales disponibles. Cree una sucursal primero.
+            </div>
+          ) : (
+            <div className={`sucursal-dropdown-container ${showSucursalDropdown ? 'open' : ''}`}>
+              <div 
+                className="sucursal-dropdown-header"
+                onClick={() => setShowSucursalDropdown(!showSucursalDropdown)}
+              >
+                {form.todasLasSucursales ? 'Todas las sucursales' : 
+                  form.sucursales_Ids.length > 0 ? 
+                  `${form.sucursales_Ids.length} sucursal(es) seleccionada(s)` : 
+                  'Seleccionar sucursales'}
+                <FaChevronDown className="dropdown-arrow" />
+              </div>
+              
+              {showSucursalDropdown && (
+                <div className="sucursal-dropdown-menu">
+                  <div 
+                    className={`sucursal-option ${form.todasLasSucursales ? 'selected' : ''}`}
+                    onClick={() => {
+                      setForm(prev => ({
+                        ...prev,
+                        todasLasSucursales: !prev.todasLasSucursales,
+                        sucursales_Ids: []
+                      }));
+                    }}
+                  >
+                    <div className="option-content">
+                      Todas las sucursales
+                    </div>
+                    {form.todasLasSucursales && (
+                      <div className="selected-indicator">✓</div>
+                    )}
+                  </div>
+                  
+                  {!form.todasLasSucursales && (
+                    sucursales.map(sucursal => {
+                      const isSelected = form.sucursales_Ids.includes(sucursal.id);
+                      return (
+                        <div 
+                          key={sucursal.id} 
+                          className={`sucursal-option ${isSelected ? 'selected' : ''}`}
+                          onClick={() => {
+                            const id = sucursal.id;
+                            let nuevasSucursales = [...form.sucursales_Ids];
+                            
+                            if (nuevasSucursales.includes(id)) {
+                              nuevasSucursales = nuevasSucursales.filter(i => i !== id);
+                            } else {
+                              nuevasSucursales.push(id);
+                            }
+                            
+                            setForm(prev => ({
+                              ...prev,
+                              sucursales_Ids: nuevasSucursales,
+                              todasLasSucursales: false
+                            }));
+                          }}
+                        >
+                          <div className="option-content">
+                            {sucursal.nombre} - {sucursal.direccion}, {sucursal.comuna}
+                          </div>
+                          {isSelected && (
+                            <div className="selected-indicator">✓</div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="form-actions">
           <button
@@ -227,7 +436,7 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
           <button
             type="submit"
             className="save-button"
-            disabled={loading || uploadingImage}
+            disabled={loading || uploadingImage || loadingSucursales || (sucursales.length === 0)}
           >
             {loading || uploadingImage ? 'Guardando...' : isEditing ? 'Actualizar' : 'Guardar'}
           </button>

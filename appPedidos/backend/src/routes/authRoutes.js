@@ -1,7 +1,7 @@
 const express = require('express');
 const authController = require('../controllers/authController');
 const { authenticate } = require('../middlewares/authMiddleware');
-//
+
 const router = express.Router();
 
 // Rutas públicas
@@ -9,12 +9,16 @@ router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.post('/forgot-password', authController.requestPasswordReset);
 router.post('/reset-password', authController.resetPassword);
+//
+// 
+//router.post('/forgot-password', authController.forgotPassword);
+router.post('/reset-password-forgot', authController.resetPasswordForgot);
 
-// Ruta protegida (ejemplo)
-router.get('/me', authenticate, (req, res) => {
-  res.json({ user: req.user });
-});
-//Nueva ruta
+// Rutas de validación
+router.get('/validate/cedula/:cedula', authController.validateCedula);
+router.get('/validate/telefono/:telefono', authController.validateTelefono);
 
-router.get("/me", authenticate, authController.getCurrentUser);
+// Ruta protegida
+router.get('/me', authenticate, authController.getCurrentUser);
+
 module.exports = router;

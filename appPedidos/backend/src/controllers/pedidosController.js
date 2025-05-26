@@ -487,7 +487,7 @@ exports.getPedidosRestaurante = async (req, res) => {
       return res.status(404).json({ message: 'Restaurante no encontrado' });
     }
 
-    if (!restaurante.usuariosIds.includes(adminId)) {
+    if (!restaurante.ownerId.includes(adminId)) {
       return res.status(403).json({ message: 'No tienes permiso para acceder a este restaurante' });
     }
 
@@ -595,7 +595,7 @@ exports.getPedidosPendientesRestaurante = async (req, res) => {
       return res.status(404).json({ message: 'Restaurante no encontrado' });
     }
 
-    if (!restaurante.usuariosIds.includes(adminId)) {
+    if (!restaurante.ownerId.includes(adminId)) {
       return res.status(403).json({ message: 'No tienes permiso para acceder a este restaurante' });
     }
 
@@ -698,7 +698,7 @@ exports.aceptarPedido = async (req, res) => {
     });
     
     // Verificar que el restaurante pertenezca al admin
-    if (!restaurante || !restaurante.usuariosIds.includes(adminId)) {
+    if (!restaurante || !restaurante.ownerId.includes(adminId)) {
       return res.status(403).json({ message: 'No tienes permiso para gestionar este pedido' });
     }
     
@@ -757,7 +757,7 @@ exports.rechazarPedido = async (req, res) => {
     });
     
     // Verificar que el restaurante pertenezca al admin
-    if (!restaurante || !restaurante.usuariosIds.includes(adminId)) {
+    if (!restaurante || !restaurante.ownerId.includes(adminId)) {
       return res.status(403).json({ message: 'No tienes permiso para gestionar este pedido' });
     }
     
@@ -818,7 +818,7 @@ exports.marcarPedidoPreparado = async (req, res) => {
     });
     
     // Verificar que el restaurante pertenezca al admin
-    if (!restaurante || !restaurante.usuariosIds.includes(adminId)) {
+    if (!restaurante || !restaurante.ownerId.includes(adminId)) {
       return res.status(403).json({ message: 'No tienes permiso para gestionar este pedido' });
     }
     
@@ -862,7 +862,7 @@ exports.getEstadisticasRestaurante = async (req, res) => {
       return res.status(404).json({ message: 'Restaurante no encontrado' });
     }
     
-    if (!restaurante.usuariosIds.includes(adminId)) {
+    if (!restaurante.ownerId.includes(adminId)) {
       return res.status(403).json({ message: 'No tienes permiso para acceder a este restaurante' });
     }
     
@@ -989,6 +989,7 @@ exports.getEstadisticasRestaurante = async (req, res) => {
 //Nuevos métodos para el frontend del repartidor desde aqui:
 
 // Método para obtener todos los pedidos disponibles (sin repartidor asignado)
+// Método corregido para obtener pedidos disponibles
 exports.getPedidosDisponibles = async (req, res) => {
   try {
     // Buscar pedidos sin repartidor asignado
@@ -1015,13 +1016,13 @@ exports.getPedidosDisponibles = async (req, res) => {
           }
         });
         
-        // Info de restaurante y sucursal
+        // Info de restaurante y sucursal con valores por defecto
         let infoRestaurante = {
           id: null,
           nombre: "Restaurante no disponible",
           imageUrl: null,
-          direccion: "Dirección no disponible", // Mantenemos campo para compatibilidad
-          sucursal: null // Nuevo campo opcional con datos completos de la sucursal
+          direccion: "Dirección no disponible",
+          sucursal: null
         };
         
         // Obtener restaurante y sucursal a partir del primer producto
@@ -1033,14 +1034,22 @@ exports.getPedidosDisponibles = async (req, res) => {
             });
             
             if (primerProducto) {
-              // 2. Obtener información del restaurante
+              // 2. Obtener información del restaurante con sucursales
               const restaurante = await prisma.restaurantes.findUnique({
                 where: { id: primerProducto.restaurante_Id },
                 select: {
                   id: true,
                   nombre: true,
                   imageUrl: true,
-                  ubicaciones: true
+                  sucursales: {
+                    take: 1, // Tomar la primera sucursal
+                    select: {
+                      id: true,
+                      nombre: true,
+                      direccion: true,
+                      comuna: true
+                    }
+                  }
                 }
               });
               
@@ -1051,26 +1060,19 @@ exports.getPedidosDisponibles = async (req, res) => {
                 infoRestaurante.imageUrl = restaurante.imageUrl;
                 
                 // 3. Obtener información de la sucursal
-                if (restaurante.ubicaciones && restaurante.ubicaciones.length > 0) {
-                  // Tomar la primera sucursal (podríamos implementar lógica para elegir la mejor)
-                  const sucursalId = restaurante.ubicaciones[0].sucursal_Id;
+                if (restaurante.sucursales && restaurante.sucursales.length > 0) {
+                  const sucursal = restaurante.sucursales[0];
                   
-                  const sucursal = await prisma.sucursales.findUnique({
-                    where: { id: sucursalId }
-                  });
+                  // Guardamos la dirección principal para compatibilidad
+                  infoRestaurante.direccion = sucursal.direccion;
                   
-                  if (sucursal) {
-                    // Guardamos la dirección principal para compatibilidad
-                    infoRestaurante.direccion = sucursal.direccion;
-                    
-                    // Guardamos la información completa de la sucursal
-                    infoRestaurante.sucursal = {
-                      id: sucursal.id,
-                      nombre: sucursal.nombre,
-                      direccion: sucursal.direccion,
-                      comuna: sucursal.comuna
-                    };
-                  }
+                  // Guardamos la información completa de la sucursal
+                  infoRestaurante.sucursal = {
+                    id: sucursal.id,
+                    nombre: sucursal.nombre,
+                    direccion: sucursal.direccion,
+                    comuna: sucursal.comuna
+                  };
                 }
               }
             }
@@ -1081,12 +1083,30 @@ exports.getPedidosDisponibles = async (req, res) => {
         
         return {
           ...pedido,
-          cliente,
+          cliente: cliente || {
+            id: null,
+            nombreCompleto: "Cliente no disponible",
+            telefono: null
+          },
           restaurante: infoRestaurante
         };
       } catch (error) {
         console.error(`Error procesando pedido ${pedido.id}:`, error);
-        return pedido;
+        return {
+          ...pedido,
+          cliente: {
+            id: null,
+            nombreCompleto: "Cliente no disponible",
+            telefono: null
+          },
+          restaurante: {
+            id: null,
+            nombre: "Restaurante no disponible",
+            imageUrl: null,
+            direccion: "Dirección no disponible",
+            sucursal: null
+          }
+        };
       }
     }));
     
@@ -1099,12 +1119,11 @@ exports.getPedidosDisponibles = async (req, res) => {
     });
   }
 };
-
 // Método para obtener pedidos activos de un repartidor
 // Función mejorada con mejor manejo de errores
+// Método corregido para obtener pedidos activos de un repartidor
 exports.getPedidosRepartidor = async (req, res) => {
   try {
-    // Verificar que el usuario tiene el rol correcto
     console.log("ID de usuario:", req.user.id);
     console.log("Rol de usuario:", req.user.rol);
     
@@ -1137,14 +1156,14 @@ exports.getPedidosRepartidor = async (req, res) => {
     
     console.log(`Pedidos encontrados: ${pedidos.length}`);
     
-    // Procesar un pedido a la vez para identificar errores más fácilmente
+    // Procesar pedidos con información completa
     const pedidosConInfo = [];
     
     for (const pedido of pedidos) {
       try {
         console.log(`Procesando pedido ID: ${pedido.id}`);
         
-        // Obtener cliente con manejo de errores
+        // Obtener cliente
         let cliente = null;
         try {
           cliente = await prisma.usuarios.findUnique({
@@ -1159,8 +1178,15 @@ exports.getPedidosRepartidor = async (req, res) => {
           console.error(`Error al obtener cliente para pedido ${pedido.id}:`, clienteError);
         }
         
-        // Obtener restaurante con manejo de errores
-        let restaurante = null;
+        // Obtener restaurante y sucursal con información completa
+        let restauranteInfo = {
+          id: null,
+          nombre: "Restaurante no disponible",
+          imageUrl: null,
+          direccion: "Dirección no disponible",
+          sucursal: null
+        };
+        
         if (pedido.productos && pedido.productos.length > 0) {
           try {
             const primerProductoId = pedido.productos[0].productoId;
@@ -1173,16 +1199,33 @@ exports.getPedidosRepartidor = async (req, res) => {
             if (primerProducto && primerProducto.restaurante_Id) {
               console.log(`Buscando restaurante ID: ${primerProducto.restaurante_Id}`);
               
-              restaurante = await prisma.restaurantes.findUnique({
+              const restaurante = await prisma.restaurantes.findUnique({
                 where: { id: primerProducto.restaurante_Id },
                 select: {
                   id: true,
                   nombre: true,
-                  // Eliminar direccion: true
-                  ubicaciones: true, // En su lugar, incluir ubicaciones
-                  imageUrl: true
+                  imageUrl: true,
+                  sucursales: {
+                    take: 1, // Tomar la primera sucursal
+                    select: {
+                      id: true,
+                      nombre: true,
+                      direccion: true,
+                      comuna: true
+                    }
+                  }
                 }
               });
+              
+              if (restaurante) {
+                restauranteInfo = {
+                  id: restaurante.id,
+                  nombre: restaurante.nombre,
+                  imageUrl: restaurante.imageUrl,
+                  direccion: restaurante.sucursales[0]?.direccion || "Dirección no disponible",
+                  sucursal: restaurante.sucursales[0] || null
+                };
+              }
             }
           } catch (productoError) {
             console.error(`Error al obtener restaurante para pedido ${pedido.id}:`, productoError);
@@ -1191,12 +1234,31 @@ exports.getPedidosRepartidor = async (req, res) => {
         
         pedidosConInfo.push({
           ...pedido,
-          cliente,
-          restaurante
+          cliente: cliente || {
+            id: null,
+            nombreCompleto: "Cliente no disponible",
+            telefono: null
+          },
+          restaurante: restauranteInfo
         });
       } catch (pedidoError) {
         console.error(`Error procesando pedido ${pedido.id}:`, pedidoError);
-        // Continuar con el siguiente pedido sin interrumpir el proceso
+        // Agregar pedido con datos por defecto para evitar romper el frontend
+        pedidosConInfo.push({
+          ...pedido,
+          cliente: {
+            id: null,
+            nombreCompleto: "Cliente no disponible",
+            telefono: null
+          },
+          restaurante: {
+            id: null,
+            nombre: "Restaurante no disponible",
+            imageUrl: null,
+            direccion: "Dirección no disponible",
+            sucursal: null
+          }
+        });
       }
     }
     

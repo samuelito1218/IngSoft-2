@@ -3,7 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { api } from '../../services/api';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaPlus, FaEdit, FaTrash, FaUtensils, FaExternalLinkAlt, FaStore } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaUtensils, FaExternalLinkAlt, FaStore, FaBuilding } from 'react-icons/fa';
+import SucursalesManagement from './SucursalesManagement';
+
 import './MisRestaurantes.css';
 
 export default function MisRestaurantes() {
@@ -14,20 +16,24 @@ export default function MisRestaurantes() {
   const [error, setError] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [restaurantToDelete, setRestaurantToDelete] = useState(null);
+  const [mostrarSucursales, setMostrarSucursales] = useState(false); //Nuevo
+  const [restauranteSeleccionado, setRestauranteSeleccionado] = useState(null); //Nuevo
 
   // Cargar restaurantes
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
         setLoading(true);
-        const res = await api.get('/restaurantes/mine', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        console.log("Intentando obtener restaurantes del usuario")
+
+        const res = await api.get('/restaurantes/mine');
+        console.log("Restaurantes obtenidos:", res.data);
+
         setRestaurants(res.data || []);
         setLoading(false);
-      } catch (err) {
-        console.error(err);
-        setError('No se pudieron cargar los restaurantes. Por favor, intente de nuevo.');
+      } catch (error) {
+        console.error("Error al obtener restaurantes:", error);
+        setError("No se pudieron cargar los restaurantes. Intente nuevamente");
         setRestaurants([]);
         setLoading(false);
       }
@@ -79,6 +85,12 @@ export default function MisRestaurantes() {
     navigate(`/admin/productos/${id}`);
   };
 
+  // Manejar gestión de sucursales - NUEVO
+  const handleManageSucursales = (restaurant) => {
+    setRestauranteSeleccionado(restaurant);
+    setMostrarSucursales(true);
+  };
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -103,9 +115,7 @@ export default function MisRestaurantes() {
     <div className="mis-restaurantes-container">
       <div className="section-header">
         <h2>Mis Restaurantes</h2>
-        <Link to="/admin/restaurantes/nuevo" className="add-button">
-          <FaPlus /> Crear Restaurante
-        </Link>
+        
       </div>
 
       {restaurants && restaurants.length === 0 ? (
@@ -164,6 +174,17 @@ export default function MisRestaurantes() {
                 >
                   <FaUtensils />
                 </button>
+                {/* NUEVO BOTÓN DE SUCURSALES */}
+                <button 
+                  className="action-button sucursales" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleManageSucursales(restaurant);
+                  }}
+                  title="Gestionar sucursales"
+                >
+                  <FaBuilding />
+                </button>
                 <button 
                   className="action-button view" 
                   onClick={(e) => {
@@ -213,6 +234,17 @@ export default function MisRestaurantes() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* NUEVO MODAL DE SUCURSALES */}
+      {mostrarSucursales && restauranteSeleccionado && (
+        <SucursalesManagement
+          restaurante={restauranteSeleccionado}
+          onClose={() => {
+            setMostrarSucursales(false);
+            setRestauranteSeleccionado(null);
+          }}
+        />
       )}
     </div>
   );

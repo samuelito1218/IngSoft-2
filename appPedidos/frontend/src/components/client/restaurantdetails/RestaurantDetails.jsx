@@ -1,7 +1,8 @@
-// src/components/client/RestaurantDetailss.jsx
+// src/components/client/RestaurantDetails.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth';
+import { useRating } from '../../../hooks/useRating';
 import FoodItem from '../fooditem/FoodItem';
 import OrderActiveAlert from '../orderactivealert/OrderActiveAlert';
 import ApiService from '../../../services/api';
@@ -16,6 +17,9 @@ const RestaurantDetails = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  
+  // Usar el hook para obtener calificaciones reales
+  const { calificacionPromedio, totalCalificaciones, loading: ratingLoading } = useRating(id);
   
   const [restaurant, setRestaurant] = useState(null);
   const [products, setProducts] = useState([]);
@@ -94,9 +98,14 @@ const RestaurantDetails = () => {
         }
         
         // Verificar pedido activo
-        const pedidoResponse = await ApiService.pedidos.activo();
-        if (pedidoResponse.data && pedidoResponse.data.pedido) {
-          setActivePedido(pedidoResponse.data);
+        try {
+          const pedidoResponse = await ApiService.pedidos.activo();
+          if (pedidoResponse.data && pedidoResponse.data.pedido) {
+            setActivePedido(pedidoResponse.data);
+          }
+        } catch (pedidoError) {
+          console.error('Error al obtener pedido activo:', pedidoError);
+          // No es crítico, continuar sin pedido activo
         }
         
         setLoading(false);
@@ -135,23 +144,10 @@ const RestaurantDetails = () => {
     setFilteredProducts(filtered);
   }, [selectedCategory, searchTerm, products]);
   
-  // Calcular la calificación promedio
-  const getAverageRating = () => {
-    if (!restaurant || !restaurant.calificaciones || restaurant.calificaciones.length === 0) {
-      return '0.0';
-    }
-    
-    const total = restaurant.calificaciones.reduce((sum, rating) => sum + rating.valor, 0);
-    return (total / restaurant.calificaciones.length).toFixed(1);
-  };
-  
-  // Formatear precio
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0
-    }).format(price);
+  // Formatear la calificación para mostrar
+  const formatRating = (rating) => {
+    if (rating === 0) return '0.0';
+    return Number(rating).toFixed(1);
   };
   
   // Ir al detalle del producto
@@ -237,10 +233,14 @@ const RestaurantDetails = () => {
             <div className="restaurant-meta">
               <div className="meta-item">
                 <FaStar className="meta-icon star" />
-                <span>{getAverageRating()}</span>
-                <span className="meta-count">
-                  ({restaurant.calificaciones?.length || 0} calificaciones)
-                </span>
+                {ratingLoading ? (
+                  <span className="rating-loading">Cargando...</span>
+                ) : (
+                  <>
+                    <span>{formatRating(calificacionPromedio)}</span>
+                    <span className="meta-count">({totalCalificaciones} calificaciones)</span>
+                  </>
+                )}
               </div>
               
               <div className="meta-item">
@@ -308,14 +308,15 @@ const RestaurantDetails = () => {
             </div>
           ) : (
             <div className="products-grid">
-              {filteredProducts.map(product => (
-                <FoodItem
-                  key={product.id}
-                  product={product}
-                  onClick={() => handleProductClick(product.id)}
-                />
-              ))}
-            </div>
+  {filteredProducts.map(product => (
+    <FoodItem
+      key={product.id}
+      product={product}
+      restaurantName={restaurant.nombre} 
+      onClick={() => handleProductClick(product.id)}
+    />
+  ))}
+</div>
           )}
         </main>
       </div>

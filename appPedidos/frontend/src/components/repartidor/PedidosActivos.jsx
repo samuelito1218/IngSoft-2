@@ -1,4 +1,3 @@
-//
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -21,10 +20,10 @@ const PedidosActivos = () => {
 
   // Estados posibles de un pedido
   const estados = {
-  PENDIENTE: '#f7dc6f',    // amarillo claro
-  EN_CAMINO: '#3498db',    // azul oscuro
-  ENTREGADO: '#27ae60',    // verde oscuro
-  CANCELADO: '#e74c3c',    // rojo
+    PENDIENTE: '#f7dc6f',    // amarillo claro
+    EN_CAMINO: '#3498db',    // azul oscuro
+    ENTREGADO: '#27ae60',    // verde oscuro
+    CANCELADO: '#e74c3c',    // rojo
   };
 
   const estadoColores = {
@@ -96,6 +95,23 @@ const PedidosActivos = () => {
 
   const navigateToChat = (pedidoId) => {
     navigate(`/repartidor/chat/${pedidoId}`);
+  };
+
+  // Función auxiliar para validar y obtener datos seguros
+  const obtenerDatosPedido = (pedido) => {
+    return {
+      restaurante: {
+        nombre: pedido.restaurante?.nombre || 'Restaurante no disponible',
+        direccion: pedido.restaurante?.direccion || 
+                  pedido.restaurante?.sucursal?.direccion || 
+                  'Dirección no disponible',
+        imageUrl: pedido.restaurante?.imageUrl || null
+      },
+      cliente: {
+        nombreCompleto: pedido.cliente?.nombreCompleto || 'Cliente no disponible',
+        telefono: pedido.cliente?.telefono || 'No disponible'
+      }
+    };
   };
 
   // Determinar qué botones de acción mostrar según el estado actual
@@ -190,65 +206,79 @@ const PedidosActivos = () => {
         </div>
       ) : (
         <div className="pedidos-activos-grid">
-          {pedidos.map((pedido) => (
-            <div key={pedido.id} className="pedido-activo-card">
-              <div className="pedido-header">
-                <div className="restaurante-info">
-                  <FaStore className="icon" />
-                  <h3>{pedido.restaurante.nombre}</h3>
-                </div>
-                <div 
-                  className="estado-badge"
-                  style={{ 
-                    backgroundColor: estados[pedido.estado] || 'var(--color-gray)',
-                    color: estadoColores[pedido.estado] || 'black'
-                  }}
-                >
-                  {pedido.estado}
-                </div>
-              </div>
-              
-              <div className="pedido-body">
-                <div className="info-row">
-                  <FaMapMarkerAlt className="icon" />
-                  <div className="location-info">
-                    <span className="direccion-label">Dirección de entrega:</span>
-                    <p className="direccion-text">{formatearDireccion(pedido.direccionEntrega)}</p>
+          {pedidos.map((pedido) => {
+            const datosPedido = obtenerDatosPedido(pedido);
+            
+            return (
+              <div key={pedido.id} className="pedido-activo-card">
+                <div className="pedido-header">
+                  <div className="restaurante-info">
+                    <FaStore className="icon" />
+                    <h3>{datosPedido.restaurante.nombre}</h3>
                   </div>
-                </div>
-                
-                <div className="info-row">
-                  <FaUser className="icon" />
-                  <div className="cliente-info">
-                    <span className="cliente-label">Cliente:</span>
-                    <p className="cliente-name">{pedido.cliente.nombreCompleto}</p>
-                  </div>
-                </div>
-                
-                <div className="info-row">
-                  <FaPhoneAlt className="icon" />
-                  <div className="telefono-info">
-                    <span className="telefono-label">Teléfono:</span>
-                    <p className="telefono-number">{pedido.cliente.telefono || 'No disponible'}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="pedido-footer">
-                <div className="action-buttons">
-                  {getAccionesEstado(pedido)}
-                  
-                  <button
-                    className="chat-button"
-                    onClick={() => navigateToChat(pedido.id)}
+                  <div 
+                    className="estado-badge"
+                    style={{ 
+                      backgroundColor: estados[pedido.estado] || 'var(--color-gray)',
+                      color: estadoColores[pedido.estado] || 'black'
+                    }}
                   >
-                    <FaComments />
-                    <span>Chat</span>
-                  </button>
+                    {pedido.estado}
+                  </div>
+                </div>
+                
+                <div className="pedido-body">
+                  {/* Sección del restaurante - donde recoger */}
+                  <div className="info-row restaurante-pickup">
+                    <FaStore className="icon" />
+                    <div className="location-info">
+                      <span className="direccion-label">Recoger en:</span>
+                      <p className="direccion-text">{datosPedido.restaurante.direccion}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Sección de entrega - donde entregar */}
+                  <div className="info-row">
+                    <FaMapMarkerAlt className="icon" />
+                    <div className="location-info">
+                      <span className="direccion-label">Entregar en:</span>
+                      <p className="direccion-text">{formatearDireccion(pedido.direccionEntrega)}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="info-row">
+                    <FaUser className="icon" />
+                    <div className="cliente-info">
+                      <span className="cliente-label">Cliente:</span>
+                      <p className="cliente-name">{datosPedido.cliente.nombreCompleto}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="info-row">
+                    <FaPhoneAlt className="icon" />
+                    <div className="telefono-info">
+                      <span className="telefono-label">Teléfono:</span>
+                      <p className="telefono-number">{datosPedido.cliente.telefono}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="pedido-footer">
+                  <div className="action-buttons">
+                    {getAccionesEstado(pedido)}
+                    
+                    <button
+                      className="chat-button"
+                      onClick={() => navigateToChat(pedido.id)}
+                    >
+                      <FaComments />
+                      <span>Chat</span>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

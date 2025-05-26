@@ -1,3 +1,8 @@
+
+
+
+
+
 //VERSION SAMUELllll
 
 
@@ -45,21 +50,28 @@ apiClient.interceptors.response.use(
 // Servicio API principal
 const ApiService = {
   // Autenticación
-  auth: {
+   auth: {
     login: (email, password) => apiClient.post('/auth/login', { email, password }),
     register: (userData) => apiClient.post('/auth/register', userData),
     requestPasswordReset: (email) => apiClient.post('/auth/forgot-password', { email }),
     resetPassword: (token, password) => apiClient.post('/auth/reset-password', { token, password }),
-    verifyToken: () => apiClient.get('/auth/verify')
+    verifyToken: () => apiClient.get('/auth/verify'),
+    validateCedula: (cedula) => apiClient.get(`/auth/validate/cedula/${cedula}`),
+    validateTelefono: (telefono) => apiClient.get(`/auth/validate/telefono/${telefono}`),
+    forgotPassword: (email) => apiClient.post('/auth/forgot-password', { email }),
+    resetPasswordForgot: (token, password) => apiClient.post('/auth/reset-password-forgot', { token, newPassword: password }),
   },
   
   // Usuarios
+ // Usuarios
   usuarios: {
     perfil: () => apiClient.get('/usuarios/perfil'),
     actualizar: (userData) => apiClient.put('/usuarios/perfil', userData),
     actualizarImagen: (imageData) => apiClient.post('/usuarios/perfil/imagen', imageData),
-    
-    obtenerUsuario: (userId) => apiClient.get(`/usuarios/${userId}`)
+    cambiarContrasena: (passwordData) => apiClient.post('/usuarios/perfil/cambiar-contrasena', passwordData),
+    obtenerUsuario: (userId) => apiClient.get(`/usuarios/${userId}`),
+    //obtenerDirecciones: () => apiClient.get('/usuarios/mis-direcciones'),
+    //guardarDireccion: (direccionData) => apiClient.post('/usuarios/guardar-direccion', direccionData),
   },
   
   // Modificación en ApiService.js

@@ -1,4 +1,5 @@
-/* src/components/admin/restaurant/RestaurantDetail.css - Mejorado // */
+/* src/components/admin/restaurant/RestaurantDetail.css - COMPLETO CON BOTÓN SUCURSALES */
+
 .restaurant-detail {
   max-width: 1200px;
   margin: 0 auto;
@@ -8,6 +9,7 @@
 .detail-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 24px;
   flex-wrap: wrap;
 }
@@ -35,13 +37,73 @@
 
 .restaurant-info {
   flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
-.restaurant-info h2 {
-  margin: 0 0 8px 0;
-  font-size: 24px;
-  font-weight: 700;
-  color: #333;
+/* ✅ SECCIÓN DEL TÍTULO CON BOTÓN DE SUCURSALES */
+.restaurant-title-section {
+  display: flex !important;
+  flex-direction: row !important; /* ✅ CAMBIAR: de column a row */
+  align-items: center !important; /* ✅ CAMBIAR: centrar verticalmente */
+  gap: 16px !important;
+  flex: 1 !important; /* ✅ AGREGAR: tomar espacio disponible */
+}
+
+.restaurant-title-section h2 {
+  margin: 0 !important;
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: #333 !important;
+}
+
+/* ✅ BOTÓN GESTIÓN DE SUCURSALES - ESTILO FORZADO */
+.restaurant-detail .manage-branches-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 10px 16px !important; /* ✅ MISMO padding que edit-button */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  font-size: 14px !important; /* ✅ MISMO font-size que edit-button */
+  font-weight: 600 !important; /* ✅ AJUSTAR: mismo weight que edit-button (500) */
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+  white-space: nowrap !important;
+  text-decoration: none !important;
+  outline: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  height: 40px !important; /* Mismo height que edit-button */
+}
+
+.restaurant-detail .manage-branches-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.restaurant-detail .manage-branches-btn:active {
+  transform: translateY(0) !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.restaurant-detail .manage-branches-btn:focus {
+  outline: none !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
 }
 
 .restaurant-meta {
@@ -85,6 +147,7 @@
   align-items: center;
   gap: 8px;
   font-size: 14px;
+  height: 40px; /* Mismo height que el botón de sucursales */
 }
 
 .edit-button:hover {
@@ -334,92 +397,166 @@
   box-shadow: 0 4px 10px rgba(255, 75, 43, 0.25);
 }
 
+/* ✅ TABLA DE PRODUCTOS - ESTILOS MEJORADOS */
 .products-table-container {
   overflow-x: auto;
+  background: white;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  margin-top: 20px;
 }
 
 .products-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: white;
+  background: white;
 }
 
-.products-table th,
-.products-table td {
-  padding: 16px;
-  text-align: left;
-  border-bottom: 1px solid #f0f0f0;
+.products-table thead {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .products-table th {
+  padding: 16px 20px;
+  text-align: left;
   font-weight: 600;
-  color: #333;
-  background-color: #f9f9f9;
+  color: #374151;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #e2e8f0;
   white-space: nowrap;
 }
 
-.products-table tr:last-child td {
+.products-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #374151;
+  font-size: 14px;
+}
+
+.products-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.products-table tbody tr:hover {
+  background: #f8fafc;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.products-table tbody tr:last-child td {
   border-bottom: none;
 }
 
+/* ✅ ESTILOS ESPECÍFICOS PARA LA COLUMNA DE IMAGEN */
 .image-column {
-  width: 80px;
+  width: 80px !important;
+  min-width: 80px !important;
+  text-align: center !important;
+  padding: 12px !important;
 }
 
-.product-image {
+.products-table .product-image-container {
+  position: relative;
   width: 60px;
   height: 60px;
-  object-fit: cover;
   border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #e5e7eb;
+  margin: 0 auto;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.image-placeholder {
+.products-table .product-image-container:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: #3b82f6;
+}
+
+.products-table .product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: all 0.2s ease;
+}
+
+.products-table .image-placeholder {
   width: 60px;
   height: 60px;
-  background-color: #f0f0f0;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 2px solid #e5e7eb;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #aaa;
-  font-size: 24px;
+  color: #9ca3af;
+  font-size: 20px;
+  margin: 0 auto;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
+.products-table .image-placeholder:hover {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #6b7280;
+  transform: scale(1.05);
+  border-color: #9ca3af;
+}
+
+/* ✅ COLUMNA DE ACCIONES MEJORADA */
 .actions-column {
-  width: 100px;
+  width: 120px !important;
+  min-width: 120px !important;
+  text-align: center !important;
   white-space: nowrap;
 }
 
 .action-button {
   width: 36px;
   height: 36px;
-  border-radius: 8px;
-  background: none;
   border: none;
-  color: #666;
-  font-size: 16px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-right: 8px;
+  margin: 0 4px;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: #666;
+  background: none;
 }
 
 .action-button:last-child {
   margin-right: 0;
 }
 
+.action-button.edit {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+}
+
 .action-button.edit:hover {
-  background-color: rgba(33, 150, 243, 0.1);
-  color: #2196f3;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.action-button.delete {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
 }
 
 .action-button.delete:hover {
-  background-color: rgba(244, 67, 54, 0.1);
-  color: #f44336;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
 }
 
 /* Pedidos */
@@ -772,11 +909,49 @@
   background-color: #e53935;
 }
 
-/* Responsive */
+/* ✅ ASEGURAR QUE EN TODAS LAS PANTALLAS SE VEA IGUAL */
+@media (min-width: 320px) {
+  .restaurant-detail .manage-branches-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    border: none !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .restaurant-detail .manage-branches-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    border: none !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .restaurant-detail .manage-branches-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    border: none !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  .restaurant-detail .manage-branches-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    border: none !important;
+  }
+}
+
+/* ✅ RESPONSIVE PARA TABLA DE PRODUCTOS */
 @media (max-width: 768px) {
   .detail-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+   .restaurant-info {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
   }
   
   .restaurant-banner {
@@ -803,5 +978,109 @@
   
   .orders-container {
     grid-template-columns: 1fr;
+  }
+
+  /* ✅ RESPONSIVE PARA BOTÓN SUCURSALES */
+  .restaurant-title-section {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  
+  .restaurant-detail .manage-branches-btn {
+    align-self: flex-end !important;
+    font-size: 13px !important;
+    padding: 8px 14px !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    border: none !important;
+  }
+  
+  /* ✅ RESPONSIVE PARA TABLA DE PRODUCTOS */
+  .products-table-container {
+    margin: 10px;
+    border-radius: 8px;
+  }
+  
+  .products-table th,
+  .products-table td {
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+  
+  .products-table .product-image,
+  .products-table .image-placeholder {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .products-table .product-image-container {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .image-column {
+    width: 70px !important;
+    min-width: 70px !important;
+  }
+  
+  .actions-column {
+    width: 100px !important;
+    min-width: 100px !important;
+  }
+  
+  .action-button {
+    width: 32px;
+    height: 32px;
+    margin: 0 2px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 576px) {
+  .restaurant-title-section {
+    align-items: flex-start !important;
+  }
+  
+  .restaurant-detail .manage-branches-btn {
+    align-self: flex-start !important;
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    border: none !important;
+  }
+  
+  .restaurant-detail .manage-branches-btn span {
+    display: none !important; /* Ocultar texto en móviles muy pequeños */
+  }
+  
+  /* ✅ RESPONSIVE EXTRA PEQUEÑO PARA TABLA */
+  .products-table .product-image,
+  .products-table .image-placeholder {
+    width: 45px;
+    height: 45px;
+    font-size: 16px;
+  }
+  
+  .products-table .product-image-container {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .image-column {
+    width: 60px !important;
+    min-width: 60px !important;
+  }
+  
+  .actions-column {
+    width: 80px !important;
+    min-width: 80px !important;
+  }
+  
+  .action-button {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
   }
 }

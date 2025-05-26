@@ -1,9 +1,7 @@
-//
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import ApiService, { api } from '../services/api';
-//import ApiService from '../services/api';
 import '../styles/Register.css';
 
 function Register() {
@@ -21,27 +19,28 @@ function Register() {
     comuna: '',
     rol: 'Cliente',
     vehiculo: '',
-    // Datos para restaurante (si es Admin)
-    restauranteNombre: '',
-    sucursales: [{ 
-      comuna: '', 
-      direccion: '' 
-    }]
   });
 
-  const [documentoLegal, setDocumentoLegal] = useState(null);
-  const [documentoNombre, setDocumentoNombre] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [animateForm, setAnimateForm] = useState(false);
   const [formStep, setFormStep] = useState(1);
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [passwordErrors, setPasswordErrors] = useState([]);
   const [successMessage, setSuccessMessage] = useState('');
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  
+  // Estados para la validación de unicidad
+  const [validatingCedula, setValidatingCedula] = useState(false);
+  const [validatingTelefono, setValidatingTelefono] = useState(false);
+  const [cedulaError, setCedulaError] = useState('');
+  const [telefonoError, setTelefonoError] = useState('');
+  const [cedulaValid, setCedulaValid] = useState(false);
+  const [telefonoValid, setTelefonoValid] = useState(false);
 
-  // Calcular número total de pasos según el rol
   const getTotalSteps = () => {
-    return formData.rol === 'Admin' ? 3 : 2;
+    return 2;
   };
 
   useEffect(() => {
@@ -49,17 +48,116 @@ function Register() {
   }, []);
 
   useEffect(() => {
-    // Evaluar la fuerza de la contraseña
+    // Lista para almacenar errores de validación de contraseña
+    const errors = [];
+    
+    // Validar longitud mínima
+    if (formData.password.length > 0 && formData.password.length < 8) {
+      errors.push('La contraseña debe tener al menos 8 caracteres');
+    }
+    
+    // Validar letra mayúscula
+    if (formData.password.length > 0 && !/[A-Z]/.test(formData.password)) {
+      errors.push('La contraseña debe incluir al menos una letra mayúscula');
+    }
+    
+    // Validar número
+    if (formData.password.length > 0 && !/[0-9]/.test(formData.password)) {
+      errors.push('La contraseña debe incluir al menos un número');
+    }
+    
+    // Actualizar lista de errores
+    setPasswordErrors(errors);
+    
+    // Evaluar fuerza de la contraseña
     if (formData.password.length === 0) {
       setPasswordStrength(0);
-    } else if (formData.password.length < 6) {
+    } else if (errors.length >= 2) {
       setPasswordStrength(1); // Débil
-    } else if (formData.password.length >= 6 && /[A-Z]/.test(formData.password) && /[0-9]/.test(formData.password)) {
-      setPasswordStrength(3); // Fuerte
-    } else {
+    } else if (errors.length === 1) {
       setPasswordStrength(2); // Media
+    } else {
+      setPasswordStrength(3); // Fuerte
     }
   }, [formData.password]);
+
+  // Validar unicidad de la cédula con debounce
+  useEffect(() => {
+    // Define la función dentro del useEffect para evitar errores de "undefined"
+    const validateCedula = async () => {
+      if (formData.cedula && formData.cedula.length >= 5) {
+        try {
+          setValidatingCedula(true);
+          setCedulaError('');
+          
+          // Usar api.get directamente para evitar problemas con ApiService
+          const response = await ApiService.auth.validateCedula(formData.cedula);
+          
+          setCedulaValid(true);
+          setValidatingCedula(false);
+        } catch (error) {
+          if (error.response && error.response.status === 409) {
+            setCedulaError('Esta cédula ya está registrada en el sistema');
+            setCedulaValid(false);
+          } else {
+            console.error('Error al validar cédula:', error);
+          }
+          setValidatingCedula(false);
+        }
+      } else {
+        setCedulaValid(false);
+        setCedulaError('');
+      }
+    };
+
+    // Debounce la validación para evitar demasiadas solicitudes
+    const timeoutId = setTimeout(() => {
+      if (formData.cedula && formData.cedula.length >= 5) {
+        validateCedula();
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.cedula]);
+
+  // Validar unicidad del teléfono con debounce
+  useEffect(() => {
+    // Define la función dentro del useEffect para evitar errores de "undefined"
+    const validateTelefono = async () => {
+      if (formData.telefono && formData.telefono.length >= 6) {
+        try {
+          setValidatingTelefono(true);
+          setTelefonoError('');
+          
+          // Usar api.get directamente para evitar problemas con ApiService
+          const response = await ApiService.auth.validateTelefono(formData.telefono);
+          
+          setTelefonoValid(true);
+          setValidatingTelefono(false);
+        } catch (error) {
+          if (error.response && error.response.status === 409) {
+            setTelefonoError('Este número de teléfono ya está registrado');
+            setTelefonoValid(false);
+          } else {
+            console.error('Error al validar teléfono:', error);
+          }
+          setValidatingTelefono(false);
+        }
+      } else {
+        setTelefonoValid(false);
+        setTelefonoError('');
+      }
+    };
+
+    // Debounce la validación para evitar demasiadas solicitudes
+    const timeoutId = setTimeout(() => {
+      if (formData.telefono && formData.telefono.length >= 6) {
+        validateTelefono();
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.telefono]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -67,53 +165,12 @@ function Register() {
       ...formData,
       [name]: value
     });
-  };
 
-  const handleSucursalChange = (index, field, value) => {
-    const updatedSucursales = [...formData.sucursales];
-    updatedSucursales[index] = {
-      ...updatedSucursales[index],
-      [field]: value
-    };
-    
-    setFormData({
-      ...formData,
-      sucursales: updatedSucursales
-    });
-  };
-
-  const addSucursal = () => {
-    setFormData({
-      ...formData,
-      sucursales: [...formData.sucursales, { comuna: '', direccion: '' }]
-    });
-  };
-
-  const removeSucursal = (index) => {
-    if (formData.sucursales.length > 1) {
-      const updatedSucursales = [...formData.sucursales];
-      updatedSucursales.splice(index, 1);
-      setFormData({
-        ...formData,
-        sucursales: updatedSucursales
-      });
-    } else {
-      setError('Debe tener al menos una sucursal');
-    }
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.type === 'application/pdf' && file.size <= 5 * 1024 * 1024) {
-        setDocumentoLegal(file);
-        setDocumentoNombre(file.name);
-        setError('');
-      } else {
-        setError('Por favor seleccione un PDF de máximo 5MB');
-        setDocumentoLegal(null);
-        setDocumentoNombre('');
-      }
+    // Limpiar errores cuando el usuario comienza a cambiar los campos
+    if (name === 'cedula') {
+      setCedulaError('');
+    } else if (name === 'telefono') {
+      setTelefonoError('');
     }
   };
 
@@ -141,21 +198,18 @@ function Register() {
         return;
       }
       
-      setFormStep(2);
-    } else if (formStep === 2 && formData.rol === 'Admin') {
-      // Validar campos del segundo paso para Admin
-      if (!formData.password || !formData.confirmPassword || !formData.direccion || !formData.comuna) {
-        setError('Por favor completa todos los campos');
-        return;
-      }
-
-      // Validar que las contraseñas coincidan
-      if (formData.password !== formData.confirmPassword) {
-        setError('Las contraseñas no coinciden');
+      // Validar que cédula y teléfono no estén duplicados
+      if (cedulaError) {
+        setError(cedulaError);
         return;
       }
       
-      setFormStep(3);
+      if (telefonoError) {
+        setError(telefonoError);
+        return;
+      }
+      
+      setFormStep(2);
     }
   };
 
@@ -166,39 +220,14 @@ function Register() {
     }
   };
 
-  const validateRestauranteData = () => {
-    if (!formData.restauranteNombre) {
-      setError('Por favor ingrese el nombre del restaurante');
-      return false;
-    }
-
-    // Validar que al menos haya una sucursal con datos completos
-    const sucursalValida = formData.sucursales.some(
-      sucursal => sucursal.comuna && sucursal.direccion
-    );
-
-    if (!sucursalValida) {
-      setError('Por favor complete los datos de al menos una sucursal');
-      return false;
-    }
-
-    if (formData.rol === 'Admin' && !documentoLegal) {
-      setError('Por favor adjunte los documentos legales del restaurante');
-      return false;
-    }
-
-    return true;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    // Si es el último paso para Admin, validar datos del restaurante
-    if (formData.rol === 'Admin' && formStep === 3) {
-      if (!validateRestauranteData()) {
-        return;
-      }
+    // Validar que la contraseña sea suficientemente fuerte
+    if (passwordStrength < 3) {
+      setError('La contraseña no cumple con los requisitos de seguridad');
+      return;
     }
 
     // Validar que las contraseñas coincidan
@@ -223,6 +252,12 @@ function Register() {
       return;
     }
 
+    // Verificar nuevamente la unicidad de cédula y teléfono
+    if (cedulaError || telefonoError) {
+      setError(cedulaError || telefonoError);
+      return;
+    }
+
     try {
       setIsLoading(true);
 
@@ -236,72 +271,33 @@ function Register() {
         direccion: formData.direccion,
         comuna: comunaNum.toString(),
         rol: formData.rol,
-        vehiculo: formData.rol === 'Repartidor' ? formData.vehiculo : undefined
+        vehiculo: formData.rol === 'Repartidor' ? formData.vehiculo : undefined,
+        // Añadir verificado=true para los administradores
+        verificado: true // Todos los usuarios verificados automáticamente
       };
 
       // Llamada a la API para registro de usuario
       const response = await ApiService.auth.register(userData);
-
-      // Si es Admin, enviar datos del restaurante después del registro exitoso
-      if (formData.rol === 'Admin' && response.data.user && response.data.token) {
-        // Guardar token para las siguientes peticiones
-        localStorage.setItem('token', response.data.token);
-        
-        // Crear FormData para enviar el documento
-        const formDataUpload = new FormData();
-        formDataUpload.append('nombre', formData.restauranteNombre);
-        formDataUpload.append('documento', documentoLegal);
-        
-        // Convertir sucursales a formato esperado por el backend
-        const ubicaciones = formData.sucursales.map(sucursal => ({
-          sucursal_Id: crypto.randomUUID(), // Generar ID temporal 
-          comuna: sucursal.comuna
-        }));
-        
-        formDataUpload.append('ubicaciones', JSON.stringify(ubicaciones));
-        
-        // Enviar ubicaciones adicionales (direcciones detalladas) 
-        const direccionesDetalladas = formData.sucursales.map((s, index) => ({
-          sucursal_Id: ubicaciones[index].sucursal_Id,
-          direccion: s.direccion
-        }));
-        
-        formDataUpload.append('direccionesDetalladas', JSON.stringify(direccionesDetalladas));
-        
-        try {
-          const respuesta = await api.post('/restaurantes/verificacion/crear', formDataUpload, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              'Authorization': `Bearer ${response.data.token}`
-            }
-          });
-          console.log('Respuesta del servidor:', respuesta);
-          
-          // Añade esta línea para mostrar el mensaje de éxito y terminar la carga
-          setSuccessMessage('Tu solicitud ha sido enviada con éxito. En breve recibirás un correo electrónico con la confirmación de la verificación de tus documentos.');
-          setIsLoading(false);
-          
-        } catch (restauranteError) {
-          console.error('Error completo:', restauranteError);
-          console.error('Detalles del error:', restauranteError.response?.data || restauranteError.message);
-          setError(restauranteError.response?.data?.message || 'Error al registrar el restaurante');
-          setIsLoading(false);
-        }
+      
+      // Guardar datos de la respuesta
+      const { token, user } = response.data;
+      
+      // Mostrar mensaje de éxito y pantalla de confirmación
+      setRegistrationSuccess(true);
+      
+      // Mensaje personalizado según el rol
+      let mensaje = '';
+      if (formData.rol === 'Admin') {
+        mensaje = `¡Tu cuenta de Administrador ha sido creada exitosamente! Ahora puedes iniciar sesión como ${formData.email} para gestionar tu restaurante. Verifica en tu bandeja de entrada o spam`;
+      } else if (formData.rol === 'Repartidor') {
+        mensaje = `¡Bienvenido al equipo de repartidores de FastFood! Tu cuenta ha sido creada exitosamente. Inicia sesión como ${formData.email} para comenzar a recibir pedidos. Verifica en tu bandeja de entrada o spam`;
       } else {
-        // Para Cliente y Repartidor
-        const { token, user } = response.data;
-        localStorage.setItem('token', token);
-
-        // Actualizar estado de autenticación
-        login(user, token);
-
-        // Redireccionar según el rol
-        if (user.rol === 'Repartidor') {
-          navigate('/repartidor');
-        } else {
-          navigate('/cliente');
-        }
+        mensaje = `¡Bienvenido a FastFood! Tu cuenta ha sido creada exitosamente. Ahora puedes iniciar sesión como ${formData.email} y comenzar a pedir tu comida favorita. Verifica en tu bandeja de entrada o spam`;
       }
+      
+      setSuccessMessage(mensaje);
+      setIsLoading(false);
+      
     } catch (error) {
       console.error('Error de registro:', error);
 
@@ -327,21 +323,26 @@ function Register() {
     }
   };
 
-  // Renderizar mensaje de éxito (específico para administradores)
-  if (successMessage) {
+  // Renderizar mensaje de éxito
+  if (registrationSuccess) {
     return (
       <div className="register-container">
         <div className={`register-card ${animateForm ? 'animate-fade-in' : ''}`}>
           <div className="success-message">
             <div className="success-icon">✅</div>
-            <h2>¡Registro enviado!</h2>
+            <h2>¡Registro Exitoso!</h2>
             <p>{successMessage}</p>
+            <div className="confetti-animation">
+              <div className="confetti confetti-1">🎉</div>
+              <div className="confetti confetti-2">🎊</div>
+              <div className="confetti confetti-3">✨</div>
+            </div>
             <button 
               type="button" 
               className="primary-button" 
               onClick={() => navigate('/')}
             >
-              Volver a inicio
+              Ir al inicio de sesión
             </button>
           </div>
         </div>
@@ -413,7 +414,10 @@ function Register() {
                       onChange={handleChange} 
                       required 
                     />
+                    {validatingTelefono && <span className="validating-indicator">Validando...</span>}
+                    {telefonoValid && <span className="valid-indicator">✓</span>}
                   </div>
+                  {telefonoError && <div className="field-error">{telefonoError}</div>}
 
                   <div className="input-container">
                     <span className="input-icon">🆔</span>
@@ -425,7 +429,10 @@ function Register() {
                       onChange={handleChange} 
                       required 
                     />
+                    {validatingCedula && <span className="validating-indicator">Validando...</span>}
+                    {cedulaValid && <span className="valid-indicator">✓</span>}
                   </div>
+                  {cedulaError && <div className="field-error">{cedulaError}</div>}
 
                   <div className="input-container">
                     <span className="input-icon">👥</span>
@@ -519,16 +526,29 @@ function Register() {
                   </div>
 
                   {formData.password && (
-                    <div className="password-strength">
-                      <div className="strength-bars">
-                        <div className={`bar ${passwordStrength >= 1 ? 'active' : ''}`} style={{backgroundColor: passwordStrength >= 1 ? getPasswordStrengthText().color : ''}}></div>
-                        <div className={`bar ${passwordStrength >= 2 ? 'active' : ''}`} style={{backgroundColor: passwordStrength >= 2 ? getPasswordStrengthText().color : ''}}></div>
-                        <div className={`bar ${passwordStrength >= 3 ? 'active' : ''}`} style={{backgroundColor: passwordStrength >= 3 ? getPasswordStrengthText().color : ''}}></div>
+                    <>
+                      <div className="password-strength">
+                        <div className="strength-bars">
+                          <div className={`bar ${passwordStrength >= 1 ? 'active' : ''}`} style={{backgroundColor: passwordStrength >= 1 ? getPasswordStrengthText().color : ''}}></div>
+                          <div className={`bar ${passwordStrength >= 2 ? 'active' : ''}`} style={{backgroundColor: passwordStrength >= 2 ? getPasswordStrengthText().color : ''}}></div>
+                          <div className={`bar ${passwordStrength >= 3 ? 'active' : ''}`} style={{backgroundColor: passwordStrength >= 3 ? getPasswordStrengthText().color : ''}}></div>
+                        </div>
+                        <span className="strength-text" style={{color: getPasswordStrengthText().color}}>
+                          {getPasswordStrengthText().text}
+                        </span>
                       </div>
-                      <span className="strength-text" style={{color: getPasswordStrengthText().color}}>
-                        {getPasswordStrengthText().text}
-                      </span>
-                    </div>
+                      
+                      {passwordErrors.length > 0 && (
+                        <div className="password-requirements">
+                          <p>Tu contraseña debe cumplir los siguientes requisitos:</p>
+                          <ul>
+                            {passwordErrors.map((error, index) => (
+                              <li key={index} className="requirement-item">{error}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </>
                   )}
 
                   <div className="input-container password-section">
@@ -542,108 +562,14 @@ function Register() {
                       required 
                     />
                   </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {formStep === 3 && formData.rol === 'Admin' && (
-            <>
-              <div className="form-group">
-                <h3 className="step-title">Datos del Restaurante</h3>
-                
-                <div className="admin-info-box">
-                  <p>Deberá proporcionar información sobre su restaurante y adjuntar documentos legales para verificación.</p>
-                </div>
-                
-                <div className="input-group">
-                  <div className="input-container">
-                    <span className="input-icon">🍽️</span>
-                    <input 
-                      type="text" 
-                      name="restauranteNombre"
-                      placeholder="Nombre del restaurante" 
-                      value={formData.restauranteNombre} 
-                      onChange={handleChange} 
-                      required 
-                    />
-                  </div>
-
-                  <div className="sucursales-container">
-                    <h4>Sucursales</h4>
-                    <p>Debe registrar al menos una sucursal</p>
-                    
-                    <div className="sucursal-section">
-                      {formData.sucursales.map((sucursal, index) => (
-                        <div key={index} className="sucursal-item">
-                          <div className="sucursal-header">
-                            <h5>Sucursal {index + 1}</h5>
-                            {index > 0 && (
-                              <button 
-                                type="button" 
-                                className="remove-button"
-                                onClick={() => removeSucursal(index)}
-                              >
-                                ❌
-                              </button>
-                            )}
-                          </div>
-                          
-                          <div className="input-container">
-                            <span className="input-icon">🏙️</span>
-                            <input 
-                              type="text" 
-                              placeholder="Comuna" 
-                              value={sucursal.comuna} 
-                              onChange={(e) => handleSucursalChange(index, 'comuna', e.target.value)}
-                              required 
-                            />
-                          </div>
-                          
-                          <div className="input-container">
-                            <span className="input-icon">📍</span>
-                            <input 
-                              type="text" 
-                              placeholder="Dirección detallada" 
-                              value={sucursal.direccion} 
-                              onChange={(e) => handleSucursalChange(index, 'direccion', e.target.value)}
-                              required 
-                            />
-                          </div>
-                        </div>
-                      ))}
+                  
+                  {formData.password && formData.confirmPassword && (
+                    <div className={formData.password === formData.confirmPassword ? "password-match" : "password-mismatch"}>
+                      {formData.password === formData.confirmPassword 
+                        ? "✓ Las contraseñas coinciden" 
+                        : "✗ Las contraseñas no coinciden"}
                     </div>
-                    
-                    <button 
-                      type="button" 
-                      className="add-sucursal-button"
-                      onClick={addSucursal}
-                    >
-                      + Agregar otra sucursal
-                    </button>
-                  </div>
-
-                  <div className="document-upload">
-                    <h4>Documentos Legales</h4>
-                    <p>Adjunte su licencia comercial y otros documentos legales (PDF, máx. 5MB)</p>
-                    
-                    <div className="file-upload-container">
-                      <input 
-                        type="file"
-                        id="documento-legal"
-                        accept=".pdf"
-                        onChange={handleFileChange}
-                        className="file-input"
-                      />
-                      <label htmlFor="documento-legal" className="file-label">
-                        {documentoNombre ? documentoNombre : 'Seleccionar archivo'}
-                      </label>
-                    </div>
-                    
-                    <div className="document-info">
-                      <p>Estos documentos serán verificados por nuestro equipo. Se le notificará por correo electrónico cuando su cuenta haya sido aprobada.</p>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </>
@@ -668,7 +594,7 @@ function Register() {
                 type="button" 
                 className="next-button" 
                 onClick={nextStep}
-                disabled={isLoading}
+                disabled={isLoading || validatingCedula || validatingTelefono}
               >
                 Siguiente
               </button>
@@ -676,14 +602,14 @@ function Register() {
               <button 
                 type="submit" 
                 className="register-button" 
-                disabled={isLoading}
+                disabled={isLoading || passwordStrength < 3 || formData.password !== formData.confirmPassword}
               >
                 {isLoading ? (
                   <span className="loading-text">
                     <span className="loading-spinner"></span>
                     Procesando...
                   </span>
-                ) : (formData.rol === 'Admin' ? 'Enviar Solicitud' : 'Registrarse')}
+                ) : 'Registrarse'}
               </button>
             )}
           </div>

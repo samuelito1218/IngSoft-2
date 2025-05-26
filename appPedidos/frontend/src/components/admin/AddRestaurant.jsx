@@ -163,11 +163,11 @@ export default function AddRestaurant() {
       }
 
       // Validar que al menos una sucursal tenga datos
-      const validBranch = form.branches.some(branch => 
+      const validBranch = form.branches.filter(branch => 
         branch.nombre.trim() && branch.direccion.trim() && branch.comuna.trim()
       );
 
-      if (!validBranch) {
+      if (validBranch.length === 0) {
         throw new Error('Debe completar al menos una sucursal con nombre, dirección y comuna');
       }
 
@@ -180,10 +180,20 @@ export default function AddRestaurant() {
       // 2) Preparar datos para el servidor
       const restaurantData = {
         nombre: form.nombre,
-        descripcion: form.descripcion,
+        descripcion: form.descripcion || '',
         imageUrl,
-        categorias: form.categorias
+        categorias: form.categorias || ['General'],
+
+        //Tranforma las sucursales al formato esperado por el backend
+        sucursales : validBranch.map(branch =>({
+
+          nombre: branch.nombre,
+          direccion: branch.direccion,
+          comuna: branch.comuna
+        }))
       };
+      console.log("Enviando datos al servidor:", restaurantData);
+
 
       let newRestId;
 
@@ -200,30 +210,7 @@ export default function AddRestaurant() {
         console.log("Restaurante creado:", createRes.data);
       }
 
-      // 4) Procesar sucursales
-      await Promise.all(
-        form.branches.map(async branch => {
-          // Si la sucursal tiene ID, actualizarla
-          if (branch.id) {
-            return api.put(`/sucursales/${branch.id}`, {
-              nombre: branch.nombre,
-              direccion: branch.direccion,
-              comuna: branch.comuna,
-              restaurante_Id: newRestId
-            });
-          } 
-          // Si no tiene ID y tiene datos, crearla
-          else if (branch.nombre && branch.direccion && branch.comuna) {
-            return api.post('/sucursales', {
-              nombre: branch.nombre,
-              direccion: branch.direccion,
-              comuna: branch.comuna,
-              restaurante_Id: newRestId
-            });
-          }
-          return null;
-        })
-      );
+      
 
       // 5) Mostrar éxito y redirigir
       setSuccess(isEditing 

@@ -132,4 +132,81 @@
     .restaurant-image {
       height: 180px;
     }
+  
+
+    /* Estilos adicionales para las calificaciones - Agregar a RestaurantCard.css */
+
+.rating-loading {
+  color: #999;
+  font-style: italic;
+  font-size: 13px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+/* Mejorar la visualización de la calificación */
+.rating {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #666;
+  gap: 4px;
+}
+
+.star-icon {
+  color: #ffc107;
+  font-size: 14px;
+}
+
+.meta-count {
+  font-size: 12px;
+  color: #999;
+  margin-left: 2px;
+}
+
+/* Para RestaurantDetails.css también */
+.restaurant-meta .rating-loading {
+  color: #888;
+  font-size: 14px;
+}
+
+.restaurant-meta .meta-item {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #666;
+  gap: 6px;
+}
+
+.restaurant-meta .meta-icon.star {
+  color: #ffc107;
+}
+
+/* Estilo para cuando no hay calificaciones */
+.no-rating {
+  color: #ccc;
+  font-style: italic;
+}
+
+/* Estilo para calificaciones altas */
+.rating-high {
+  color: #4caf50;
+  font-weight: 600;
+}
+
+.rating-medium {
+  color: #ff9800;
+  font-weight: 600;
+}
+
+.rating-low {
+  color: #f44336;
+  font-weight: 600;
+}
+
   }

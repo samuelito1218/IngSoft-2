@@ -1,4 +1,3 @@
-//
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../../services/api';
@@ -19,7 +18,7 @@ const Statistics = () => {
   // Estados
   const [restaurants, setRestaurants] = useState([]);
   const [selectedRestaurant, setSelectedRestaurant] = useState('');
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const [selectedPeriod, setSelectedPeriod] = useState('mes');
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -54,14 +53,40 @@ const Statistics = () => {
       try {
         setLoading(true);
         
-        const response = await api.get(`/pedidos/restaurante/${selectedRestaurant}/estadisticas?periodo=${selectedPeriod}`);
+        // USAR EL NUEVO ENDPOINT CON CALIFICACIONES DINÁMICAS
+        const response = await api.get(`/calificaciones/restaurante/${selectedRestaurant}/estadisticas?periodo=${selectedPeriod}`);
         
         setStats(response.data);
         setLoading(false);
       } catch (err) {
         console.error('Error al cargar estadísticas:', err);
-        setError('No se pudieron cargar las estadísticas');
-        setLoading(false);
+        
+        // Si falla el nuevo endpoint, usar el anterior como fallback
+        try {
+          const response = await api.get(`/pedidos/restaurante/${selectedRestaurant}/estadisticas?periodo=${selectedPeriod}`);
+          
+          // Agregar calificación dinámica al response del endpoint anterior
+          try {
+            const calificacionesResponse = await api.get(`/calificaciones/restaurante/${selectedRestaurant}`);
+            if (calificacionesResponse.data && calificacionesResponse.data.restaurante) {
+              response.data.promedioCalificacion = calificacionesResponse.data.restaurante.calificacionPromedio || 0;
+              response.data.totalCalificaciones = calificacionesResponse.data.restaurante.totalCalificaciones || 0;
+              response.data.calificacionesRecientes = [];
+            }
+          } catch (calErr) {
+            console.error('Error al obtener calificaciones:', calErr);
+            response.data.promedioCalificacion = 0;
+            response.data.totalCalificaciones = 0;
+            response.data.calificacionesRecientes = [];
+          }
+          
+          setStats(response.data);
+          setLoading(false);
+        } catch (fallbackErr) {
+          console.error('Error al cargar estadísticas (fallback):', fallbackErr);
+          setError('No se pudieron cargar las estadísticas');
+          setLoading(false);
+        }
       }
     };
     
@@ -198,7 +223,7 @@ const Statistics = () => {
               </div>
               <div className="stat-content">
                 <h3>Calificación Promedio</h3>
-                <p className="stat-value">{stats.promedioCalificacion.toFixed(1)} <small>/ 5</small></p>
+                <p className="stat-value">{stats.promedioCalificacion ? stats.promedioCalificacion.toFixed(1) : '0.0'} <small>/ 5</small></p>
               </div>
             </div>
             
@@ -231,17 +256,6 @@ const Statistics = () => {
                     ></div>
                   </div>
                   <div className="status-value">{stats.pedidosPendientes}</div>
-                </div>
-                
-                <div className="status-item">
-                  <div className="status-label">En Preparación</div>
-                  <div className="status-bar">
-                    <div 
-                      className="status-fill preparing" 
-                      style={{ width: `${stats.totalPedidos ? (stats.pedidosEnPreparacion / stats.totalPedidos) * 100 : 0}%` }}
-                    ></div>
-                  </div>
-                  <div className="status-value">{stats.pedidosEnPreparacion}</div>
                 </div>
                 
                 <div className="status-item">
@@ -307,6 +321,70 @@ const Statistics = () => {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* NUEVA SECCIÓN: Calificaciones del Restaurante */}
+            <div className="stats-section">
+              <h3>Calificaciones del Restaurante</h3>
+              
+              {/* Resumen de calificaciones */}
+              <div className="rating-summary">
+                <div className="rating-overview">
+                  <div className="rating-stars">
+                    {[1,2,3,4,5].map(star => (
+                      <span 
+                        key={star} 
+                        className={`star ${star <= (stats.promedioCalificacion || 0) ? 'filled' : 'empty'}`}
+                      >
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                  <div className="rating-number">
+                    {stats.promedioCalificacion ? stats.promedioCalificacion.toFixed(1) : '0.0'} / 5
+                  </div>
+                  <div className="rating-count">
+                    ({stats.totalCalificaciones || 0} calificaciones)
+                  </div>
+                </div>
+              </div>
+
+              {/* Calificaciones recientes */}
+              {stats.calificacionesRecientes && stats.calificacionesRecientes.length > 0 ? (
+                <div className="recent-ratings">
+                  <h4>Calificaciones Recientes</h4>
+                  <div className="ratings-list">
+                    {stats.calificacionesRecientes.slice(0, 5).map((calificacion, index) => (
+                      <div key={index} className="rating-item">
+                        <div className="rating-header">
+                          <div className="rating-stars-small">
+                            {[1,2,3,4,5].map(star => (
+                              <span 
+                                key={star} 
+                                className={`star-small ${star <= calificacion.calificacion ? 'filled' : 'empty'}`}
+                              >
+                                ★
+                              </span>
+                            ))}
+                          </div>
+                          <span className="rating-date">
+                            {new Date(calificacion.fecha).toLocaleDateString('es-CO')}
+                          </span>
+                        </div>
+                        {calificacion.comentarios && (
+                          <div className="rating-comment">
+                            "{calificacion.comentarios}"
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="no-ratings">
+                  <p>Aún no hay calificaciones para este restaurante</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

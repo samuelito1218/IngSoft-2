@@ -1,13 +1,29 @@
-// src/components/client/ProductDetailss.jsx
+// src/components/client/ProductDetails.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaPlus, FaMinus, FaStore, FaShoppingCart } from 'react-icons/fa';
 import { useAuth } from '../../../hooks/useAuth';
 import { CartContext } from '../../../contexts/CartContext';
 import ApiService from '../../../services/api';
+import RestaurantChangeModal from '../restaurantChangeModal/RestaurantChangeModal';
+
 import './ProductDetails.css';
 
+
 const DEFAULT_IMAGE = '/images/food-placeholder.jpg';
+
+// Función helper para obtener la URL de imagen correcta (igual que en FoodItem)
+const getImageUrl = (product) => {
+  const imageFields = ['imagen', 'imageUrl', 'image', 'foto', 'picture'];
+  
+  for (const field of imageFields) {
+    if (product[field] && product[field].trim() !== '') {
+      return product[field];
+    }
+  }
+  
+  return DEFAULT_IMAGE;
+};
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -22,6 +38,14 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(0);
+  const [imageError, setImageError] = useState(false);
+  const [relatedImageErrors, setRelatedImageErrors] = useState({}); // Para productos relacionados
+
+
+  // Agregar estados para el modal (después de los estados existentes):
+const [showRestaurantModal, setShowRestaurantModal] = useState(false);
+const [restrictionInfo, setRestrictionInfo] = useState(null);
+
   
   // Cargar información del producto
   useEffect(() => {
@@ -40,6 +64,9 @@ const ProductDetails = () => {
         const productData = response.data;
         setProduct(productData);
         
+        // Resetear error de imagen cuando cambia el producto
+        setImageError(false);
+        
         // Obtener información del restaurante
         if (productData.restaurante_Id) {
           const restaurantResponse = await ApiService.restaurantes.detalle(productData.restaurante_Id);
@@ -53,6 +80,8 @@ const ProductDetails = () => {
             // Filtrar el producto actual
             const filtered = relatedResponse.data.filter(item => item.id !== id);
             setRelatedProducts(filtered.slice(0, 4));
+            // Resetear errores de imágenes relacionadas
+            setRelatedImageErrors({});
           }
         }
         
@@ -80,14 +109,57 @@ const ProductDetails = () => {
     }).format(price);
   };
   
-  // Manejar incremento de cantidad
-  const handleIncrement = () => {
-    if (product) {
-      addToCart(product);
-      setQuantity(prev => prev + 1);
+  // Manejar error de imagen principal
+  const handleImageError = (e) => {
+    if (!imageError) {
+      setImageError(true);
+      e.target.src = DEFAULT_IMAGE;
     }
   };
   
+  // Manejar error de imagen de productos relacionados
+  const handleRelatedImageError = (productId) => {
+    setRelatedImageErrors(prev => ({
+      ...prev,
+      [productId]: true
+    }));
+  };
+  
+  // Manejar incremento de cantidad
+  const handleIncrement = () => {
+  if (product) {
+    const result = addToCart(product, restaurant?.nombre);
+    
+    if (!result.success) {
+      setRestrictionInfo({
+        reason: result.reason,
+        currentRestaurant: result.currentRestaurant,
+        newRestaurant: restaurant?.nombre
+      });
+      setShowRestaurantModal(true);
+      return;
+    }
+    
+    setQuantity(prev => prev + 1);
+  }
+};
+
+
+const handleRestaurantChange = () => {
+  clearCart();
+  const result = addToCart(product, restaurant?.nombre);
+  
+  if (result.success) {
+    setQuantity(1);
+    setShowRestaurantModal(false);
+    setRestrictionInfo(null);
+  }
+};
+
+const handleRestaurantCancel = () => {
+  setShowRestaurantModal(false);
+  setRestrictionInfo(null);
+};
   // Manejar decremento de cantidad
   const handleDecrement = () => {
     if (quantity > 0) {
@@ -146,6 +218,9 @@ const ProductDetails = () => {
     );
   }
   
+  // Obtener URL de imagen del producto principal
+  const productImageUrl = getImageUrl(product);
+  
   return (
     <div className="product-details">
       <div className="product-header">
@@ -164,13 +239,11 @@ const ProductDetails = () => {
       <div className="product-content">
         <div className="product-image-container">
           <img 
-            src={product.imagen || DEFAULT_IMAGE} 
-            alt={product.nombre}
+            src={imageError ? DEFAULT_IMAGE : productImageUrl}
+            alt={product.nombre || 'Producto'}
             className="product-image"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = DEFAULT_IMAGE;
-            }}
+            onError={handleImageError}
+            loading="lazy"
           />
         </div>
         
@@ -196,11 +269,20 @@ const ProductDetails = () => {
                 className="quantity-button" 
                 onClick={handleDecrement}
                 disabled={quantity === 0}
+                title="Disminuir cantidad"
+                aria-label="Disminuir cantidad"
               >
                 <FaMinus />
               </button>
-              <span className="quantity">{quantity}</span>
-              <button className="quantity-button" onClick={handleIncrement}>
+              <span className="quantity" aria-label={`Cantidad: ${quantity}`}>
+                {quantity}
+              </span>
+              <button 
+                className="quantity-button" 
+                onClick={handleIncrement}
+                title="Aumentar cantidad"
+                aria-label="Aumentar cantidad"
+              >
                 <FaPlus />
               </button>
             </div>
@@ -221,31 +303,46 @@ const ProductDetails = () => {
           <h2>Productos relacionados</h2>
           
           <div className="related-products-grid">
-            {relatedProducts.map(relatedProduct => (
-              <div 
-                key={relatedProduct.id} 
-                className="related-product"
-                onClick={() => viewRelatedProduct(relatedProduct.id)}
-              >
-                <div className="related-product-image">
-                  <img 
-                    src={relatedProduct.imagen || DEFAULT_IMAGE} 
-                    alt={relatedProduct.nombre}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = DEFAULT_IMAGE;
-                    }}
-                  />
+            {relatedProducts.map(relatedProduct => {
+              const relatedImageUrl = getImageUrl(relatedProduct);
+              const hasRelatedImageError = relatedImageErrors[relatedProduct.id];
+              
+              return (
+                <div 
+                  key={relatedProduct.id} 
+                  className="related-product"
+                  onClick={() => viewRelatedProduct(relatedProduct.id)}
+                >
+                  <div className="related-product-image">
+                    <img 
+                      src={hasRelatedImageError ? DEFAULT_IMAGE : relatedImageUrl}
+                      alt={relatedProduct.nombre || 'Producto relacionado'}
+                      onError={() => handleRelatedImageError(relatedProduct.id)}
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="related-product-info">
+                    <h3>{relatedProduct.nombre}</h3>
+                    <p>{formatPrice(relatedProduct.precio)}</p>
+                  </div>
                 </div>
-                <div className="related-product-info">
-                  <h3>{relatedProduct.nombre}</h3>
-                  <p>{formatPrice(relatedProduct.precio)}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
+
+      {/* Modal de cambio de restaurante */}
+    {showRestaurantModal && restrictionInfo && (
+      <RestaurantChangeModal
+        isOpen={showRestaurantModal}
+        onConfirm={handleRestaurantChange}
+        onCancel={handleRestaurantCancel}
+        currentRestaurant={restrictionInfo.currentRestaurant}
+        newRestaurant={restrictionInfo.newRestaurant}
+        reason={restrictionInfo.reason}
+      />
+    )}
     </div>
   );
 };

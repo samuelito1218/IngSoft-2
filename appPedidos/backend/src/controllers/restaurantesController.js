@@ -1,206 +1,248 @@
-const {PrismaClient} = require('@prisma/client');
+const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-//
-// listado de los restaurantes del admin logueado
+
+// Obtener restaurantes del admin logueado
 exports.obtenerMisRestaurantes = async (req, res) => {
     try {
         const userId = req.user.id;
-        console.log("id del admin: "+userId)
+        console.log("Buscando restaurantes del admin con ID:", userId);
+        
+        // Buscar donde el usuario es propietario (owner)
         const restaurantes = await prisma.restaurantes.findMany({
-          where: {
-                OR: [
-                    { ownerId: userId },              // Buscar donde el usuario es propietario
-                    { usuariosIds: { has: userId } }  // O donde el usuario está en usuariosIds
-                ]
+            where: {
+                ownerId: userId
+            },
+            include: {
+                // Incluir las sucursales relacionadas
+                sucursales: true
             },
             orderBy: { nombre: 'asc' },
         });
+        
         console.log(`Se encontraron ${restaurantes.length} restaurantes para el admin ${userId}`);
-        res.json(restaurantes);
-      } catch (error) {
-        console.error('Error interno al obtener restaurantes:', error);
-        res.status(500).json({
-          message: 'Error interno al obtener los restaurantes',
-          error: error.message
+        
+        // Log detallado para depuración
+        restaurantes.forEach((r, i) => {
+            console.log(`Restaurante ${i+1}: ${r.nombre} (ID: ${r.id})`);
+            console.log(`  - Sucursales: ${r.sucursales.length}`);
         });
-      }
-    };
-    
-// Método para listar todos los restaurantes
-// En el método listarRestaurantes del restaurantesController.js
+        
+        res.json(restaurantes);
+    } catch (error) {
+        console.error('Error al obtener restaurantes:', error);
+        res.status(500).json({
+            message: 'Error al obtener los restaurantes',
+            error: error.message
+        });
+    }
+};
+
+// Listar todos los restaurantes (público)
 exports.listarRestaurantes = async (req, res) => {
-  try {
-    console.log("Iniciando listarRestaurantes");
-    
-    // Intento 1: Consulta simple sin filtros
-    const restaurantes = await prisma.restaurantes.findMany();
-    console.log(`Consulta simple encontró: ${restaurantes.length} restaurantes`);
-    
-    if (restaurantes && restaurantes.length > 0) {
-      return res.status(200).json(restaurantes);
+    try {
+        console.log("Obteniendo listado de todos los restaurantes");
+        
+        const restaurantes = await prisma.restaurantes.findMany({
+            include: {
+                sucursales: true
+            },
+            orderBy: { nombre: 'asc' }
+        });
+        
+        console.log(`Se encontraron ${restaurantes.length} restaurantes en total`);
+        
+        return res.status(200).json(restaurantes);
+    } catch (error) {
+        console.error("Error al listar restaurantes:", error);
+        return res.status(500).json({ 
+            message: "Error al obtener restaurantes", 
+            error: error.message 
+        });
     }
-
-    // Intento 2: Verificar directamente en la base de datos
-    console.log("Realizando consulta alternativa...");
-    
-    // Verificar si hay algún problema con el modelo
-    const collections = await prisma.$queryRaw`SHOW COLLECTIONS`;
-    console.log("Colecciones disponibles:", collections);
-    
-    // Intento 3: Restaurante de respaldo
-    console.log("Retornando datos de respaldo");
-    return res.status(200).json([{
-      id: "default-1",
-      nombre: "Restaurante Database",
-      descripcion: "Este es un restaurante generado para solucionar problemas de conexión a la BD",
-      imageUrl: null,
-      categorias: ["General"]
-    }]);
-  } catch (error) {
-    console.error("Error en listarRestaurantes:", error);
-    return res.status(500).json({ 
-      message: "Error al obtener restaurantes", 
-      error: error.message 
-    });
-  }
 };
 
-// Método para obtener un restaurante específico por ID
+// Obtener un restaurante específico por ID
 exports.obtenerRestaurante = async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const restaurante = await prisma.restaurantes.findUnique({
-      where: { id }
-    });
-    
-    if (!restaurante) {
-      return res.status(404).json({ message: "Restaurante no encontrado" });
+    try {
+        const { id } = req.params;
+        
+        const restaurante = await prisma.restaurantes.findUnique({
+            where: { id },
+            include: {
+                sucursales: true
+            }
+        });
+        
+        if (!restaurante) {
+            return res.status(404).json({ message: "Restaurante no encontrado" });
+        }
+        
+        res.status(200).json(restaurante);
+    } catch (error) {
+        console.error("Error al obtener restaurante:", error);
+        res.status(500).json({
+            message: "Error al obtener el restaurante",
+            error: error.message
+        });
     }
-    
-    res.status(200).json(restaurante);
-  } catch (error) {
-    console.error("Error al obtener restaurante:", error);
-    res.status(500).json({
-      message: "Error interno al obtener el restaurante",
-      error: error.message
-    });
-  }
 };
-// Método para listar productos de un restaurante específico
+
+// Listar productos de un restaurante específico
+// En restaurantesController.js - REEMPLAZA esta función:
+// En restaurantesController.js - REEMPLAZA esta función:
 exports.listarProductosPorRestaurante = async (req, res) => {
   try {
     const { restauranteId } = req.params;
     
-    // Verificar que el restaurante existe
-    const restaurante = await prisma.restaurantes.findUnique({
-      where: { id: restauranteId }
+    console.log("Buscando productos del restaurante:", restauranteId);
+    
+    // ✅ Buscar productos SIN filtros restrictivos
+    const productos = await prisma.Productos.findMany({
+      where: { 
+        restaurante_Id: restauranteId
+      }
     });
     
-    if (!restaurante) {
-      return res.status(404).json({ message: "Restaurante no encontrado" });
-    }
+    console.log(`Encontrados ${productos.length} productos`);
     
-    // Buscar productos del restaurante
-    const productos = await prisma.productos.findMany({
-      where: { restaurante_Id: restauranteId }
-    });
+    // ✅ Procesar productos con valores por defecto pero SIN filtrar
+    const productosLimpios = productos.map(prod => ({
+      id: prod.id,
+      nombre: prod.nombre || 'Producto sin nombre',
+      especificaciones: prod.especificaciones || 'Sin descripción',
+      precio: prod.precio || 0,
+      categoria: prod.categoria || 'Sin categoría',
+      imageUrl: prod.imageUrl || null,
+      restaurante_Id: prod.restaurante_Id,
+      sucursales_Ids: prod.sucursales_Ids || []
+    }));
     
-    res.status(200).json(productos);
+    console.log("Productos procesados:", productosLimpios);
+    res.status(200).json(productosLimpios);
+    
   } catch (error) {
     console.error("Error al listar productos del restaurante:", error);
-    res.status(500).json({
-      message: "Error interno al listar productos",
-      error: error.message
-    });
+    // ✅ Solo en caso de error devolver array vacío
+    res.status(200).json([]);
   }
 };
+
 // Crear restaurante
 exports.crearRestaurante = async (req, res) => {
     try {
-      // 1) Sólo Admin
-      if (req.user.rol !== "Admin") {
-        return res.status(403).json({ message: "Acceso denegado. Sólo Admin puede crear restaurantes" });
-      }
-  
-      // 2) Extraer y validar datos
-      const { nombre, descripcion, ubicaciones, imageUrl } = req.body;
-      if (!nombre || !descripcion ){
-        return res.status(400).json({ message: "Faltan datos obligatorios: nombre, descripcion, ownerId" });
-      }
-      
-  
-      // 3) Mapear ubicaciones (si vienen)
-      let ubicacionesData = [];
-      if (Array.isArray(ubicaciones)) {
-        ubicacionesData = ubicaciones.map(u => {
-          if (!u.sucursal_Id || !u.comuna) {
-            throw new Error("Cada ubicación debe tener sucursal_Id y comuna");
-          }
-          if (!/^[0-9a-fA-F]{24}$/.test(u.sucursal_Id)) {
-            throw new Error("sucursal_Id no es un ObjectId válido");
-          }
-          return { sucursal_Id: u.sucursal_Id, comuna: u.comuna };
+        // 1) Validar rol Admin
+        if (req.user.rol !== "Admin") {
+            return res.status(403).json({ message: "Acceso denegado. Sólo Admin puede crear restaurantes" });
+        }
+        
+        // 2) Extraer y validar datos
+        const { nombre, descripcion, sucursales, imageUrl, categorias } = req.body;
+        if (!nombre || !descripcion) {
+            return res.status(400).json({ message: "Faltan datos obligatorios: nombre, descripcion" });
+        }
+        
+        // 3) Crear el restaurante con el usuario como dueño
+        const nuevoRestaurante = await prisma.restaurantes.create({
+            data: {
+                nombre,
+                descripcion,
+                ownerId: req.user.id,
+                imageUrl,
+                categorias: Array.isArray(categorias) ? categorias : categorias ? [categorias] : ['General']
+            }
         });
-      }
-  
-      // 4) Armar el objeto data SIN usar `{ create: … }`
-      const data = {
-        nombre,
-        descripcion,
-        ownerId: req.user.id,
-        imageUrl
-      };
-      if (ubicacionesData.length) {
-        data.ubicaciones = ubicacionesData; 
-      }
-  
-      // 5) Crear el restaurante
-      const nuevoRestaurante = await prisma.restaurantes.create({ data });
-  
-      return res.status(201).json({
-        message: "Restaurante creado exitosamente",
-        restaurante: nuevoRestaurante
-      });
-  
+        
+        console.log(`Restaurante creado: ${nuevoRestaurante.id} por usuario ${req.user.id}`);
+        
+        // 4) Crear las sucursales vinculadas al restaurante
+        const sucursalesCreadas = [];
+        if (Array.isArray(sucursales) && sucursales.length > 0) {
+            for (const sucursal of sucursales) {
+                if (!sucursal.nombre || !sucursal.direccion || !sucursal.comuna) {
+                    console.warn("Sucursal con datos incompletos:", sucursal);
+                    continue;
+                }
+                
+                try {
+                    const nuevaSucursal = await prisma.sucursales.create({
+                        data: {
+                            nombre: sucursal.nombre,
+                            direccion: sucursal.direccion,
+                            comuna: sucursal.comuna,
+                            restaurante_Id: nuevoRestaurante.id
+                        }
+                    });
+                    
+                    console.log(`Sucursal creada: ${nuevaSucursal.id} para restaurante ${nuevoRestaurante.id}`);
+                    sucursalesCreadas.push(nuevaSucursal);
+                } catch (sucursalError) {
+                    console.error("Error al crear sucursal:", sucursalError);
+                    // Continuamos con la siguiente sucursal
+                }
+            }
+        }
+        
+        // 5) Actualizar el usuario para incluir este restaurante en su lista
+        try {
+            await prisma.usuarios.update({
+                where: { id: req.user.id },
+                data: {
+                    restaurantesIds: {
+                        push: nuevoRestaurante.id
+                    }
+                }
+            });
+            console.log(`Usuario ${req.user.id} actualizado con nuevo restaurante ${nuevoRestaurante.id}`);
+        } catch (userError) {
+            console.warn("No se pudo actualizar el usuario:", userError);
+            // No fallamos la operación completa por esto
+        }
+        
+        // 6) Devolver restaurante con sus sucursales
+        const restauranteCompleto = {
+            ...nuevoRestaurante,
+            sucursales: sucursalesCreadas
+        };
+        
+        return res.status(201).json({
+            message: "Restaurante creado exitosamente",
+            restaurante: restauranteCompleto
+        });
     } catch (error) {
-      console.error("Error al crear restaurante:", error);
-      const status = error.message.includes("ubicación") ? 400 : 500;
-      return res.status(status).json({
-        message: error.message.includes("ubic") 
-          ? error.message 
-          : "Error interno al crear el restaurante",
-        error: error.message
-      });
+        console.error("Error al crear restaurante:", error);
+        return res.status(500).json({
+            message: "Error al crear el restaurante",
+            error: error.message
+        });
     }
 };
 
-// Método para subir/actualizar imagen de restaurante
+// Actualizar imagen de restaurante
 exports.actualizarImagen = async (req, res) => {
     try {
         const { restauranteId } = req.params;
         const { imageUrl } = req.body;
-
+        
         // Verificar que el restaurante existe
         const restaurante = await prisma.restaurantes.findUnique({
             where: { id: restauranteId }
         });
-
+        
         if (!restaurante) {
             return res.status(404).json({ message: "Restaurante no encontrado" });
         }
-
-        // Verificar que el usuario puede modificar este restaurante
-        if (!restaurante.usuariosIds.includes(req.user.id)) {
+        
+        // Verificar que el usuario es dueño del restaurante
+        if (restaurante.ownerId !== req.user.id) {
             return res.status(403).json({ message: "No tienes permiso para modificar este restaurante" });
         }
-
+        
         // Actualizar imagen
         const restauranteActualizado = await prisma.restaurantes.update({
             where: { id: restauranteId },
             data: { imageUrl }
         });
-
+        
         res.status(200).json({
             message: "Imagen actualizada correctamente",
             restaurante: restauranteActualizado
@@ -213,310 +255,310 @@ exports.actualizarImagen = async (req, res) => {
         });
     }
 };
-// Método para agregar ubicación (solamente el dueño del restaurante)
-exports.agregarUbicacion = async (req, res) => {
-    try {
-        // Solo los admins propietarios
-        if (req.user.rol !== "Admin") {
-            return res.status(403).json({
-                message: "Acceso denegado, solo los usuarios con rol Admin pueden agregar ubicaciones a los restaurantes"
-            });
-        }
 
-        const { restauranteId } = req.params;
-        const { sucursal_Id, comuna } = req.body;
-
-        // Validación de los datos
-        if (!sucursal_Id || !comuna) {
-            return res.status(400).json({
-                message: "Faltan datos obligatorios para agregar la ubicación: sucursal_Id, comuna"
-            });
-        }
-
-        // Verificar existencia del restaurante y que es de la propiedad del usuario solicitante
-        const restaurante = await prisma.restaurantes.findUnique({
-            where: { id: restauranteId }
-        });
-
-        if (!restaurante) {
-            return res.status(404).json({
-                message: "Restaurante no encontrado en el sistema"
-            });
-        }
-
-        // Verificar si el usuario actual está en la lista de usuarios del restaurante
-        if (!restaurante.usuariosIds.includes(req.user.id)) {
-            return res.status(403).json({
-                message: "Solo puedes agregar ubicaciones a un restaurante de tu propiedad"
-            });
-        }
-
-        // Agregar la ubicación al restaurante
-        const restauranteActualizado = await prisma.restaurantes.update({
-            where: { id: restauranteId },
-            data: {
-                ubicaciones: {
-                    push: { sucursal_Id, comuna }
-                }
-            }
-        });
-
-        res.status(201).json({
-            message: "Ubicación agregada exitosamente",
-            ubicacion: { sucursal_Id, comuna },
-            restaurante: restauranteActualizado
-        });
-    } catch (error) {
-        console.error("Error al agregar ubicación ", error);
-        res.status(500).json({
-            message: "Error interno al agregar ubicación",
-            error: error.message
-        });
-    }
-};
-
-// Método para eliminar ubicación
-exports.eliminarUbicacion = async (req, res) => {
-    try {
-        const { restauranteId, ubicacionIndex } = req.params;
-        const index = parseInt(ubicacionIndex);
-
-        if (isNaN(index) || index < 0) {
-            return res.status(400).json({
-                message: "Índice de ubicación inválido"
-            });
-        }
-
-        // Buscar el restaurante
-        const restaurante = await prisma.restaurantes.findUnique({
-            where: { id: restauranteId }
-        });
-
-        if (!restaurante) {
-            return res.status(404).json({
-                message: "Restaurante no encontrado"
-            });
-        }
-
-        // Verificar que el usuario sea uno de los propietarios
-        if (req.user.rol !== "Admin" || !restaurante.usuariosIds.includes(req.user.id)) {
-            return res.status(403).json({
-                message: "Acceso denegado. Solo puedes eliminar ubicaciones de tus propios restaurantes"
-            });
-        }
-
-        // Verificar que el índice sea válido
-        if (index >= restaurante.ubicaciones.length) {
-            return res.status(404).json({
-                message: "Ubicación no encontrada"
-            });
-        }
-
-        // Guardar la ubicación a eliminar
-        const ubicacionEliminada = restaurante.ubicaciones[index];
-
-        // Eliminar la ubicación del array
-        const ubicacionesActualizadas = [...restaurante.ubicaciones];
-        ubicacionesActualizadas.splice(index, 1);
-
-        // Actualizar el restaurante
-        await prisma.restaurantes.update({
-            where: { id: restauranteId },
-            data: {
-                ubicaciones: ubicacionesActualizadas
-            }
-        });
-
-        res.status(200).json({
-            message: "Ubicación eliminada correctamente",
-            ubicacionEliminada
-        });
-    } catch (error) {
-        console.error("Error al eliminar ubicación: ", error);
-        res.status(500).json({
-            message: "Error al eliminar ubicación",
-            error: error.message
-        });
-    }
-};
-
-// Método para listar ubicaciones de un restaurante
-exports.listarUbicacionesPorRestaurante = async (req, res) => {
-    try {
-        const { restauranteId } = req.params;
-
-        // Buscar restaurante
-        const restaurante = await prisma.restaurantes.findUnique({
-            where: { id: restauranteId }
-        });
-
-        if (!restaurante) {
-            return res.status(404).json({
-                message: "Restaurante no encontrado"
-            });
-        }
-
-        res.status(200).json({
-            message: "Ubicaciones del restaurante",
-            ubicaciones: restaurante.ubicaciones
-        });
-    } catch (error) {
-        console.error("Error al listar ubicaciones: ", error);
-        res.status(500).json({
-            message: "Error al listar las ubicaciones",
-            error: error.message
-        });
-    }
-};
-
-// Método para listar restaurantes de un usuario
-exports.listarMisRestaurantes = async (req, res) => {
-    try {
-        if (req.user.rol !== "Admin") {
-            return res.status(403).json({
-                message: "Acceso denegado. Solo los administradores pueden listar sus restaurantes."
-            });
-        }
-
-        // Obtener los IDs de restaurantes del usuario
-        const usuario = await prisma.usuarios.findUnique({
-            where: { id: req.user.id }
-        });
-
-        if (!usuario || !usuario.restaurantesIds) {
-            return res.status(200).json({
-                message: "No se encontraron restaurantes para este usuario",
-                restaurantes: []
-            });
-        }
-
-        // Buscar los restaurantes asociados al usuario
-        const misRestaurantes = await prisma.restaurantes.findMany({
-            where: {
-                id: { in: usuario.restaurantesIds }
-            }
-        });
-
-        res.status(200).json({
-            message: "Restaurantes del usuario autenticado",
-            restaurantes: misRestaurantes
-        });
-    } catch (error) {
-        console.error("Error al listar mis restaurantes:", error);
-        res.status(500).json({
-            message: "Error interno al listar los restaurantes",
-            error: error.message
-        });
-    }
-};
-
-// Método para Editar la información de un restaurante (solo el dueño)
+// Editar información de un restaurante
 exports.editarRestaurante = async (req, res) => {
     try {
         const { restauranteId } = req.params;
-        const { nombre } = req.body;
-
+        const { nombre, descripcion, imageUrl, categorias } = req.body;
+        
+        // Validar rol Admin
         if (req.user.rol !== "Admin") {
             return res.status(403).json({
                 message: "Acceso denegado. Solo administradores pueden editar restaurantes."
             });
         }
-
+        
+        // Verificar que el restaurante existe
         const restaurante = await prisma.restaurantes.findUnique({
             where: { id: restauranteId }
         });
-
+        
         if (!restaurante) {
-            return res.status(404).json({
-                message: "Restaurante no encontrado"
-            });
+            return res.status(404).json({ message: "Restaurante no encontrado" });
         }
-
-        // Se comprueba que el usuario esté en la lista de usuarios del restaurante
-        if (!restaurante.usuariosIds.includes(req.user.id)) {
-            return res.status(403).json({
-                message: "Solo puedes editar restaurantes de tu propiedad"
-            });
+        
+        // Verificar que el usuario es dueño del restaurante
+        if (restaurante.ownerId !== req.user.id) {
+            return res.status(403).json({ message: "Solo puedes editar restaurantes de tu propiedad" });
         }
-
-        // Actualizar info restaurante
+        
+        // Actualizar restaurante
+        const datosActualizados = {};
+        if (nombre) datosActualizados.nombre = nombre;
+        if (descripcion) datosActualizados.descripcion = descripcion;
+        if (imageUrl) datosActualizados.imageUrl = imageUrl;
+        if (categorias) datosActualizados.categorias = Array.isArray(categorias) ? categorias : [categorias];
+        
         const restauranteActualizado = await prisma.restaurantes.update({
             where: { id: restauranteId },
-            data: {
-                nombre: nombre || restaurante.nombre
+            data: datosActualizados,
+            include: {
+                sucursales: true
             }
         });
-
+        
         res.status(200).json({
             message: "Restaurante actualizado exitosamente",
             restaurante: restauranteActualizado
         });
-
     } catch (error) {
         console.error("Error al editar restaurante:", error);
         res.status(500).json({
-            message: "Error interno al editar el restaurante",
+            message: "Error al editar el restaurante",
             error: error.message
         });
     }
 };
 
-// Método para eliminar un restaurante
+// Eliminar un restaurante
 exports.eliminarRestaurante = async (req, res) => {
     try {
         const { restauranteId } = req.params;
-
+        
+        // Validar rol Admin
         if (req.user.rol !== "Admin") {
             return res.status(403).json({
                 message: "Acceso denegado. Solo los administradores pueden eliminar restaurantes."
             });
         }
-
-        // Se busca el restaurante
+        
+        // Verificar que el restaurante existe
         const restaurante = await prisma.restaurantes.findUnique({
-            where: { id: restauranteId }
+            where: { id: restauranteId },
+            include: {
+                sucursales: true
+            }
         });
-
+        
         if (!restaurante) {
-            return res.status(404).json({
-                message: "Restaurante no encontrado"
-            });
+            return res.status(404).json({ message: "Restaurante no encontrado" });
         }
-
-        // Se valida que el usuario esté en la lista de usuarios del restaurante
-        if (!restaurante.usuariosIds.includes(req.user.id)) {
-            return res.status(403).json({
-                message: "Solo puedes eliminar restaurantes que te pertenecen"
-            });
+        
+        // Verificar que el usuario es dueño del restaurante
+        if (restaurante.ownerId !== req.user.id) {
+            return res.status(403).json({ message: "Solo puedes eliminar restaurantes de tu propiedad" });
         }
-
-        // Primero eliminar los productos asociados a este restaurante
+        
+        // Procedemos a eliminar en el siguiente orden para mantener integridad referencial:
+        
+        // 1. Eliminar sucursales
+        if (restaurante.sucursales && restaurante.sucursales.length > 0) {
+            await prisma.sucursales.deleteMany({
+                where: { restaurante_Id: restauranteId }
+            });
+            console.log(`Eliminadas ${restaurante.sucursales.length} sucursales del restaurante ${restauranteId}`);
+        }
+        
+        // 2. Eliminar productos
         await prisma.productos.deleteMany({
             where: { restaurante_Id: restauranteId }
         });
-
-        // Luego eliminar el restaurante
+        
+        // 3. Eliminar el restaurante
         await prisma.restaurantes.delete({
             where: { id: restauranteId }
         });
-
-        // Actualizar la lista de restaurantes del usuario
-        await prisma.usuarios.update({
-            where: { id: req.user.id },
-            data: {
-                restaurantesIds: {
-                    set: usuario.restaurantesIds.filter(id => id !== restauranteId)
-                }
+        
+        // 4. Actualizar la lista de restaurantes del usuario
+        try {
+            const usuario = await prisma.usuarios.findUnique({
+                where: { id: req.user.id },
+                select: { restaurantesIds: true }
+            });
+            
+            if (usuario && usuario.restaurantesIds) {
+                await prisma.usuarios.update({
+                    where: { id: req.user.id },
+                    data: {
+                        restaurantesIds: {
+                            set: usuario.restaurantesIds.filter(id => id !== restauranteId)
+                        }
+                    }
+                });
             }
-        });
-
+        } catch (userError) {
+            console.warn("Error al actualizar usuario:", userError);
+            // No fallamos la operación completa por esto
+        }
+        
         res.status(200).json({
-            message: "Restaurante y todos sus productos eliminados correctamente"
+            message: "Restaurante y todos sus datos asociados eliminados correctamente"
         });
     } catch (error) {
-        console.error("Error al eliminar restaurante: ", error);
+        console.error("Error al eliminar restaurante:", error);
         res.status(500).json({
-            message: "Error interno al eliminar el restaurante",
+            message: "Error al eliminar el restaurante",
+            error: error.message
+        });
+    }
+};
+
+//Métodos para sucursales:
+
+// Crear una nueva sucursal
+exports.crearSucursal = async (req, res) => {
+    try {
+        // Validar rol Admin
+        if (req.user.rol !== "Admin") {
+            return res.status(403).json({ message: "Acceso denegado. Sólo Admin puede crear sucursales" });
+        }
+        
+        // Extraer y validar datos
+        const { nombre, direccion, comuna, restaurante_Id } = req.body;
+        
+        if (!nombre || !direccion || !comuna || !restaurante_Id) {
+            return res.status(400).json({ message: "Faltan datos obligatorios para la sucursal" });
+        }
+        
+        // Verificar que el restaurante existe
+        const restaurante = await prisma.restaurantes.findUnique({
+            where: { id: restaurante_Id }
+        });
+        
+        if (!restaurante) {
+            return res.status(404).json({ message: "Restaurante no encontrado" });
+        }
+        
+        // Verificar que el usuario es dueño del restaurante
+        if (restaurante.ownerId !== req.user.id) {
+            return res.status(403).json({ message: "No tienes permiso para añadir sucursales a este restaurante" });
+        }
+        
+        // Crear la sucursal
+        const nuevaSucursal = await prisma.sucursales.create({
+            data: {
+                nombre,
+                direccion,
+                comuna,
+                restaurante_Id
+            }
+        });
+        
+        console.log(`Sucursal creada: ${nuevaSucursal.id} para restaurante ${restaurante_Id}`);
+        
+        res.status(201).json({
+            message: "Sucursal creada exitosamente",
+            sucursal: nuevaSucursal
+        });
+    } catch (error) {
+        console.error("Error al crear sucursal:", error);
+        res.status(500).json({
+            message: "Error al crear la sucursal",
+            error: error.message
+        });
+    }
+};
+
+// Obtener sucursales de un restaurante
+exports.listarSucursalesPorRestaurante = async (req, res) => {
+    try {
+        const { restauranteId } = req.params;
+        
+        // Verificar que el restaurante existe
+        const restaurante = await prisma.restaurantes.findUnique({
+            where: { id: restauranteId },
+            include: {
+                sucursales: true
+            }
+        });
+        
+        if (!restaurante) {
+            return res.status(404).json({ message: "Restaurante no encontrado" });
+        }
+        
+        res.status(200).json(restaurante.sucursales);
+    } catch (error) {
+        console.error("Error al listar sucursales:", error);
+        res.status(500).json({
+            message: "Error al listar las sucursales",
+            error: error.message
+        });
+    }
+};
+
+// Eliminar una sucursal
+exports.eliminarSucursal = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Buscar la sucursal
+        const sucursal = await prisma.sucursales.findUnique({
+            where: { id },
+            include: {
+                restaurante: true
+            }
+        });
+        
+        if (!sucursal) {
+            return res.status(404).json({ message: "Sucursal no encontrada" });
+        }
+        
+        // Verificar que el usuario es dueño del restaurante asociado
+        if (sucursal.restaurante.ownerId !== req.user.id) {
+            return res.status(403).json({ message: "No tienes permiso para eliminar esta sucursal" });
+        }
+        
+        // Eliminar la sucursal
+        await prisma.sucursales.delete({
+            where: { id }
+        });
+        
+        res.status(200).json({
+            message: "Sucursal eliminada correctamente"
+        });
+    } catch (error) {
+        console.error("Error al eliminar sucursal:", error);
+        res.status(500).json({
+            message: "Error al eliminar la sucursal",
+            error: error.message
+        });
+    }
+};
+
+// Actualizar una sucursal
+exports.actualizarSucursal = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nombre, direccion, comuna } = req.body;
+        
+        // Buscar la sucursal
+        const sucursal = await prisma.sucursales.findUnique({
+            where: { id },
+            include: {
+                restaurante: true
+            }
+        });
+        
+        if (!sucursal) {
+            return res.status(404).json({ message: "Sucursal no encontrada" });
+        }
+        
+        // Verificar que el usuario es dueño del restaurante asociado
+        if (sucursal.restaurante.ownerId !== req.user.id) {
+            return res.status(403).json({ message: "No tienes permiso para modificar esta sucursal" });
+        }
+        
+        // Preparar datos para actualizar
+        const datosActualizados = {};
+        if (nombre) datosActualizados.nombre = nombre;
+        if (direccion) datosActualizados.direccion = direccion;
+        if (comuna) datosActualizados.comuna = comuna;
+        
+        // Actualizar la sucursal
+        const sucursalActualizada = await prisma.sucursales.update({
+            where: { id },
+            data: datosActualizados
+        });
+        
+        res.status(200).json({
+            message: "Sucursal actualizada correctamente",
+            sucursal: sucursalActualizada
+        });
+    } catch (error) {
+        console.error("Error al actualizar sucursal:", error);
+        res.status(500).json({
+            message: "Error al actualizar la sucursal",
             error: error.message
         });
     }

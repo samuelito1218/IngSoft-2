@@ -1,32 +1,30 @@
 import React from 'react';
 import { FaStar, FaClock, FaMapMarkerAlt } from 'react-icons/fa';
+import { useRating } from '../../../hooks/useRating';
 import './RestaurantCard.css';
 
 const DEFAULT_IMAGE = '/images/restaurant-placeholder.jpg';
 
 const RestaurantCard = ({ restaurant, onClick }) => {
-  // Adaptador para manejar diferentes formatos de s
+  // Usar el hook para obtener calificaciones reales
+  const { calificacionPromedio, totalCalificaciones, loading } = useRating(restaurant.id);
+  
+  // Adaptador para manejar diferentes formatos de datos
   const restaurantData = {
     nombre: restaurant.nombre || 'Restaurante sin nombre',
     descripcion: restaurant.descripcion || '',
     // Usa imageUrl si existe, sino imagen, o valor por defecto
     imagen: restaurant.imageUrl || restaurant.imagen || DEFAULT_IMAGE,
-    // Valores por defecto para campos que pueden no existir
-    calificaciones: restaurant.calificaciones || [],
     tiempoEntrega: restaurant.tiempoEntrega || '30-45 min',
     categorias: restaurant.categorias || ['General'],
     ubicaciones: restaurant.ubicaciones || [],
     envioGratis: restaurant.envioGratis || false
   };
   
-  // Calcular la calificación promedio
-  const getAverageRating = () => {
-    if (restaurantData.calificaciones.length === 0) {
-      return 4.5; // Valor por defecto para mejor UI
-    }
-    
-    const total = restaurantData.calificaciones.reduce((sum, rating) => sum + rating.valor, 0);
-    return (total / restaurantData.calificaciones.length).toFixed(1);
+  // Formatear la calificación para mostrar
+  const formatRating = (rating) => {
+    if (rating === 0) return '0.0';
+    return Number(rating).toFixed(1);
   };
   
   return (
@@ -49,8 +47,14 @@ const RestaurantCard = ({ restaurant, onClick }) => {
         <div className="rating-time">
           <div className="rating">
             <FaStar className="star-icon" />
-            <span>{getAverageRating()}</span>
-            <span className="rating-count">({restaurantData.calificaciones.length})</span>
+            {loading ? (
+              <span className="rating-loading">...</span>
+            ) : (
+              <>
+                <span>{formatRating(calificacionPromedio)}</span>
+                <span className="rating-count">({totalCalificaciones})</span>
+              </>
+            )}
           </div>
           
           <div className="delivery-time">

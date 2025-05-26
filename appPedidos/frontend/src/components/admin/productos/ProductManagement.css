@@ -1,3 +1,8 @@
+/*
+ * ProductManagement.css
+ * Estilos para la gestión de productos
+ */
+
 .product-management-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -187,9 +192,38 @@
 .product-image {
   width: 80px;
   height: 80px;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border: 1px solid #ddd;
+  background-color: white;
+}
+
+
+
+.product-image-wrapper {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border: 1px solid #ccc;
+  overflow: hidden;
   border-radius: 8px;
 }
+
+.product-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
+
+
+
+
 
 .image-placeholder {
   width: 80px;
@@ -243,15 +277,20 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 20px;
+  overflow-y: auto;
 }
 
 .product-modal {
-  background-color: white;
+  background: white;
   border-radius: 12px;
-  max-width: 500px;
-  width: 90%;
+  width: 100%;
+  max-width: 600px;
   max-height: 90vh;
-  overflow-y: auto;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
 }
 
 .confirm-modal {
@@ -284,8 +323,23 @@
   gap: 12px;
 }
 
+/* Estilos para los botones de acción del formulario */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 16px 24px;
+  background: white;
+  border-top: 1px solid #eee;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
 .cancel-button,
-.delete-button {
+.delete-button,
+.save-button {
   padding: 10px 20px;
   border-radius: 8px;
   font-weight: 500;
@@ -296,10 +350,10 @@
 .cancel-button {
   background-color: #f5f5f5;
   color: #333;
-  border: none;
+  border: 1px solid #e0e0e0;
 }
 
-.cancel-button:hover {
+.cancel-button:hover:not(:disabled) {
   background-color: #e0e0e0;
 }
 
@@ -311,6 +365,27 @@
 
 .delete-button:hover {
   background-color: #d32f2f;
+}
+
+.save-button {
+  background-color: #ff4b2b;
+  color: white;
+  border: none;
+  box-shadow: 0 4px 8px rgba(255, 75, 43, 0.2);
+}
+
+.save-button:hover:not(:disabled) {
+  background-color: #e63e1a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(255, 75, 43, 0.25);
+}
+
+.cancel-button:disabled,
+.save-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Loading container */
@@ -329,7 +404,6 @@
   width: 40px;
   height: 40px;
   animation: spin 1s linear infinite;
-  margin-bottom: 20px;
 }
 
 @keyframes spin {
@@ -383,6 +457,24 @@
   .products-table th,
   .products-table td {
     padding: 12px;
+  }
+  
+  .modal-overlay {
+    padding: 10px;
+  }
+  
+  .product-modal {
+    max-height: 95vh;
+  }
+  
+  .form-actions {
+    padding: 12px 16px;
+    flex-direction: column;
+  }
+  
+  .cancel-button,
+  .save-button {
+    width: 100%;
   }
 }
 

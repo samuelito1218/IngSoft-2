@@ -1,20 +1,42 @@
-// src/componentss/client/FoodItem.jsx
+// 2. MODIFICAR FoodItem.jsx - Con manejo de restricción de restaurante
+
+// src/components/client/fooditem/FoodItem.jsx
 import React, { useState, useContext } from 'react';
 import { FaPlus, FaMinus, FaShoppingCart } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { CartContext } from '../../../contexts/CartContext';
+import RestaurantChangeModal from '../restaurantchangemodal/RestaurantChangeModal';
 import './FoodItem.css';
 
 const DEFAULT_IMAGE = '/images/food-placeholder.jpg';
 
-const FoodItem = ({ product, onClick }) => {
-  const { addToCart, removeFromCart, getItemQuantity } = useContext(CartContext);
+// Función helper para obtener la URL de imagen correcta
+const getImageUrl = (product) => {
+  const imageFields = ['imagen', 'imageUrl', 'image', 'foto', 'picture'];
+  
+  for (const field of imageFields) {
+    if (product[field] && product[field].trim() !== '') {
+      return product[field];
+    }
+  }
+  
+  return DEFAULT_IMAGE;
+};
+
+const FoodItem = ({ product, onClick, restaurantName }) => {
+  const { addToCart, removeFromCart, getItemQuantity, clearCart } = useContext(CartContext);
   const navigate = useNavigate();
   
   const [isAdding, setIsAdding] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [showRestaurantModal, setShowRestaurantModal] = useState(false);
+  const [restrictionInfo, setRestrictionInfo] = useState(null);
   
   // Obtener la cantidad actual en el carrito
   const quantity = getItemQuantity(product.id);
+  
+  // Obtener la URL de imagen
+  const imageUrl = getImageUrl(product);
   
   // Formatear precio
   const formatPrice = (price) => {
@@ -36,72 +58,152 @@ const FoodItem = ({ product, onClick }) => {
   
   // Manejar clic en el botón de agregar
   const handleAddClick = (e) => {
-    e.stopPropagation(); // Evitar que el clic se propague al elemento padre
+    e.stopPropagation();
     setIsAdding(true);
-    addToCart(product);
+    
+    const result = addToCart(product, restaurantName);
+    
+    if (!result.success) {
+      // Mostrar modal de restricción
+      setRestrictionInfo({
+        reason: result.reason,
+        currentRestaurant: result.currentRestaurant,
+        newRestaurant: restaurantName
+      });
+      setShowRestaurantModal(true);
+      setIsAdding(false);
+      return;
+    }
+    
+    setTimeout(() => setIsAdding(false), 300);
   };
   
   // Manejar clic en el botón de incrementar cantidad
   const handleIncrement = (e) => {
-    e.stopPropagation(); // Evitar que el clic se propague al elemento padre
-    addToCart(product);
+    e.stopPropagation();
+    const result = addToCart(product, restaurantName);
+    
+    if (!result.success) {
+      setRestrictionInfo({
+        reason: result.reason,
+        currentRestaurant: result.currentRestaurant,
+        newRestaurant: restaurantName
+      });
+      setShowRestaurantModal(true);
+    }
   };
   
   // Manejar clic en el botón de decrementar cantidad
   const handleDecrement = (e) => {
-    e.stopPropagation(); // Evitar que el clic se propague al elemento padre
+    e.stopPropagation();
     removeFromCart(product.id);
   };
   
+  // Manejar error de imagen
+  const handleImageError = (e) => {
+    if (!imageError) {
+      setImageError(true);
+      e.target.src = DEFAULT_IMAGE;
+    }
+  };
+  
+  // Manejar confirmación de cambio de restaurante
+  const handleRestaurantChange = () => {
+    clearCart();
+    const result = addToCart(product, restaurantName);
+    
+    if (result.success) {
+      setShowRestaurantModal(false);
+      setRestrictionInfo(null);
+    }
+  };
+  
+  // Manejar cancelación de cambio de restaurante
+  const handleRestaurantCancel = () => {
+    setShowRestaurantModal(false);
+    setRestrictionInfo(null);
+  };
+  
   return (
-    <div className="food-item" onClick={handleClick}>
-      <div className="food-image-container">
-        <img 
-          src={product.imagen || DEFAULT_IMAGE} 
-          alt={product.nombre}
-          className="food-image"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = DEFAULT_IMAGE;
-          }}
-        />
-        
-        {quantity === 0 ? (
-          <button className="add-button" onClick={handleAddClick}>
-            <FaPlus />
-          </button>
-        ) : (
-          <div className="quantity-control">
-            <button className="quantity-button" onClick={handleDecrement}>
-              <FaMinus />
-            </button>
-            <span className="quantity">{quantity}</span>
-            <button className="quantity-button" onClick={handleIncrement}>
-              <FaPlus />
-            </button>
-          </div>
-        )}
-      </div>
-      
-      <div className="food-info">
-        <h3 className="food-name">{product.nombre}</h3>
-        
-        {product.descripcion && (
-          <p className="food-description">{product.descripcion}</p>
-        )}
-        
-        <div className="food-price-container">
-          <span className="food-price">{formatPrice(product.precio)}</span>
+    <>
+      <div className="food-item" onClick={handleClick}>
+        <div className="food-image-container">
+          <img 
+            src={imageError ? DEFAULT_IMAGE : imageUrl}
+            alt={product.nombre || 'Producto'}
+            className="food-image"
+            onError={handleImageError}
+            loading="lazy"
+          />
           
-          {quantity > 0 && (
-            <span className="cart-badge">
-              <FaShoppingCart />
-              <span className="cart-quantity">{quantity}</span>
-            </span>
+          {quantity === 0 ? (
+            <button 
+              className={`add-button ${isAdding ? 'adding' : ''}`} 
+              onClick={handleAddClick}
+              title="Agregar al carrito"
+              aria-label="Agregar al carrito"
+            >
+              +
+            </button>
+          ) : (
+            <div className="quantity-control">
+              <button 
+                className="quantity-button" 
+                onClick={handleDecrement}
+                title="Disminuir cantidad"
+                aria-label="Disminuir cantidad"
+              >
+                −
+              </button>
+              <span className="quantity" aria-label={`Cantidad: ${quantity}`}>
+                {quantity}
+              </span>
+              <button 
+                className="quantity-button" 
+                onClick={handleIncrement}
+                title="Aumentar cantidad"
+                aria-label="Aumentar cantidad"
+              >
+                +
+              </button>
+            </div>
           )}
         </div>
+        
+        <div className="food-info">
+          <h3 className="food-name">{product.nombre || 'Producto sin nombre'}</h3>
+          
+          {product.descripcion && (
+            <p className="food-description">{product.descripcion}</p>
+          )}
+          
+          <div className="food-price-container">
+            <span className="food-price">
+              {formatPrice(product.precio || 0)}
+            </span>
+            
+            {quantity > 0 && (
+              <span className="cart-badge">
+                <FaShoppingCart />
+                <span className="cart-quantity">{quantity}</span>
+              </span>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+      
+      {/* Modal de cambio de restaurante */}
+      {showRestaurantModal && restrictionInfo && (
+        <RestaurantChangeModal
+          isOpen={showRestaurantModal}
+          onConfirm={handleRestaurantChange}
+          onCancel={handleRestaurantCancel}
+          currentRestaurant={restrictionInfo.currentRestaurant}
+          newRestaurant={restrictionInfo.newRestaurant}
+          reason={restrictionInfo.reason}
+        />
+      )}
+    </>
   );
 };
 

@@ -41,25 +41,36 @@ export const CartProvider = ({ children }) => {
   }, [cartItems]);
   
   // Agregar producto al carrito
-  const addToCart = (product) => {
-    setCartItems(prevItems => {
-      // Verificar si el producto ya está en el carrito
-      const existingItemIndex = prevItems.findIndex(item => item.id === product.id);
-      
-      if (existingItemIndex !== -1) {
-        // Si ya existe, incrementar la cantidad
-        const updatedItems = [...prevItems];
-        updatedItems[existingItemIndex] = {
-          ...updatedItems[existingItemIndex],
-          quantity: updatedItems[existingItemIndex].quantity + 1
-        };
-        return updatedItems;
-      } else {
-        // Si no existe, agregarlo con cantidad 1
-        return [...prevItems, { ...product, quantity: 1 }];
-      }
-    });
-  };
+  const addToCart = (product, restaurantName) => {
+  const currentRestaurant = cartItems.length > 0 ? cartItems[0].restaurantName : null;
+
+  // Si hay un restaurante distinto al actual
+  if (currentRestaurant && currentRestaurant !== restaurantName) {
+    return {
+      success: false,
+      reason: 'No se pueden mezclar productos de diferentes restaurantes.',
+      currentRestaurant
+    };
+  }
+
+  setCartItems(prevItems => {
+    const existingItemIndex = prevItems.findIndex(item => item.id === product.id);
+
+    if (existingItemIndex !== -1) {
+      const updatedItems = [...prevItems];
+      updatedItems[existingItemIndex] = {
+        ...updatedItems[existingItemIndex],
+        quantity: updatedItems[existingItemIndex].quantity + 1
+      };
+      return updatedItems;
+    } else {
+      return [...prevItems, { ...product, quantity: 1, restaurantName }];
+    }
+  });
+
+  return { success: true };
+};
+
   
   // Remover producto del carrito
   const removeFromCart = (productId) => {
