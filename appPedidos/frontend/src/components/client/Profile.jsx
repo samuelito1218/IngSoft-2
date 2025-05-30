@@ -1,11 +1,15 @@
-// src/components/client/ProfileComponent.jsx
+// src/components/client/Profile.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { FaExclamationTriangle, FaTrash, FaCheck } from 'react-icons/fa';
 import ProfileService from '../../services/ProfileService';
+import NotificationManager from '../shared/Notification';
 import '../../styles/Profile.css';
 
 function Profile() {
-  const { user, login } = useAuth();
+  const { user, login, logout } = useAuth();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -28,6 +32,12 @@ function Profile() {
   });
   const [passwordError, setPasswordError] = useState('');
   
+  // Estado para eliminación de cuenta (simplificado con modal)
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  
   const [uploadingImage, setUploadingImage] = useState(false);
   
   useEffect(() => {
@@ -43,7 +53,6 @@ function Profile() {
       setProfile(userData);
       
       // Inicializar formulario con datos actuales
-      // Si userData.historialDirecciones existe y tiene elementos, usar la comuna del último
       const lastDireccion = userData.historialDirecciones && 
                          userData.historialDirecciones.length > 0 ? 
                          userData.historialDirecciones[userData.historialDirecciones.length - 1] : null;
@@ -84,16 +93,13 @@ function Profile() {
   const handleChangePassword = async (e) => {
     e.preventDefault();
     
-    // Restablecer mensajes de error
     setPasswordError('');
     
-    // Validar que las contraseñas coincidan
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       setPasswordError('Las contraseñas no coinciden');
       return;
     }
     
-    // Validar longitud mínima de contraseña
     if (passwordData.newPassword.length < 6) {
       setPasswordError('La contraseña debe tener al menos 6 caracteres');
       return;
@@ -102,22 +108,18 @@ function Profile() {
     try {
       setIsLoading(true);
       
-      // Llamar al servicio con la nueva contraseña
       await ProfileService.changePassword(passwordData.newPassword);
       
-      // Limpiar formulario
       setPasswordData({
         newPassword: '',
         confirmPassword: ''
       });
       
-      // Cerrar formulario de contraseña
       setShowPasswordForm(false);
       
-      // Mostrar mensaje de éxito más destacado
       setSuccessMessage('¡Contraseña actualizada exitosamente! Tu cuenta ahora está protegida con la nueva contraseña.');
+      window.showNotification('Contraseña actualizada exitosamente', 'success');
       
-      // Limpiar mensaje después de 5 segundos (tiempo aumentado para mejor visibilidad)
       setTimeout(() => {
         setSuccessMessage('');
       }, 5000);
@@ -126,11 +128,69 @@ function Profile() {
       console.error('Error al cambiar contraseña:', error);
       if (error.response && error.response.data && error.response.data.message) {
         setPasswordError(error.response.data.message);
+        window.showNotification(error.response.data.message, 'error');
       } else {
         setPasswordError('Error al cambiar contraseña. Intente nuevamente.');
+        window.showNotification('Error al cambiar contraseña. Intente nuevamente.', 'error');
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  // Método para mostrar el modal de eliminación
+  const handleMostrarConfirmacionEliminacion = () => {
+    setDeleteConfirmation('');
+    setDeleteError('');
+    setShowDeleteModal(true);
+  };
+  
+  // Método para cerrar el modal de eliminación
+  const handleCerrarModalEliminacion = () => {
+    setShowDeleteModal(false);
+    setDeleteConfirmation('');
+    setDeleteError('');
+    setDeletingAccount(false);
+  };
+  
+  // Método para eliminar cuenta después de confirmar
+  const handleEliminarCuenta = async () => {
+    setDeleteError('');
+    
+    // Verificar confirmación
+    if (deleteConfirmation.toLowerCase() !== 'eliminar') {
+      setDeleteError('Debes escribir "eliminar" para confirmar');
+      return;
+    }
+    
+    try {
+      setDeletingAccount(true);
+      
+      await ProfileService.eliminarCuenta();
+      
+      // Mostrar notificación de éxito
+      window.showNotification('Tu cuenta ha sido eliminada exitosamente. Redirigiendo...', 'success');
+      
+      // Cerrar modal
+      setShowDeleteModal(false);
+      
+      // Cerrar sesión y redirigir después de 2 segundos
+      setTimeout(() => {
+        logout();
+        navigate('/login');
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Error al eliminar cuenta:', error);
+      if (error.response && error.response.data && error.response.data.message) {
+        setDeleteError(error.response.data.message);
+        window.showNotification(error.response.data.message, 'error');
+      } else {
+        setDeleteError('Error al eliminar la cuenta. Intente nuevamente.');
+        window.showNotification('Error al eliminar la cuenta. Intente nuevamente.', 'error');
+      }
+    } finally {
+      setDeletingAccount(false);
     }
   };
   
@@ -141,7 +201,6 @@ function Profile() {
       setIsLoading(true);
       setError(null);
       
-      // Convertir campos numéricos
       const dataToSend = {
         ...formData,
         telefono: parseInt(formData.telefono),
@@ -150,14 +209,13 @@ function Profile() {
       
       const updatedProfile = await ProfileService.updateUserProfile(dataToSend);
       
-      // Actualizar estado local y contexto de autenticación
       setProfile(updatedProfile);
-      login(updatedProfile); // Actualizar datos de usuario en el contexto
+      login(updatedProfile);
       
       setSuccessMessage('Perfil actualizado correctamente');
+      window.showNotification('Perfil actualizado correctamente', 'success');
       setIsEditing(false);
       
-      // Limpiar mensaje después de 3 segundos
       setTimeout(() => {
         setSuccessMessage('');
       }, 3000);
@@ -165,6 +223,7 @@ function Profile() {
     } catch (error) {
       console.error('Error al actualizar perfil:', error);
       setError('Error al actualizar el perfil. Intente nuevamente.');
+      window.showNotification('Error al actualizar el perfil. Intente nuevamente.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -184,21 +243,19 @@ function Profile() {
       
       const imageUrl = await ProfileService.uploadProfileImage(user.id, file);
       
-      // Actualizar imagen en el perfil local
       setProfile(prev => ({
         ...prev,
         imageUrl
       }));
       
-      // Actualizar imagen en el contexto de autenticación
       login({
         ...user,
         imageUrl
       });
       
       setSuccessMessage('Imagen de perfil actualizada correctamente');
+      window.showNotification('Imagen de perfil actualizada correctamente', 'success');
       
-      // Limpiar mensaje después de 3 segundos
       setTimeout(() => {
         setSuccessMessage('');
       }, 3000);
@@ -206,6 +263,7 @@ function Profile() {
     } catch (error) {
       console.error('Error al subir imagen:', error);
       setError('Error al subir la imagen. Intente nuevamente.');
+      window.showNotification('Error al subir la imagen. Intente nuevamente.', 'error');
     } finally {
       setUploadingImage(false);
     }
@@ -222,6 +280,9 @@ function Profile() {
   
   return (
     <div className="profile-container">
+      {/* Agregar el NotificationManager */}
+      <NotificationManager />
+      
       <div className="profile-header">
         <h2>Mi Perfil</h2>
         <p className="subtitle">Gestiona tu información personal y preferencias</p>
@@ -233,7 +294,6 @@ function Profile() {
         </div>
       )}
       
-      {/* Mensaje de éxito mejorado con ícono */}
       {successMessage && (
         <div className="success-message animated-success">
           <div className="success-icon">✓</div>
@@ -408,12 +468,18 @@ function Profile() {
                   Editar perfil
                 </button>
                 
-                {/* Botón para cambiar contraseña */}
                 <button
                   className="password-button"
                   onClick={() => setShowPasswordForm(!showPasswordForm)}
                 >
                   Cambiar contraseña
+                </button>
+                
+                <button
+                  className="delete-button"
+                  onClick={handleMostrarConfirmacionEliminacion}
+                >
+                  <FaTrash /> Eliminar cuenta
                 </button>
               </div>
               
@@ -479,6 +545,77 @@ function Profile() {
           )}
         </div>
       </div>
+
+      {/* Modal de confirmación para eliminar cuenta */}
+      {showDeleteModal && (
+        <div className='confirmation-modal-overlay'>
+          <div className='confirmation-modal delete-modal'>
+            <h2>⚠️ Eliminar cuenta permanentemente</h2>
+
+            <div className='modal-user-info'>
+              <p><strong>Usuario:</strong> {profile?.nombreCompleto}</p>
+              <p><strong>Email:</strong> {profile?.email}</p>
+              <p><strong>Rol:</strong> {profile?.rol}</p>
+            </div>
+
+            <div className="delete-warning-modal">
+              <FaExclamationTriangle className="warning-icon" />
+              <div className="warning-content">
+                <p><strong>¡Atención!</strong> Esta acción es irreversible.</p>
+                {profile?.rol === 'Admin' && (
+                  <p><strong>Como administrador:</strong> Se eliminarán también todos tus restaurantes y productos asociados.</p>
+                )}
+                <p>Para confirmar, escribe <strong>"eliminar"</strong> en el campo de abajo:</p>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Confirmar eliminación</label>
+              <input
+                type="text"
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                placeholder="Escribe 'eliminar' para confirmar"
+                className={deleteError ? 'input-error' : ''}
+              />
+            </div>
+            
+            {deleteError && (
+              <div className="error-message">
+                <FaExclamationTriangle />
+                <p>{deleteError}</p>
+              </div>
+            )}
+            
+            <div className="modal-actions">
+              <button 
+                className="cancel-btn"
+                onClick={handleCerrarModalEliminacion}
+                disabled={deletingAccount}
+              >
+                Cancelar
+              </button>
+              <button 
+                className="delete-confirm-btn" 
+                onClick={handleEliminarCuenta}
+                disabled={deletingAccount}
+              >
+                {deletingAccount ? (
+                  <>
+                    <div className="btn-spinner small"></div>
+                    <span>Eliminando...</span>
+                  </>
+                ) : (
+                  <>
+                    <FaTrash />
+                    <span>Eliminar definitivamente</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

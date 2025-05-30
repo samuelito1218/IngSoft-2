@@ -60,8 +60,21 @@ const PedidosActivos = () => {
     }
   };
 
+  // Verificar si hay algún pedido en camino
+  const hayPedidoEnCamino = () => {
+    return pedidos.some(pedido => 
+      pedido.estado === 'EN_CAMINO' || pedido.estado.toLowerCase() === 'en_camino' || pedido.estado.toLowerCase() === 'en camino'
+    );
+  };
+
   const handleCambiarEstado = async (pedidoId, nuevoEstado) => {
     try {
+      // Verificar si ya hay un pedido en camino y el nuevo estado es EN_CAMINO
+      if (nuevoEstado === 'En_Camino' && hayPedidoEnCamino()) {
+        window.showNotification('No puedes iniciar otra entrega mientras tienes un pedido en camino', 'warning');
+        return;
+      }
+
       setPedidoSeleccionadoId(pedidoId);
       setCambiandoEstado(true);
 
@@ -114,17 +127,32 @@ const PedidosActivos = () => {
     };
   };
 
+  // Determinar si un pedido específico puede cambiar de estado
+  const puedeIniciarEntrega = (pedido) => {
+    const estadoActual = pedido.estado.toLowerCase();
+    
+    // Si es pendiente y no hay ningún pedido en camino
+    if (estadoActual === 'pendiente') {
+      return !hayPedidoEnCamino();
+    }
+    
+    return false;
+  };
+
   // Determinar qué botones de acción mostrar según el estado actual
   const getAccionesEstado = (pedido) => {
     const estado = pedido.estado.toLowerCase();
+    const enCamino = hayPedidoEnCamino();
+    const estePedidoEnCamino = estado === 'en_camino' || estado === 'en camino';
 
     switch (estado) {
       case 'pendiente':
         return (
           <button 
-            className="pickup-btn" 
+            className={`pickup-btn ${enCamino ? 'disabled' : ''}`}
             onClick={() => handleCambiarEstado(pedido.id, 'En_Camino')}
-            disabled={cambiandoEstado && pedidoSeleccionadoId === pedido.id}
+            disabled={cambiandoEstado || enCamino}
+            title={enCamino ? 'No puedes iniciar otra entrega mientras tienes un pedido en camino' : 'Iniciar entrega'}
           >
             {cambiandoEstado && pedidoSeleccionadoId === pedido.id ? (
               <div className="btn-spinner"></div>
@@ -196,6 +224,11 @@ const PedidosActivos = () => {
       <div className="pedidos-header">
         <h1>Mis Entregas</h1>
         <p>Pedidos que tienes asignados</p>
+        {hayPedidoEnCamino() && (
+          <div className="warning-banner">
+            <p>⚠️ Tienes un pedido en camino. Complétalo antes de iniciar otra entrega.</p>
+          </div>
+        )}
       </div>
 
       {pedidos.length === 0 ? (

@@ -3,14 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   FaArrowLeft, FaPlus, FaStore, FaUtensils, FaEdit, 
-  FaMapMarkerAlt, FaClipboardList, FaCheck, FaTimes, 
-  FaClock, FaTruck, FaSearch, FaTrash, FaCamera, FaBuilding 
+  FaMapMarkerAlt, FaClipboardList, FaClock, FaSearch, 
+  FaTrash, FaCamera, FaBuilding 
 } from 'react-icons/fa';
 import { useAuth } from '../../../hooks/useAuth';
 import { api } from '../../../services/api';
 import ProductForm from '../productos/ProductForm';
 import CloudinaryService from '../../../services/CloudinaryService';
-import SucursalesManagement from '../SucursalesManagement'; //Nuevo
+import SucursalesManagement from '../SucursalesManagement';
 import './RestaurantDetail.css';
 
 const RestaurantDetail = () => {
@@ -20,7 +20,7 @@ const RestaurantDetail = () => {
   
   // Estados principales
   const [restaurant, setRestaurant] = useState(null);
-  const [activeTab, setActiveTab] = useState('products'); // 'products', 'orders', 'stats'
+  const [activeTab, setActiveTab] = useState('products'); // 'products', 'orders'
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -36,30 +36,26 @@ const RestaurantDetail = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
   
-  // Estados para pedidos
+  // Estados para pedidos (solo visualización)
   const [orders, setOrders] = useState([]);
   const [pendingOrders, setPendingOrders] = useState([]);
   const [inProcessOrders, setInProcessOrders] = useState([]);
   const [readyOrders, setReadyOrders] = useState([]);
   const [completedOrders, setCompletedOrders] = useState([]);
-  const [activeOrdersTab, setActiveOrdersTab] = useState('pending');
-  const [processingAction, setProcessingAction] = useState(null);
-  const [rejectReason, setRejectReason] = useState('');
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [orderToReject, setOrderToReject] = useState(null);
+  const [activeOrdersTab, setActiveOrdersTab] = useState('completed'); // ✅ CAMBIADO: Inicializar en 'completed'
   
   // Estado para imagen
   const [isUploading, setIsUploading] = useState(false);
 
-  //Función para abrir modal de sucursales
+  // Función para abrir modal de sucursales
   const handleOpenSucursales = () => {
-  setShowSucursalesModal(true);
-};
-  //Función para cerrar modal de sucursales
+    setShowSucursalesModal(true);
+  };
+  
+  // Función para cerrar modal de sucursales
   const handleCloseSucursales = () => {
-  setShowSucursalesModal(false);
-};
-
+    setShowSucursalesModal(false);
+  };
   
   // Obtener datos del restaurante
   useEffect(() => {
@@ -77,32 +73,32 @@ const RestaurantDetail = () => {
         console.log("🔍 RESPUESTA COMPLETA DE PRODUCTOS:", productsResponse.data);
 
         // Debug cada producto individualmente
-      if (productsResponse.data && productsResponse.data.length > 0) {
-        productsResponse.data.forEach((product, index) => {
-          console.log(`📦 PRODUCTO ${index + 1}:`, {
-            id: product.id,
-            nombre: product.nombre,
-            imagen: product.imagen,
-            imageUrl: product.imageUrl,
-            image: product.image,
-            foto: product.foto,
-            picture: product.picture,
-            media: product.media,
-            // Mostrar TODAS las propiedades
-            todasLasPropiedades: Object.keys(product)
+        if (productsResponse.data && productsResponse.data.length > 0) {
+          productsResponse.data.forEach((product, index) => {
+            console.log(`📦 PRODUCTO ${index + 1}:`, {
+              id: product.id,
+              nombre: product.nombre,
+              imagen: product.imagen,
+              imageUrl: product.imageUrl,
+              image: product.image,
+              foto: product.foto,
+              picture: product.picture,
+              media: product.media,
+              // Mostrar TODAS las propiedades
+              todasLasPropiedades: Object.keys(product)
+            });
           });
-        });
-      }
+        }
 
         setProducts(productsResponse.data || []);
         setFilteredProducts(productsResponse.data || []);
         
-        // Obtener pedidos del restaurante
+        // Obtener pedidos del restaurante (solo para visualización)
         try {
           const ordersResponse = await api.get(`/pedidos/restaurante/${restaurantId}`);
           setOrders(ordersResponse.data || []);
           
-          // Clasificar pedidos
+          // Clasificar pedidos para mostrar en diferentes pestañas
           const pendingOrders = ordersResponse.data?.filter(order => order.estado === 'Pendiente') || [];
           const inProcessOrders = ordersResponse.data?.filter(order => order.estado === 'En_Preparacion') || [];
           const readyOrders = ordersResponse.data?.filter(order => order.estado === 'Preparado') || [];
@@ -259,65 +255,6 @@ const RestaurantDetail = () => {
     }
   };
   
-  // Aceptar pedido
-  const handleAcceptOrder = async (orderId) => {
-    setProcessingAction(orderId);
-    try {
-      await api.put(`/pedidos/aceptar/${orderId}`);
-      // Actualizar estado
-      setRefreshTrigger(prev => prev + 1);
-    } catch (error) {
-      console.error('Error al aceptar pedido:', error);
-      alert('No se pudo aceptar el pedido');
-    } finally {
-      setProcessingAction(null);
-    }
-  };
-  
-  // Rechazar pedido - prepara modal
-  const showRejectOrderModal = (order) => {
-    setOrderToReject(order);
-    setRejectReason('');
-    setShowRejectModal(true);
-  };
-  
-  // Rechazar pedido - confirma rechazo
-  const confirmRejectOrder = async () => {
-    if (!orderToReject) return;
-    
-    setProcessingAction(orderToReject.id);
-    try {
-      await api.put(`/pedidos/rechazar/${orderToReject.id}`, { 
-        motivo: rejectReason || 'Rechazado por el restaurante' 
-      });
-      // Actualizar estado
-      setRefreshTrigger(prev => prev + 1);
-      // Cerrar modal
-      setShowRejectModal(false);
-      setOrderToReject(null);
-    } catch (error) {
-      console.error('Error al rechazar pedido:', error);
-      alert('No se pudo rechazar el pedido');
-    } finally {
-      setProcessingAction(null);
-    }
-  };
-  
-  // Marcar pedido como listo
-  const handleMarkAsReady = async (orderId) => {
-    setProcessingAction(orderId);
-    try {
-      await api.put(`/pedidos/preparado/${orderId}`);
-      // Actualizar estado
-      setRefreshTrigger(prev => prev + 1);
-    } catch (error) {
-      console.error('Error al marcar pedido como listo:', error);
-      alert('No se pudo marcar el pedido como listo');
-    } finally {
-      setProcessingAction(null);
-    }
-  };
-  
   // Formatear precio
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-CO', {
@@ -370,29 +307,29 @@ const RestaurantDetail = () => {
             {filteredProducts.map(product => (
               <tr key={product.id}>
                 <td className="image-column">
-  <div className="product-image-container">
-    {product.imageUrl ? (
-      <img 
-        src={product.imageUrl} 
-        alt={product.nombre} 
-        className="product-image"
-        title={`Ver imagen de ${product.nombre}`}
-        loading="lazy"
-        onError={(e) => {
-          console.error("Error cargando imagen de Cloudinary:", {
-            producto: product.nombre,
-            url: e.target.src,
-            status: e.target.complete
-          });
-        }}
-      />
-    ) : (
-      <div className="image-placeholder">
-        <FaUtensils />
-      </div>
-    )}
-  </div>
-</td>
+                  <div className="product-image-container">
+                    {product.imageUrl ? (
+                      <img 
+                        src={product.imageUrl} 
+                        alt={product.nombre} 
+                        className="product-image"
+                        title={`Ver imagen de ${product.nombre}`}
+                        loading="lazy"
+                        onError={(e) => {
+                          console.error("Error cargando imagen de Cloudinary:", {
+                            producto: product.nombre,
+                            url: e.target.src,
+                            status: e.target.complete
+                          });
+                        }}
+                      />
+                    ) : (
+                      <div className="image-placeholder">
+                        <FaUtensils />
+                      </div>
+                    )}
+                  </div>
+                </td>
                 <td>{product.nombre}</td>
                 <td>{product.especificaciones || 'Sin descripción'}</td>
                 <td>{formatPrice(product.precio)}</td>
@@ -420,7 +357,7 @@ const RestaurantDetail = () => {
     );
   };
   
-  // Renderizar pedidos según pestaña activa
+  // Renderizar pedidos según pestaña activa (SOLO VISUALIZACIÓN)
   const renderOrders = () => {
     let ordersToShow = [];
     
@@ -438,7 +375,7 @@ const RestaurantDetail = () => {
         ordersToShow = completedOrders;
         break;
       default:
-        ordersToShow = pendingOrders;
+        ordersToShow = completedOrders; // ✅ CAMBIADO: Default a completedOrders
     }
     
     if (ordersToShow.length === 0) {
@@ -489,36 +426,21 @@ const RestaurantDetail = () => {
                 <strong>Total:</strong> {formatPrice(order.total)}
               </p>
               
-              {activeOrdersTab === 'pending' && (
-                <div className="order-actions">
-                  <button 
-                    className="accept-button"
-                    onClick={() => handleAcceptOrder(order.id)}
-                    disabled={processingAction === order.id}
-                  >
-                    <FaCheck /> Aceptar
-                  </button>
-                  <button 
-                    className="reject-button"
-                    onClick={() => showRejectOrderModal(order)}
-                    disabled={processingAction === order.id}
-                  >
-                    <FaTimes /> Rechazar
-                  </button>
-                </div>
-              )}
-              
-              {activeOrdersTab === 'inProcess' && (
-                <div className="order-actions">
-                  <button 
-                    className="ready-button"
-                    onClick={() => handleMarkAsReady(order.id)}
-                    disabled={processingAction === order.id}
-                  >
-                    <FaTruck /> Listo para entregar
-                  </button>
-                </div>
-              )}
+              {/* ✅ ELIMINADO: Ya no hay botones de acción para gestionar pedidos */}
+              <div className="order-info-note">
+                <p style={{ 
+                  fontSize: '14px', 
+                  color: '#666', 
+                  fontStyle: 'italic',
+                  textAlign: 'center',
+                  margin: '10px 0 0 0',
+                  padding: '8px',
+                  backgroundColor: '#f8f9fa',
+                  borderRadius: '4px'
+                }}>
+                  📋 Este pedido es gestionado por el sistema de reparto
+                </p>
+              </div>
             </div>
           </div>
         ))}
@@ -561,37 +483,37 @@ const RestaurantDetail = () => {
         </button>
         
         <div className="restaurant-info">
-  <div className="restaurant-title-section">
-    <h2>{restaurant.nombre}</h2>
-    
-    {/* ✅ BOTÓN GESTIÓN DE SUCURSALES */}
-    <button 
-      className="manage-branches-btn"
-      onClick={handleOpenSucursales}
-      title="Gestionar Sucursales"
-    >
-      <FaBuilding />
-      <span>Gestionar Sucursales</span>
-    </button>
-  </div>
-  
-  <div className="restaurant-meta">
-    {restaurant.categorias && restaurant.categorias.length > 0 && (
-      <div className="meta-item">
-        <span className="category-tag">{restaurant.categorias.join(', ')}</span>
-      </div>
-    )}
-    
-    {restaurant.ubicaciones && restaurant.ubicaciones.length > 0 && (
-      <div className="meta-item">
-        <FaMapMarkerAlt className="meta-icon" />
-        <span>
-          {restaurant.ubicaciones.map(ub => ub.comuna).join(', ')}
-        </span>
-      </div>
-    )}
-  </div>
-</div>
+          <div className="restaurant-title-section">
+            <h2>{restaurant.nombre}</h2>
+            
+            {/* Botón Gestión de Sucursales */}
+            <button 
+              className="manage-branches-btn"
+              onClick={handleOpenSucursales}
+              title="Gestionar Sucursales"
+            >
+              <FaBuilding />
+              <span>Gestionar Sucursales</span>
+            </button>
+          </div>
+          
+          <div className="restaurant-meta">
+            {restaurant.categorias && restaurant.categorias.length > 0 && (
+              <div className="meta-item">
+                <span className="category-tag">{restaurant.categorias.join(', ')}</span>
+              </div>
+            )}
+            
+            {restaurant.ubicaciones && restaurant.ubicaciones.length > 0 && (
+              <div className="meta-item">
+                <FaMapMarkerAlt className="meta-icon" />
+                <span>
+                  {restaurant.ubicaciones.map(ub => ub.comuna).join(', ')}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
         
         <button className="edit-button" onClick={handleEditRestaurant}>
           <FaEdit /> Editar Restaurante
@@ -635,9 +557,12 @@ const RestaurantDetail = () => {
         
         <button 
           className={`tab-button ${activeTab === 'orders' ? 'active' : ''}`}
-          onClick={() => setActiveTab('orders')}
+          onClick={() => {
+            setActiveTab('orders');
+            setActiveOrdersTab('completed'); // ✅ AGREGADO: Establecer automáticamente en completados
+          }}
         >
-          <FaClipboardList /> Pedidos
+          <FaClipboardList /> Ver Pedidos
           {pendingOrders.length > 0 && (
             <span className="badge">{pendingOrders.length}</span>
           )}
@@ -674,40 +599,17 @@ const RestaurantDetail = () => {
         {activeTab === 'orders' && (
           <div className="orders-tab">
             <div className="section-header">
-              <h3>Gestión de Pedidos</h3>
+              <h3>Visualización de Pedidos</h3>
+              <p style={{ 
+                fontSize: '14px', 
+                color: '#666', 
+                margin: '5px 0 0 0' 
+              }}>
+                Los pedidos son gestionados automáticamente por el sistema
+              </p>
             </div>
             
             <div className="orders-nav">
-              <button 
-                className={`orders-tab-btn ${activeOrdersTab === 'pending' ? 'active' : ''}`} 
-                onClick={() => setActiveOrdersTab('pending')}
-              >
-                Pendientes
-                {pendingOrders.length > 0 && (
-                  <span className="badge">{pendingOrders.length}</span>
-                )}
-              </button>
-              
-              <button 
-                className={`orders-tab-btn ${activeOrdersTab === 'inProcess' ? 'active' : ''}`} 
-                onClick={() => setActiveOrdersTab('inProcess')}
-              >
-                En Preparación
-                {inProcessOrders.length > 0 && (
-                  <span className="badge">{inProcessOrders.length}</span>
-                )}
-              </button>
-              
-              <button 
-                className={`orders-tab-btn ${activeOrdersTab === 'ready' ? 'active' : ''}`} 
-                onClick={() => setActiveOrdersTab('ready')}
-              >
-                Listos para Entregar
-                {readyOrders.length > 0 && (
-                  <span className="badge">{readyOrders.length}</span>
-                )}
-              </button>
-              
               <button 
                 className={`orders-tab-btn ${activeOrdersTab === 'completed' ? 'active' : ''}`} 
                 onClick={() => setActiveOrdersTab('completed')}
@@ -761,49 +663,14 @@ const RestaurantDetail = () => {
         </div>
       )}
       
-      {/* Modal para rechazar pedido */}
-      {showRejectModal && (
-        <div className="modal-overlay">
-          <div className="reject-modal">
-            <h3>Rechazar Pedido</h3>
-            <p>Por favor, indique el motivo por el cual está rechazando este pedido:</p>
-            
-            <textarea
-              className="reject-reason"
-              placeholder="Ejemplo: Lo sentimos, no contamos con algunos ingredientes en este momento."
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              rows={4}
-            ></textarea>
-            
-            <div className="modal-actions">
-              <button 
-                className="cancel-button" 
-                onClick={() => setShowRejectModal(false)}
-              >
-                Cancelar
-              </button>
-              <button 
-                className="delete-button" 
-                onClick={confirmRejectOrder}
-                disabled={processingAction === orderToReject?.id}
-              >
-                Confirmar Rechazo
-              </button>
-            </div>
-          </div>
-        </div>
-
-      )}
+      {/* Modal de Sucursales */}
       {showSucursalesModal && (
-  <SucursalesManagement
-    restaurante={restaurant}
-    onClose={handleCloseSucursales}
-  />
-)}
+        <SucursalesManagement
+          restaurante={restaurant}
+          onClose={handleCloseSucursales}
+        />
+      )}
     </div>
-
-    
   );
 };
 

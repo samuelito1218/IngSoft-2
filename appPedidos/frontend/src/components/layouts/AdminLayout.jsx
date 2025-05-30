@@ -1,4 +1,4 @@
-// components/layouts/AdminLayout.jsx - VERSIÓN COMPLETA CON CARGA INMEDIATA
+// components/layouts/AdminLayout.jsx - VERSIÓN COMPLETA CON N-ARY TREES
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { 
@@ -8,6 +8,307 @@ import {
 } from 'react-icons/fa';
 import { useAuth } from '../../hooks/useAuth';
 import './layouts.css';
+
+// Implementación de N-ary Tree según las diapositivas
+class Nodo {
+  constructor(valor) {
+    this.valor = valor;
+    this.hijos = [];
+  }
+
+  agregarHijo(nodo) {
+    this.hijos.push(nodo);
+  }
+}
+
+// Clase para manejar el árbol de menús del administrador
+class AdminMenuTree {
+  constructor() {
+    this.root = null;
+    this.initializeTree();
+  }
+
+  initializeTree() {
+    // Crear el árbol de menús del administrador
+    this.root = new Nodo({
+      title: "Admin Menu Principal",
+      path: "/admin",
+      component: "root",
+      key: "root",
+      icon: null
+    });
+
+    // Menús principales de navegación
+    const dashboardMenu = new Nodo({
+      title: "Dashboard",
+      path: "/admin",
+      component: "dashboard",
+      key: "dashboard",
+      icon: FaHome,
+      exactMatch: true
+    });
+
+    const restaurantesMenu = new Nodo({
+      title: "Mis Restaurantes",
+      path: "/admin/restaurantes",
+      component: "restaurantes",
+      key: "restaurantes",
+      icon: FaStore
+    });
+
+    // Submenús para Restaurantes
+    const listarRestaurantesSubmenu = new Nodo({
+      title: "Listar Restaurantes",
+      path: "/admin/restaurantes",
+      component: "listar-restaurantes",
+      key: "listar-restaurantes",
+      icon: FaStore
+    });
+
+    const nuevoRestauranteSubmenu = new Nodo({
+      title: "Nuevo Restaurante",
+      path: "/admin/restaurantes/nuevo",
+      component: "nuevo-restaurante",
+      key: "nuevo-restaurante",
+      icon: FaPlus
+    });
+
+    const editarRestauranteSubmenu = new Nodo({
+      title: "Editar Restaurante",
+      path: "/admin/restaurantes/editar",
+      component: "editar-restaurante",
+      key: "editar-restaurante",
+      icon: FaCog
+    });
+
+    // Agregar submenús a Restaurantes
+    restaurantesMenu.agregarHijo(listarRestaurantesSubmenu);
+    restaurantesMenu.agregarHijo(nuevoRestauranteSubmenu);
+    restaurantesMenu.agregarHijo(editarRestauranteSubmenu);
+
+    // Menú independiente para Nuevo Restaurante (como en el original)
+    const nuevoRestauranteMenu = new Nodo({
+      title: "Nuevo Restaurante",
+      path: "/admin/restaurantes/nuevo",
+      component: "nuevo-restaurante-main",
+      key: "nuevo-restaurante-main",
+      icon: FaPlus
+    });
+
+    const pedidosMenu = new Nodo({
+      title: "Pedidos",
+      path: "/admin/pedidos",
+      component: "pedidos",
+      key: "pedidos",
+      icon: FaClipboardList
+    });
+
+    // Submenús para Pedidos
+    const pedidosActivosSubmenu = new Nodo({
+      title: "Pedidos Activos",
+      path: "/admin/pedidos/activos",
+      component: "pedidos-activos",
+      key: "pedidos-activos",
+      icon: FaClipboardList
+    });
+
+    const historialPedidosSubmenu = new Nodo({
+      title: "Historial de Pedidos",
+      path: "/admin/pedidos/historial",
+      component: "historial-pedidos",
+      key: "historial-pedidos",
+      icon: FaClipboardList
+    });
+
+    const reportesPedidosSubmenu = new Nodo({
+      title: "Reportes de Pedidos",
+      path: "/admin/pedidos/reportes",
+      component: "reportes-pedidos",
+      key: "reportes-pedidos",
+      icon: FaChartLine
+    });
+
+    // Agregar submenús a Pedidos
+    pedidosMenu.agregarHijo(pedidosActivosSubmenu);
+    pedidosMenu.agregarHijo(historialPedidosSubmenu);
+    pedidosMenu.agregarHijo(reportesPedidosSubmenu);
+
+    const estadisticasMenu = new Nodo({
+      title: "Estadísticas",
+      path: "/admin/estadisticas",
+      component: "estadisticas",
+      key: "estadisticas",
+      icon: FaChartLine
+    });
+
+    // Submenús para Estadísticas
+    const ventasSubmenu = new Nodo({
+      title: "Estadísticas de Ventas",
+      path: "/admin/estadisticas/ventas",
+      component: "estadisticas-ventas",
+      key: "estadisticas-ventas",
+      icon: FaChartLine
+    });
+
+    const usuariosSubmenu = new Nodo({
+      title: "Estadísticas de Usuarios",
+      path: "/admin/estadisticas/usuarios",
+      component: "estadisticas-usuarios",
+      key: "estadisticas-usuarios",
+      icon: FaUser
+    });
+
+    const restaurantesStatsSubmenu = new Nodo({
+      title: "Estadísticas de Restaurantes",
+      path: "/admin/estadisticas/restaurantes",
+      component: "estadisticas-restaurantes",
+      key: "estadisticas-restaurantes",
+      icon: FaStore
+    });
+
+    // Agregar submenús a Estadísticas
+    estadisticasMenu.agregarHijo(ventasSubmenu);
+    estadisticasMenu.agregarHijo(usuariosSubmenu);
+    estadisticasMenu.agregarHijo(restaurantesStatsSubmenu);
+
+    // Menú de usuario con submenús
+    const userMenu = new Nodo({
+      title: "Usuario",
+      path: "#",
+      component: "user",
+      key: "user",
+      icon: FaUser
+    });
+
+    // Submenús del usuario
+    const perfilSubmenu = new Nodo({
+      title: "Perfil",
+      path: "/admin/perfil",
+      component: "perfil",
+      key: "perfil",
+      icon: FaUser
+    });
+
+    const configuracionSubmenu = new Nodo({
+      title: "Configuración",
+      path: "/admin/configuracion",
+      component: "configuracion",
+      key: "configuracion",
+      icon: FaCog
+    });
+
+    const logoutSubmenu = new Nodo({
+      title: "Cerrar sesión",
+      path: "#",
+      component: "logout",
+      key: "logout",
+      icon: FaSignOutAlt
+    });
+
+    // Agregar submenús al menú de usuario
+    userMenu.agregarHijo(perfilSubmenu);
+    userMenu.agregarHijo(configuracionSubmenu);
+    userMenu.agregarHijo(logoutSubmenu);
+
+    // Agregar menús principales al root
+    this.root.agregarHijo(dashboardMenu);
+    this.root.agregarHijo(restaurantesMenu);
+    this.root.agregarHijo(nuevoRestauranteMenu);
+    this.root.agregarHijo(pedidosMenu);
+    this.root.agregarHijo(estadisticasMenu);
+    this.root.agregarHijo(userMenu);
+  }
+
+  // DFS para buscar un nodo por key
+  dfs(nodo, targetKey) {
+    if (!nodo) return null;
+    
+    if (nodo.valor.key === targetKey) {
+      return nodo;
+    }
+
+    for (let hijo of nodo.hijos) {
+      const resultado = this.dfs(hijo, targetKey);
+      if (resultado) return resultado;
+    }
+
+    return null;
+  }
+
+  // BFS para obtener menús principales de navegación
+  bfs() {
+    if (!this.root) return [];
+    
+    const cola = [this.root];
+    const resultado = [];
+    
+    while (cola.length > 0) {
+      const actual = cola.shift();
+      
+      // Solo agregar los hijos del root que son menús principales
+      if (actual === this.root) {
+        for (let hijo of actual.hijos) {
+          if (hijo.valor.key !== 'user') { // Excluir user del menú principal
+            resultado.push(hijo);
+          }
+        }
+      }
+    }
+    
+    return resultado;
+  }
+
+  // Obtener submenús de usuario
+  getUserSubmenus() {
+    const userNode = this.dfs(this.root, 'user');
+    return userNode ? userNode.hijos : [];
+  }
+
+  // Buscar menú por key
+  findMenu(key) {
+    return this.dfs(this.root, key);
+  }
+
+  // Buscar menú por path usando DFS
+  findMenuByPath(path) {
+    function dfsSearch(nodo) {
+      if (!nodo) return null;
+      
+      if (nodo.valor.path === path) {
+        return nodo;
+      }
+      
+      for (let hijo of nodo.hijos) {
+        const resultado = dfsSearch(hijo);
+        if (resultado) return resultado;
+      }
+      
+      return null;
+    }
+    
+    return dfsSearch(this.root);
+  }
+
+  // Obtener todos los menús (incluyendo submenús) usando DFS
+  getAllMenus() {
+    const menus = [];
+    
+    function dfsTraversal(nodo) {
+      if (!nodo) return;
+      
+      if (nodo.valor.key !== 'root') {
+        menus.push(nodo);
+      }
+      
+      for (let hijo of nodo.hijos) {
+        dfsTraversal(hijo);
+      }
+    }
+    
+    dfsTraversal(this.root);
+    return menus;
+  }
+}
 
 const AdminLayout = () => {
   const { user, logout } = useAuth();
@@ -19,6 +320,22 @@ const AdminLayout = () => {
   const [userImageUrl, setUserImageUrl] = useState(null);
   const [imageError, setImageError] = useState(false);
   const [userLoaded, setUserLoaded] = useState(false);
+
+  // Inicializar el árbol de menús
+  const [menuTree] = useState(new AdminMenuTree());
+  const [navigationMenus, setNavigationMenus] = useState([]);
+  const [userSubmenus, setUserSubmenus] = useState([]);
+  
+  // Inicializar los menús usando BFS al montar el componente
+  useEffect(() => {
+    // Usar BFS para obtener menús principales
+    const mainMenus = menuTree.bfs();
+    setNavigationMenus(mainMenus);
+    
+    // Obtener submenús de usuario
+    const userSubs = menuTree.getUserSubmenus();
+    setUserSubmenus(userSubs);
+  }, [menuTree]);
 
   // EFECTO PARA CARGAR IMAGEN CUANDO EL USUARIO ESTÉ DISPONIBLE
   useEffect(() => {
@@ -55,9 +372,55 @@ const AdminLayout = () => {
     }
   }, [user, userImageUrl, imageError]);
   
-  // Verificar si una ruta está activa
+  // Verificar si una ruta está activa usando el árbol
   const isActive = (path) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  };
+
+  // Función mejorada para verificar rutas activas específicas
+  const isActiveAdvanced = (path, exactMatch = false) => {
+    if (exactMatch) {
+      return location.pathname === path;
+    }
+    
+    // Casos especiales usando el árbol para determinar activación
+    if (path === '/admin' && 
+        !location.pathname.startsWith('/admin/restaurantes/nuevo') && 
+        !location.pathname.startsWith('/admin/productos')) {
+      return location.pathname === '/admin';
+    }
+    
+    if (path === '/admin/restaurantes' && 
+        !location.pathname.startsWith('/admin/restaurantes/nuevo')) {
+      return location.pathname.startsWith('/admin/restaurantes');
+    }
+    
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  };
+
+  // Manejar acciones de menú usando el árbol
+  const handleMenuAction = (menuKey) => {
+    const menuNode = menuTree.findMenu(menuKey);
+    
+    if (menuNode) {
+      const menuData = menuNode.valor;
+      
+      switch (menuKey) {
+        case 'logout':
+          handleLogout();
+          break;
+        case 'perfil':
+          closeMenu();
+          navigate(menuData.path);
+          break;
+        default:
+          if (menuData.path && menuData.path !== '#') {
+            closeMenu();
+            navigate(menuData.path);
+          }
+          break;
+      }
+    }
   };
   
   // Manejar cierre de sesión
@@ -76,11 +439,10 @@ const AdminLayout = () => {
     setShowMenu(false);
   };
 
-  // Manejar click en perfil
+  // Manejar click en perfil usando el árbol
   const handleUserInfoClick = (e) => {
     e.preventDefault();
-    closeMenu();
-    navigate('/admin/perfil');
+    handleMenuAction('perfil');
   };
 
   // Manejar error de imagen
@@ -117,6 +479,50 @@ const AdminLayout = () => {
            userImageUrl !== 'null' && 
            userImageUrl.trim() !== '';
   };
+
+  // Función para renderizar menús de navegación usando el árbol
+  const renderNavigationMenus = () => {
+    return navigationMenus.map((menuNode) => {
+      const menuData = menuNode.valor;
+      const IconComponent = menuData.icon;
+      
+      return (
+        <Link 
+          key={menuData.key}
+          to={menuData.path} 
+          className={isActiveAdvanced(menuData.path, menuData.exactMatch) ? 'active' : ''}
+          onClick={closeMenu}
+        >
+          <IconComponent />
+          <span>{menuData.title}</span>
+        </Link>
+      );
+    });
+  };
+
+  // Función para renderizar submenús de usuario
+  const renderUserSubmenus = () => {
+    return userSubmenus.map((submenuNode) => {
+      const submenuData = submenuNode.valor;
+      
+      if (submenuData.key === 'logout') {
+        return (
+          <button 
+            key={submenuData.key}
+            className="logout-button" 
+            onClick={() => handleMenuAction(submenuData.key)}
+            type="button"
+            aria-label="Cerrar sesión"
+          >
+            <FaSignOutAlt />
+            <span>Cerrar sesión</span>
+          </button>
+        );
+      }
+      
+      return null; // El perfil y configuración se manejan en la info del usuario
+    });
+  };
   
   return (
     <div className="layout-container">
@@ -139,50 +545,7 @@ const AdminLayout = () => {
           
           <div className={`navbar ${showMenu ? 'show' : ''}`}>
             <nav className="nav-menu" role="navigation">
-              <Link 
-                to="/admin" 
-                className={isActive('/admin') && !isActive('/admin/restaurantes/nuevo') && !isActive('/admin/productos') ? 'active' : ''}
-                onClick={closeMenu}
-              >
-                <FaHome />
-                <span>Dashboard</span>
-              </Link>
-              
-              <Link 
-                to="/admin/restaurantes" 
-                className={isActive('/admin/restaurantes') && !isActive('/admin/restaurantes/nuevo') ? 'active' : ''}
-                onClick={closeMenu}
-              >
-                <FaStore />
-                <span>Mis Restaurantes</span>
-              </Link>
-              
-              <Link 
-                to="/admin/restaurantes/nuevo" 
-                className={isActive('/admin/restaurantes/nuevo') ? 'active' : ''}
-                onClick={closeMenu}
-              >
-                <FaPlus />
-                <span>Nuevo Restaurante</span>
-              </Link>
-              
-              <Link 
-                to="/admin/pedidos" 
-                className={isActive('/admin/pedidos') ? 'active' : ''}
-                onClick={closeMenu}
-              >
-                <FaClipboardList />
-                <span>Pedidos</span>
-              </Link>
-              
-              <Link 
-                to="/admin/estadisticas" 
-                className={isActive('/admin/estadisticas') ? 'active' : ''}
-                onClick={closeMenu}
-              >
-                <FaChartLine />
-                <span>Estadísticas</span>
-              </Link>
+              {renderNavigationMenus()}
             </nav>
             
             <div className="user-section">
@@ -236,15 +599,7 @@ const AdminLayout = () => {
                 </div>
               </div>
               
-              <button 
-                className="logout-button" 
-                onClick={handleLogout}
-                type="button"
-                aria-label="Cerrar sesión"
-              >
-                <FaSignOutAlt />
-                <span>Cerrar sesión</span>
-              </button>
+              {renderUserSubmenus()}
             </div>
           </div>
         </div>

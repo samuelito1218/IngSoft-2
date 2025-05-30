@@ -1,4 +1,3 @@
-//
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaMotorcycle, FaMapMarkerAlt, FaStore, FaCheckCircle, FaComments } from 'react-icons/fa';
@@ -71,9 +70,20 @@ const PedidosActivosPreview = () => {
     
     fetchPedidosActivos();
   }, []);
+
+  // Verificar si hay algún pedido en camino
+  const hayPedidoEnCamino = () => {
+    return pedidos.some(pedido => pedido.estado === 'EN_CAMINO');
+  };
   
   const handleCambiarEstado = async (pedidoId, nuevoEstado) => {
     try {
+      // Verificar si ya hay un pedido en camino y el nuevo estado es EN_CAMINO
+      if (nuevoEstado === 'EN_CAMINO' && hayPedidoEnCamino()) {
+        window.showNotification('No puedes iniciar otra entrega mientras tienes un pedido en camino', 'warning');
+        return;
+      }
+
       setPedidoSeleccionadoId(pedidoId);
       setCambiandoEstado(true);
       
@@ -117,13 +127,17 @@ const PedidosActivosPreview = () => {
 
   // Determinar qué botones de acción mostrar según el estado actual
   const getAccionesEstado = (pedido) => {
+    const enCamino = hayPedidoEnCamino();
+    const estePedidoEnCamino = pedido.estado === 'EN_CAMINO';
+
     switch (pedido.estado) {
       case 'LISTO':
         return (
           <button 
-            className="action-button-sm pickup-btn-sm" 
+            className={`action-button-sm pickup-btn-sm ${enCamino ? 'disabled' : ''}`}
             onClick={() => handleCambiarEstado(pedido.id, 'EN_CAMINO')}
-            disabled={cambiandoEstado && pedidoSeleccionadoId === pedido.id}
+            disabled={cambiandoEstado || enCamino}
+            title={enCamino ? 'No puedes iniciar otra entrega mientras tienes un pedido en camino' : 'Iniciar entrega'}
           >
             {cambiandoEstado && pedidoSeleccionadoId === pedido.id ? (
               <div className="btn-spinner-sm"></div>
@@ -209,6 +223,12 @@ const PedidosActivosPreview = () => {
       {/* Añadir NotificationManager */}
       <NotificationManager />
       
+      {hayPedidoEnCamino() && (
+        <div className="warning-banner-sm">
+          <p>⚠️ Pedido en camino activo</p>
+        </div>
+      )}
+      
       <div className="preview-grid">
         {pedidos.map((pedido) => (
           <div key={pedido.id} className="pedido-preview-card">
@@ -230,7 +250,6 @@ const PedidosActivosPreview = () => {
                 <FaMapMarkerAlt className="icon-sm" />
                 <div className="location-info-sm">
                   <p className="direccion-text">{formatearDireccion(pedido.direccionEntrega)}</p>
-
                 </div>
               </div>
             </div>

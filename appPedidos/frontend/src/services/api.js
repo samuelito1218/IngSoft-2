@@ -70,6 +70,7 @@ const ApiService = {
     actualizarImagen: (imageData) => apiClient.post('/usuarios/perfil/imagen', imageData),
     cambiarContrasena: (passwordData) => apiClient.post('/usuarios/perfil/cambiar-contrasena', passwordData),
     obtenerUsuario: (userId) => apiClient.get(`/usuarios/${userId}`),
+     eliminarCuenta: () => apiClient.delete('/usuarios/eliminar-cuenta'),
     //obtenerDirecciones: () => apiClient.get('/usuarios/mis-direcciones'),
     //guardarDireccion: (direccionData) => apiClient.post('/usuarios/guardar-direccion', direccionData),
   },

@@ -1,14 +1,16 @@
-//
 import React, { useState, useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaMotorcycle, FaMapMarkerAlt, FaStore, FaMoneyBillWave, FaChevronRight, FaCheck, FaExclamationTriangle } from 'react-icons/fa';
+import { FaMotorcycle, FaMapMarkerAlt, FaStore, FaMoneyBillWave, FaChevronRight, FaCheck, FaExclamationTriangle, FaStar } from 'react-icons/fa';
 import ApiService from '../../services/api';
+import pedidoPriorityQueue from '../../utils/PedidoPriorityQueue';
+import pedidoCache from '../../utils/PedidoLinkedListCache';
 import '../../styles/PedidosDisponibles.css';
 import '../../styles/ChatPedido.css'
 import NotificationManager from '../shared/Notification';
 
 const PedidosDisponibles = () => {
   const [pedidos, setPedidos] = useState([]);
+  const [pedidosOrdenados, setPedidosOrdenados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tomandoPedido, setTomandoPedido] = useState(false);
@@ -34,7 +36,20 @@ const PedidosDisponibles = () => {
       const response = await ApiService.pedidos.disponibles();
       
       if (response.data) {
+        // Limpiar la cola y cache antes de agregar nuevos pedidos
+        pedidoPriorityQueue.clear();
+        
+        // Agregar pedidos a la cola de prioridad y cache
+        response.data.forEach(pedido => {
+          pedidoPriorityQueue.enqueue(pedido);
+          pedidoCache.put(pedido);
+        });
+        
+        // Obtener pedidos ordenados por prioridad (precio)
+        const pedidosConPrioridad = pedidoPriorityQueue.getAllSorted();
+        
         setPedidos(response.data);
+        setPedidosOrdenados(pedidosConPrioridad);
       }
       
       setLoading(false);
@@ -55,33 +70,41 @@ const PedidosDisponibles = () => {
 
   const handleTomarPedido = async () => {
     if(!pedidoSeleccionado) return;
+    
     try {
       setPedidoSeleccionadoId(pedidoSeleccionado.id);
       setTomandoPedido(true);
-      setErrorMessage('');
       
-      const response = await ApiService.pedidos.tomarPedido(pedidoSeleccionado.id);
+      const response = await fetch(`http://localhost:5000/api/pedidos/asignar/${pedidoSeleccionado.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
       
-      if (response.success) {
-        // Recargar la lista de pedidos disponibles
+      if (response.ok) {
+        // Remover el pedido de la cola de prioridad y cache
+        pedidoPriorityQueue.removeById(pedidoSeleccionado.id);
+        pedidoCache.remove(pedidoSeleccionado.id);
+        
+        // Mostrar notificación de éxito antes de navegar
+        window.showNotification('¡Pedido asignado correctamente!', 'success');
+        
+        // Cerrar el modal
         setShowConfirmModal(false);
-        fetchPedidosDisponibles();
         
-        // Mostrar notificación de éxito
-        window.showNotification('Pedido tomado con éxito. Dirígete al restaurante para recogerlo.', 'success');
-        
-        // Pequeño retraso para que la notificación sea visible
+        // Breve retraso para permitir que la notificación se muestre antes de la navegación
         setTimeout(() => {
-          navigate("/repartidor/pedidos-activos");
+          navigate('/repartidor/pedidos-activos');
         }, 1000);
       } else {
-        setErrorMessage(response.message || 'No se pudo tomar el pedido. Inténtelo nuevamente.');
-        window.showNotification(response.message || 'No se pudo tomar el pedido. Inténtelo nuevamente.', 'error');
+        const errorData = await response.json();
+        setErrorMessage(errorData.message || 'No se pudo tomar el pedido. Inténtelo nuevamente.');
+        window.showNotification(errorData.message || 'No se pudo tomar el pedido. Inténtelo nuevamente.', 'error');
       }
-      
     } catch (error) {
       console.error('Error al tomar pedido:', error);
-      const errorMsg = error.response?.data.message || 'Error al tomar el pedido. Por favor, intenta nuevamente.';
+      const errorMsg = 'Error al tomar el pedido. Por favor, intenta nuevamente.';
       setErrorMessage(errorMsg);
       window.showNotification(errorMsg, 'error');
     } finally {
@@ -100,6 +123,13 @@ const PedidosDisponibles = () => {
   const formatearDireccion = (dir) => {
     if (!dir) return "Dirección no disponible";
     return `${dir.direccionEspecifica}, ${dir.barrio}, Comuna ${dir.comuna}`;
+  };
+
+  // Función para obtener el color de prioridad basado en el precio
+  const getPriorityColor = (precio) => {
+    if (precio >= 50) return '#27ae60'; // Verde para pedidos de alto valor
+    if (precio >= 25) return '#f39c12'; // Naranja para pedidos de valor medio
+    return '#3498db'; // Azul para pedidos de valor bajo
   };
 
   if (loading && pedidos.length === 0) {
@@ -127,10 +157,10 @@ const PedidosDisponibles = () => {
       
       <div className="pedidos-header">
         <h1>Pedidos Disponibles</h1>
-        <p>Elige un pedido para entregar</p>
+        <p>Ordenados por valor del pedido (mayor a menor)</p>
       </div>
 
-      {pedidos.length === 0 ? (
+      {pedidosOrdenados.length === 0 ? (
         <div className="empty-pedidos">
           <FaMotorcycle className="empty-icon" />
           <h3>No hay pedidos disponibles en este momento</h3>
@@ -138,14 +168,23 @@ const PedidosDisponibles = () => {
         </div>
       ) : (
         <div className="pedidos-grid">
-          {pedidos.map((pedido) => (
+          {pedidosOrdenados.map((pedido, index) => (
             <div key={pedido.id} className="pedido-card">
               <div className="pedido-header">
                 <div className="restaurante-info">
                   <FaStore className="icon" />
                   <h3>{pedido.restaurante.nombre}</h3>
                 </div>
-                {/* Eliminado el ID del pedido */}
+                {/* Indicador de prioridad */}
+                <div className="priority-indicator">
+                  <FaStar 
+                    style={{ 
+                      color: getPriorityColor(pedido.total),
+                      fontSize: '16px'
+                    }} 
+                  />
+                  {index === 0 && <span className="priority-badge">PRIORITARIO</span>}
+                </div>
               </div>
               
               <div className="pedido-body">
@@ -157,11 +196,19 @@ const PedidosDisponibles = () => {
                   </div>
                 </div>
                 
-                <div className="info-row">
+                <div className="info-row priority-row">
                   <FaMoneyBillWave className="icon" />
                   <div className="pago-info">
                     <span className="total-label">Total del pedido:</span>
-                    <p className="total-amount">${pedido.total.toFixed(2)}</p>
+                    <p 
+                      className="total-amount"
+                      style={{ 
+                        color: getPriorityColor(pedido.total),
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      ${pedido.total.toFixed(2)}
+                    </p>
                   </div>
                 </div>
                 
@@ -176,7 +223,7 @@ const PedidosDisponibles = () => {
               
               <div className="pedido-footer">
                 <button 
-                  className="tomar-pedido-btn"
+                  className={`tomar-pedido-btn ${index === 0 ? 'priority-btn' : ''}`}
                   onClick={() => handleMostrarConfirmacion(pedido)}
                   disabled={tomandoPedido}
                 >
@@ -187,12 +234,11 @@ const PedidosDisponibles = () => {
                     </>
                   ) : (
                     <>
-                      <span>Tomar pedido</span>
+                      <span>{index === 0 ? 'Tomar pedido prioritario' : 'Tomar pedido'}</span>
                       <FaChevronRight className="arrow-icon" />
                     </>
                   )}
                 </button>
-                {/* Eliminado el botón de chat */}
               </div>
             </div>
           ))}
@@ -200,59 +246,64 @@ const PedidosDisponibles = () => {
       )}
       
       {/* Modal de confirmación */}
-      {showConfirmModal && pedidoSeleccionado && (
-        <div className='confirmation-modal-overlay'>
-          <div className='confirmation-modal'>
-            <h2>Confirmar Asignación</h2>
-
-            <div className='modal-pedido-info'>
-              <p><strong>Restaurante:</strong> {pedidoSeleccionado.restaurante.nombre}</p>
-              <p><strong>Dirección:</strong> {formatearDireccion(pedidoSeleccionado.direccionEntrega)}</p>
-              <p><strong>Total:</strong> ${pedidoSeleccionado.total}</p>
-            </div>
-
-            <div className="confirmation-question">
-              <FaExclamationTriangle className="question-icon" />
-              <p>¿Quieres asignarte a este pedido?</p>
-            </div>
-            
-            {errorMessage && (
-              <div className="error-message">
-                <FaExclamationTriangle />
-                <p>{errorMessage}</p>
+            {showConfirmModal && pedidoSeleccionado && (
+              <div className='confirmation-modal-overlay'>
+                <div className='confirmation-modal'>
+                  <h2>Confirmar Asignación</h2>
+      
+                  <div className='modal-pedido-info'>
+                    <p><strong>Restaurante:</strong> {pedidoSeleccionado.restaurante?.nombre}</p>
+                    <p><strong>Dirección:</strong> {formatearDireccion(pedidoSeleccionado.direccionEntrega)}</p>
+                    {pedidoSeleccionado.total && (
+                      <p><strong>Total:</strong> ${pedidoSeleccionado.total}</p>
+                    )}
+                    <p style={{ color: getPriorityColor(pedidoSeleccionado.total || 0), fontWeight: 'bold' }}>
+                      <strong>Prioridad:</strong> {(pedidoSeleccionado.total || 0) >= 50 ? 'Alta' : (pedidoSeleccionado.total || 0) >= 25 ? 'Media' : 'Normal'}
+                    </p>
+                  </div>
+      
+                  <div className="confirmation-question">
+                    <FaExclamationTriangle className="question-icon" />
+                    <p>¿Quieres asignarte a este pedido?</p>
+                  </div>
+                  
+                  {errorMessage && (
+                    <div className="error-message">
+                      <FaExclamationTriangle />
+                      <p>{errorMessage}</p>
+                    </div>
+                  )}
+                  
+                  <div className="modal-actions">
+                    <button 
+                      className="cancel-btn"
+                      onClick={handleCerrarModal}
+                      disabled={tomandoPedido}
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      className="confirm-btn" 
+                      onClick={handleTomarPedido}
+                      disabled={tomandoPedido}
+                    >
+                      {tomandoPedido ? (
+                        <>
+                          <div className="btn-spinner small"></div>
+                          <span>Asignando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <FaCheck />
+                          <span>Confirmar</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
-            
-            <div className="modal-actions">
-              <button 
-                className="cancel-btn"
-                onClick={handleCerrarModal}
-                disabled={tomandoPedido}
-              >
-                Cancelar
-              </button>
-              <button 
-                className="confirm-btn" 
-                onClick={handleTomarPedido}
-                disabled={tomandoPedido}
-              >
-                {tomandoPedido ? (
-                  <>
-                    <div className="btn-spinner small"></div>
-                    <span>Asignando...</span>
-                  </>
-                ) : (
-                  <>
-                    <FaCheck />
-                    <span>Confirmar</span>
-                  </>
-                )}
-              </button>
-            </div>
           </div>
-        </div>
-      )}
-    </div>
   );
 };
 

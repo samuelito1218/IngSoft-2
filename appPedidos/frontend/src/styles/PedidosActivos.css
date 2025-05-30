@@ -392,3 +392,35 @@
         width: 100% !important;
     }
 }
+/* Para PedidosActivos.css */
+.warning-banner {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.pickup-btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #ccc;
+}
+
+/* Para PedidosDisponiblesPreview.css */
+.warning-banner-sm {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 10px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.action-button-sm.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #ccc;
+}

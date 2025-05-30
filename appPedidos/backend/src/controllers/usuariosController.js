@@ -359,3 +359,30 @@ exports.cambiarContrasena = async (req, res) => {
     res.status(500).json({ message: 'Error al cambiar contraseña', error: error.message });
   }
 };
+
+//Método para eliminar usuario
+
+exports.eliminarCuentaUsuario = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Verificar si el usuario existe
+    const usuario = await prisma.Usuarios.findUnique({
+      where: { id: userId }
+    });
+
+    if (!usuario) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    // Eliminar el usuario
+    await prisma.Usuarios.delete({
+      where: { id: userId }
+    });
+
+    res.status(200).json({ message: 'Cuenta eliminada exitosamente' });
+  } catch (error) {
+    console.error('Error al eliminar cuenta de usuario:', error);
+    res.status(500).json({ message: 'Error al eliminar cuenta', error: error.message });
+  }
+};

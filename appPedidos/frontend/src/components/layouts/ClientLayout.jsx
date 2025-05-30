@@ -1,12 +1,174 @@
-// src/components/layouts/ClientLayout.jsx - CON IMAGEN DE PERFIL CORREGIDA
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
-  FaHome, FaUtensils, FaShoppingCart, FaHistory, 
+  FaHome, FaShoppingCart, FaHistory, 
   FaUser, FaSignOutAlt, FaBars, FaTimes 
 } from 'react-icons/fa';
 import { useAuth } from '../../hooks/useAuth';
 import './layouts.css';
+
+// Implementación de N-ary Tree según las diapositivas
+class Nodo {
+  constructor(valor) {
+    this.valor = valor;
+    this.hijos = [];
+  }
+
+  agregarHijo(nodo) {
+    this.hijos.push(nodo);
+  }
+}
+
+// Clase para manejar el árbol de menús del cliente
+class ClientMenuTree {
+  constructor() {
+    this.root = null;
+    this.initializeTree();
+  }
+
+  initializeTree() {
+    // Crear el árbol de menús del cliente
+    this.root = new Nodo({
+      title: "Cliente Menu Principal",
+      link: "/cliente",
+      component: "root",
+      key: "root",
+      icon: null
+    });
+
+    // Menús principales de navegación
+    const homeMenu = new Nodo({
+      title: "Inicio",
+      link: "/cliente",
+      component: "home",
+      key: "home",
+      icon: FaHome
+    });
+
+    const pedidosMenu = new Nodo({
+      title: "Mis Pedidos",
+      link: "/cliente/pedidos",
+      component: "pedidos",
+      key: "pedidos",
+      icon: FaHistory
+    });
+
+    const carritoMenu = new Nodo({
+      title: "Carrito",
+      link: "/cliente/carrito",
+      component: "carrito",
+      key: "carrito",
+      icon: FaShoppingCart,
+      hasCounter: true
+    });
+
+    // Menú de usuario con submenús
+    const userMenu = new Nodo({
+      title: "Usuario",
+      link: "#",
+      component: "user",
+      key: "user",
+      icon: FaUser
+    });
+
+    // Submenús del usuario
+    const perfilSubmenu = new Nodo({
+      title: "Perfil",
+      link: "/cliente/perfil",
+      component: "perfil",
+      key: "perfil",
+      icon: FaUser
+    });
+
+    const logoutSubmenu = new Nodo({
+      title: "Cerrar sesión",
+      link: "#",
+      component: "logout",
+      key: "logout",
+      icon: FaSignOutAlt
+    });
+
+    // Agregar submenús al menú de usuario
+    userMenu.agregarHijo(perfilSubmenu);
+    userMenu.agregarHijo(logoutSubmenu);
+
+    // Agregar menús principales al root
+    this.root.agregarHijo(homeMenu);
+    this.root.agregarHijo(pedidosMenu);
+    this.root.agregarHijo(carritoMenu);
+    this.root.agregarHijo(userMenu);
+  }
+
+  // DFS para buscar un nodo por key
+  dfs(nodo, targetKey) {
+    if (!nodo) return null;
+    
+    if (nodo.valor.key === targetKey) {
+      return nodo;
+    }
+
+    for (let hijo of nodo.hijos) {
+      const resultado = this.dfs(hijo, targetKey);
+      if (resultado) return resultado;
+    }
+
+    return null;
+  }
+
+  // BFS para obtener menús principales de navegación
+  bfs() {
+    if (!this.root) return [];
+    
+    const cola = [this.root];
+    const resultado = [];
+    
+    while (cola.length > 0) {
+      const actual = cola.shift();
+      
+      // Solo agregar los hijos del root que son menús de navegación
+      if (actual === this.root) {
+        for (let hijo of actual.hijos) {
+          if (hijo.valor.key !== 'user') { // Excluir user del menú de navegación
+            resultado.push(hijo);
+          }
+        }
+      }
+    }
+    
+    return resultado;
+  }
+
+  // Obtener submenús de usuario
+  getUserSubmenus() {
+    const userNode = this.dfs(this.root, 'user');
+    return userNode ? userNode.hijos : [];
+  }
+
+  // Buscar menú por key
+  findMenu(key) {
+    return this.dfs(this.root, key);
+  }
+
+  // Obtener todos los menús (incluyendo submenús) usando DFS
+  getAllMenus() {
+    const menus = [];
+    
+    function dfsTraversal(nodo) {
+      if (!nodo) return;
+      
+      if (nodo.valor.key !== 'root') {
+        menus.push(nodo);
+      }
+      
+      for (let hijo of nodo.hijos) {
+        dfsTraversal(hijo);
+      }
+    }
+    
+    dfsTraversal(this.root);
+    return menus;
+  }
+}
 
 const ClientLayout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -15,6 +177,22 @@ const ClientLayout = ({ children }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [cartItemsCount, setCartItemsCount] = useState(0);
   const [imageError, setImageError] = useState(false);
+  
+  // Inicializar el árbol de menús
+  const [menuTree] = useState(new ClientMenuTree());
+  const [navigationMenus, setNavigationMenus] = useState([]);
+  const [userSubmenus, setUserSubmenus] = useState([]);
+  
+  // Inicializar los menús usando BFS al montar el componente
+  useEffect(() => {
+    // Usar BFS para obtener menús de navegación principales
+    const navMenus = menuTree.bfs();
+    setNavigationMenus(navMenus);
+    
+    // Obtener submenús de usuario
+    const userSubs = menuTree.getUserSubmenus();
+    setUserSubmenus(userSubs);
+  }, [menuTree]);
   
   // Obtener cantidad de items en carrito desde localStorage
   useEffect(() => {
@@ -59,9 +237,34 @@ const ClientLayout = ({ children }) => {
     };
   }, [location]);
   
-  // Verificar si una ruta está activa
+  // Verificar si una ruta está activa usando el árbol
   const isActive = (path) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  };
+  
+  // Manejar acciones de menú usando el árbol
+  const handleMenuAction = (menuKey) => {
+    const menuNode = menuTree.findMenu(menuKey);
+    
+    if (menuNode) {
+      const menuData = menuNode.valor;
+      
+      switch (menuKey) {
+        case 'logout':
+          handleLogout();
+          break;
+        case 'perfil':
+          closeMenu();
+          navigate(menuData.link);
+          break;
+        default:
+          if (menuData.link && menuData.link !== '#') {
+            closeMenu();
+            navigate(menuData.link);
+          }
+          break;
+      }
+    }
   };
   
   // Manejar cierre de sesión
@@ -109,11 +312,54 @@ const ClientLayout = ({ children }) => {
            user.imageUrl.trim() !== '';
   };
 
-  // Manejar click en perfil
+  // Manejar click en perfil usando el árbol
   const handleUserInfoClick = (e) => {
     e.preventDefault();
-    closeMenu();
-    navigate('/cliente/perfil');
+    handleMenuAction('perfil');
+  };
+
+  // Función para renderizar menús de navegación usando el árbol
+  const renderNavigationMenus = () => {
+    return navigationMenus.map((menuNode) => {
+      const menuData = menuNode.valor;
+      const IconComponent = menuData.icon;
+      
+      return (
+        <Link 
+          key={menuData.key}
+          to={menuData.link} 
+          className={isActive(menuData.link) ? 'active' : ''}
+          onClick={closeMenu}
+        >
+          <div className={menuData.hasCounter ? "cart-icon-container" : ""}>
+            <IconComponent />
+            {menuData.hasCounter && cartItemsCount > 0 && (
+              <span className="cart-badge">{cartItemsCount}</span>
+            )}
+          </div>
+          <span>{menuData.title}</span>
+        </Link>
+      );
+    });
+  };
+
+  // Función para renderizar submenús de usuario (no se usan en este layout específico)
+  const renderUserSubmenus = () => {
+    return userSubmenus.map((submenuNode) => {
+      const submenuData = submenuNode.valor;
+      const IconComponent = submenuData.icon;
+      
+      return (
+        <button 
+          key={submenuData.key}
+          onClick={() => handleMenuAction(submenuData.key)}
+          className={submenuData.key === 'logout' ? 'logout-button' : 'user-submenu-button'}
+        >
+          <IconComponent />
+          <span>{submenuData.title}</span>
+        </button>
+      );
+    });
   };
   
   return (
@@ -132,37 +378,7 @@ const ClientLayout = ({ children }) => {
           
           <div className={`navbar ${showMenu ? 'show' : ''}`}>
             <nav className="nav-menu">
-              <Link 
-                to="/cliente" 
-                className={isActive('/cliente') ? 'active' : ''}
-                onClick={closeMenu}
-              >
-                <FaHome />
-                <span>Inicio</span>
-              </Link>
-              
-              <Link 
-                to="/cliente/pedidos" 
-                className={isActive('/cliente/pedidos') ? 'active' : ''}
-                onClick={closeMenu}
-              >
-                <FaHistory />
-                <span>Mis Pedidos</span>
-              </Link>
-              
-              <Link 
-                to="/cliente/carrito" 
-                className={isActive('/cliente/carrito') ? 'active' : ''}
-                onClick={closeMenu}
-              >
-                <div className="cart-icon-container">
-                  <FaShoppingCart />
-                  {cartItemsCount > 0 && (
-                    <span className="cart-badge">{cartItemsCount}</span>
-                  )}
-                </div>
-                <span>Carrito</span>
-              </Link>
+              {renderNavigationMenus()}
             </nav>
             
             <div className="user-section">

@@ -31,9 +31,16 @@ console.log("✓ Ruta registrada: POST /guardar-direccion");
 router.get('/mis-pedidos', authenticate, usuariosController.obtenerPedidosUsuario);
 console.log("✓ Ruta registrada: GET /mis-pedidos");
 
+router.delete('/eliminar-cuenta', authenticate, usuariosController.eliminarCuentaUsuario);
+
+
+console.log("Ruta registrada Delete");
+
 // Ruta con parámetro dinámico (DEBE IR AL FINAL)
 router.get('/:id', authenticate, usuariosController.getUserById);
-console.log("✓ Ruta registrada: GET /:id");
+console.log("Ruta registrada: GET /:id");
+
+
 
 console.log("=== Rutas de usuarios registradas correctamente ===");
 

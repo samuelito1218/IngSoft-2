@@ -71,7 +71,19 @@ const ProfileService = {
       console.error('Error al actualizar perfil:', error);
       throw error;
     }
+  },
+
+  // Eliminar cuenta del usuario
+  async eliminarCuenta(){
+    try{
+      const response = await ApiService.usuarios.eliminarCuenta();
+      return response.data;
+    } catch(error){
+      console.error("Error al eliminar cuenta:", error);
+      throw error;
+    }
   }
 };
+
 
 export default ProfileService;

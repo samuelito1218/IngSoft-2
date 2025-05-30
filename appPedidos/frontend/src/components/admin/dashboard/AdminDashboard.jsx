@@ -378,8 +378,8 @@ const AdminDashboard = () => {
                   <div className="action-icon">
                     <FaClipboardList />
                   </div>
-                  <h3>Gestionar Pedidos</h3>
-                  <p>Administra los pedidos entrantes</p>
+                  <h3>Ver Pedidos</h3>
+                  <p>Enterate de toda la información de tus pedidos</p>
                 </div>
                 
                 <div 
@@ -443,11 +443,7 @@ const AdminDashboard = () => {
                             Cliente: {order.cliente?.nombreCompleto || 'Cliente'}
                           </p>
                         </div>
-                        <div className="order-status">
-                          <span className={`status-badge ${order.estado.toLowerCase()}`}>
-                            {order.estado.replace('_', ' ')}
-                          </span>
-                        </div>
+                        
                       </div>
                     ))
                   ) : (

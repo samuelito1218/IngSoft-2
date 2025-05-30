@@ -143,7 +143,7 @@ const AllOrders = () => {
     setDateTo('');
   };
   
-  // Ver detalle de pedido
+  // Ver detalle de pedido (SOLO VISUALIZACIÓN)
   const handleViewOrder = (restaurantId, orderId) => {
     navigate(`/admin/restaurantes/${restaurantId}?pedido=${orderId}`);
   };
@@ -190,7 +190,14 @@ const AllOrders = () => {
   return (
     <div className="all-orders-container">
       <div className="page-header">
-        <h2>Gestión de Pedidos</h2>
+        <h2>Visualización de Pedidos</h2>
+        <p style={{ 
+          fontSize: '14px', 
+          color: '#666', 
+          margin: '8px 0 0 0' 
+        }}>
+          Vista de solo lectura - Los pedidos son gestionados automáticamente
+        </p>
         
         <div className="search-bar">
           <div className="search-input">
@@ -320,7 +327,7 @@ const AllOrders = () => {
                   <th>Dirección</th>
                   <th>Total</th>
                   <th>Estado</th>
-                  <th>Acciones</th>
+                  <th>Ver</th>
                 </tr>
               </thead>
               <tbody>
@@ -367,7 +374,7 @@ const AllOrders = () => {
                       <button 
                         className="view-button"
                         onClick={() => handleViewOrder(order.restaurantId, order.id)}
-                        title="Ver detalles"
+                        title="Ver detalles (solo lectura)"
                       >
                         <FaEye />
                       </button>
