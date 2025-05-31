@@ -18,16 +18,15 @@ const PedidosActivos = () => {
   
   const navigate = useNavigate();
 
-  // Estados posibles de un pedido
   const estados = {
-    PENDIENTE: '#f7dc6f',    // amarillo claro
-    EN_CAMINO: '#3498db',    // azul oscuro
-    ENTREGADO: '#27ae60',    // verde oscuro
-    CANCELADO: '#e74c3c',    // rojo
+    PENDIENTE: '#f7dc6f',
+    EN_CAMINO: '#3498db',
+    ENTREGADO: '#27ae60',
+    CANCELADO: '#e74c3c',
   };
 
   const estadoColores = {
-    PENDIENTE: 'black',  // para amarillo claro, texto negro
+    PENDIENTE: 'black',
     EN_CAMINO: 'white',
     ENTREGADO: 'white',
     CANCELADO: 'white',
@@ -36,8 +35,7 @@ const PedidosActivos = () => {
   useEffect(() => {
     fetchPedidosActivos();
     
-    // Actualizar periódicamente los pedidos activos
-    const interval = setInterval(fetchPedidosActivos, 30000); // Cada 30 segundos
+    const interval = setInterval(fetchPedidosActivos, 30000);
     
     return () => clearInterval(interval);
   }, []);
@@ -53,14 +51,12 @@ const PedidosActivos = () => {
       
       setLoading(false);
     } catch (error) {
-      console.error('Error al cargar pedidos activos:', error);
       setError('No se pudieron cargar tus pedidos activos. Por favor, intente nuevamente.');
       setLoading(false);
       window.showNotification('Error al cargar pedidos activos', 'error');
     }
   };
 
-  // Verificar si hay algún pedido en camino
   const hayPedidoEnCamino = () => {
     return pedidos.some(pedido => 
       pedido.estado === 'EN_CAMINO' || pedido.estado.toLowerCase() === 'en_camino' || pedido.estado.toLowerCase() === 'en camino'
@@ -69,7 +65,6 @@ const PedidosActivos = () => {
 
   const handleCambiarEstado = async (pedidoId, nuevoEstado) => {
     try {
-      // Verificar si ya hay un pedido en camino y el nuevo estado es EN_CAMINO
       if (nuevoEstado === 'En_Camino' && hayPedidoEnCamino()) {
         window.showNotification('No puedes iniciar otra entrega mientras tienes un pedido en camino', 'warning');
         return;
@@ -98,7 +93,6 @@ const PedidosActivos = () => {
       }
 
     } catch (error) {
-      console.error('Error al cambiar estado:', error);
       window.showNotification('Error al actualizar el estado del pedido. Por favor, intenta nuevamente.', 'error');
     } finally {
       setCambiandoEstado(false);
@@ -110,7 +104,6 @@ const PedidosActivos = () => {
     navigate(`/repartidor/chat/${pedidoId}`);
   };
 
-  // Función auxiliar para validar y obtener datos seguros
   const obtenerDatosPedido = (pedido) => {
     return {
       restaurante: {
@@ -127,11 +120,9 @@ const PedidosActivos = () => {
     };
   };
 
-  // Determinar si un pedido específico puede cambiar de estado
   const puedeIniciarEntrega = (pedido) => {
     const estadoActual = pedido.estado.toLowerCase();
     
-    // Si es pendiente y no hay ningún pedido en camino
     if (estadoActual === 'pendiente') {
       return !hayPedidoEnCamino();
     }
@@ -139,7 +130,6 @@ const PedidosActivos = () => {
     return false;
   };
 
-  // Determinar qué botones de acción mostrar según el estado actual
   const getAccionesEstado = (pedido) => {
     const estado = pedido.estado.toLowerCase();
     const enCamino = hayPedidoEnCamino();
@@ -165,7 +155,7 @@ const PedidosActivos = () => {
           </button>
         );
       case 'en_camino':
-      case 'en camino': // Por si viene con espacio
+      case 'en camino':
         return (
           <button 
             className="deliver-btn" 
@@ -218,7 +208,6 @@ const PedidosActivos = () => {
 
   return (
     <div className="pedidos-activos-container">
-      {/* Añadir NotificationManager */}
       <NotificationManager />
       
       <div className="pedidos-header">
@@ -261,7 +250,6 @@ const PedidosActivos = () => {
                 </div>
                 
                 <div className="pedido-body">
-                  {/* Sección del restaurante - donde recoger */}
                   <div className="info-row restaurante-pickup">
                     <FaStore className="icon" />
                     <div className="location-info">
@@ -270,7 +258,6 @@ const PedidosActivos = () => {
                     </div>
                   </div>
                   
-                  {/* Sección de entrega - donde entregar */}
                   <div className="info-row">
                     <FaMapMarkerAlt className="icon" />
                     <div className="location-info">

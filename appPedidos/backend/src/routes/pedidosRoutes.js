@@ -3,7 +3,7 @@ const router = express.Router();
 const pedidosController = require('../controllers/pedidosController');
 const { authenticate, authorize } = require('../middlewares/authMiddleware');
 
-//
+
 router.get('/', authenticate, pedidosController.getPedidosCliente);
 // Rutas para repartidores
 router.get(
@@ -134,7 +134,8 @@ router.get(
   authorize("Admin"),
   pedidosController.getEstadisticasRestaurante
 );
-//router.get('/:id', authenticate, pedidosController.obtenerPedido);
+
+
 router.put('/:id/repartidor', authenticate, authorize('Administrador'), pedidosController.asignarRepartidor);
 
 module.exports = router;

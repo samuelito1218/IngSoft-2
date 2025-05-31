@@ -1,10 +1,7 @@
-// src/services/ProductService.js (Servicio mejorado)//
 import { api } from './api';
 
 const ProductService = {
-  /**
-   * Obtener todos los productos
-   */
+  
   getAllProducts: async () => {
     try {
       const response = await api.get('/productos');
@@ -22,9 +19,7 @@ const ProductService = {
     }
   },
   
-  /**
-   * Obtener un producto por su ID
-   */
+  
   getProductById: async (id) => {
     try {
       const response = await api.get(`/productos/${id}`);
@@ -42,9 +37,7 @@ const ProductService = {
     }
   },
   
-  /**
-   * Obtener productos por restaurante
-   */
+  
   getProductsByRestaurant: async (restaurantId) => {
     try {
       const response = await api.get(`/restaurantes/${restaurantId}/productos`);
@@ -62,9 +55,7 @@ const ProductService = {
     }
   },
   
-  /**
-   * Crear un nuevo producto
-   */
+  
   createProduct: async (productData) => {
     try {
       const response = await api.post('/productos', productData);
@@ -82,9 +73,7 @@ const ProductService = {
     }
   },
   
-  /**
-   * Actualizar un producto existente
-   */
+  
   updateProduct: async (id, productData) => {
     try {
       const response = await api.put(`/productos/${id}`, productData);
@@ -102,9 +91,7 @@ const ProductService = {
     }
   },
   
-  /**
-   * Eliminar un producto
-   */
+  
   deleteProduct: async (id) => {
     try {
       const response = await api.delete(`/productos/${id}`);
@@ -122,16 +109,13 @@ const ProductService = {
     }
   },
   
-  /**
-   * Subir imagen de producto y actualizar
-   */
+  
   uploadProductImage: async (id, file) => {
     try {
       // Subir imagen a Cloudinary (usando CloudinaryService)
       const CloudinaryService = (await import('../services/CloudinaryService')).default;
       const imageUrl = await CloudinaryService.uploadImage(file, 'productos');
       
-      // Actualizar producto con la nueva URL
       const response = await api.put(`/productos/${id}`, {
         imagen: imageUrl
       });

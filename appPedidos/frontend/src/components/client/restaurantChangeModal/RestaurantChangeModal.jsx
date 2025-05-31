@@ -1,6 +1,3 @@
-// 3. CREAR RestaurantChangeModal.jsx - Modal para confirmar cambio de restaurante
-
-// src/components/client/restaurantchangemodal/RestaurantChangeModal.jsx
 import React from 'react';
 import { FaExclamationTriangle, FaStore, FaTimes } from 'react-icons/fa';
 import './RestaurantChangeModal.css';

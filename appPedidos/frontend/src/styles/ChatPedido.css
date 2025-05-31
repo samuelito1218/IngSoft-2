@@ -1,6 +1,3 @@
-/*Versión Samuel*/
-/* ChatPedido.css */
-/* Estilos para botones de chat */
 .chat-button {
   display: flex;
   align-items: center;
@@ -25,11 +22,10 @@
   padding: 6px 10px;
 }
 
-/* Contenedor principal mejorado */
 .chat-pedido-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 140px); /* Aumentar altura ligeramente */
+  height: calc(100vh - 140px);
   border-radius: 12px;
   overflow: hidden;
   background-color: #fff;
@@ -83,15 +79,14 @@
   opacity: 0.9;
 }
 
-/* Área de mensajes mejorada */
 .chat-mensajes {
   padding: 20px;
-  background-color: #f8f8f8; /* Fondo más claro */
+  background-color: #f8f8f8;
   overflow-y: auto;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px; /* Más espacio entre mensajes */
+  gap: 16px;
 }
 
 .chat-loading {
@@ -130,11 +125,10 @@
   padding: 20px;
 }
 
-/* Mensajes mejorados */
 .mensaje {
   display: flex;
   margin-bottom: 12px;
-  max-width: 75%; /* Mensajes más estrechos */
+  max-width: 75%;
   animation: fadeIn 0.3s ease;
 }
 
@@ -152,7 +146,6 @@
   align-self: flex-start;
 }
 
-/* Avatar mejorado */
 .mensaje-avatar {
   width: 38px;
   height: 38px;
@@ -180,20 +173,19 @@
   position: relative;
 }
 
-/* Texto de mensaje mejorado */
 .mensaje-texto {
-  padding: 14px 18px; /* Más relleno */
+  padding: 14px 18px;
   border-radius: 18px;
   position: relative;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   font-size: 16px;
   line-height: 1.5;
-  word-break: break-word; /* Evita desbordamiento */
+  word-break: break-word;
 }
 
 .mensaje.enviado .mensaje-texto {
-  background-color: #e3f2fd; /* Azul claro en lugar de color primario */
-  color: #333; /* Texto oscuro para mejor legibilidad */
+  background-color: #e3f2fd;
+  color: #333;
   border-top-right-radius: 4px;
 }
 
@@ -203,40 +195,38 @@
   border-top-left-radius: 4px;
 }
 
-/* Hora del mensaje mejorada */
 .mensaje-hora {
   display: block;
-  font-size: 12px; /* Ligeramente más grande */
+  font-size: 12px;
   margin-top: 6px;
   text-align: right;
   opacity: 0.8;
 }
 
 .mensaje.enviado .mensaje-hora {
-  color: #777; /* Color más oscuro para legibilidad */
+  color: #777;
 }
 
 .mensaje.recibido .mensaje-hora {
   color: #999;
 }
 
-/* Área de entrada mejorada */
 .chat-input-container {
   display: flex;
-  padding: 14px; /* Más relleno */
+  padding: 14px;
   border-top: 1px solid #e0e0e0;
   background-color: white;
 }
 
 .chat-input {
   flex-grow: 1;
-  padding: 14px 18px; /* Más relleno */
+  padding: 14px 18px;
   border: 1px solid #e0e0e0;
   border-radius: 24px;
   outline: none;
   resize: none;
   font-family: inherit;
-  font-size: 15px; /* Ligeramente más grande */
+  font-size: 15px;
   max-height: 120px;
   min-height: 24px;
   transition: border-color 0.2s;
@@ -248,9 +238,8 @@
   box-shadow: 0 0 0 2px rgba(255, 74, 74, 0.1);
 }
 
-/* Botón de enviar mejorado */
 .send-button {
-  width: 44px; /* Ligeramente más grande */
+  width: 44px;
   height: 44px;
   margin-left: 10px;
   border: none;
@@ -316,7 +305,6 @@
   background-color: var(--color-primary-dark, #e04040);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .chat-pedido-container {
     height: calc(100vh - 150px);
@@ -328,7 +316,6 @@
   }
 }
 
-/* Estilos para el chat flotante */
 .floating-chat {
   position: fixed;
   bottom: 80px;
@@ -461,7 +448,6 @@
   100% { box-shadow: 0 0 0 0 rgba(255, 75, 43, 0); }
 }
 
-/* Estilos para mensajes en el chat flotante */
 .chat-empty-mini {
   display: flex;
   align-items: center;
@@ -571,7 +557,6 @@
   to { transform: rotate(360deg); }
 }
 
-/* Estilos responsivos */
 @media (max-width: 768px) {
   .floating-chat {
     width: calc(100% - 40px);
@@ -580,7 +565,6 @@
   }
 }
 
-/* Definición de variables CSS para consistencia */
 :root {
   --color-primary: #ff4a4a;
   --color-primary-dark: #e04040;

@@ -11,12 +11,10 @@ const RestaurantCard = ({ restaurant, onRestaurantDeleted, onError }) => {
   const navigate = useNavigate();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // Ver detalle de restaurante (con productos y pedidos)
   const handleViewDetails = () => {
     navigate(`/admin/restaurantes/${restaurant.id}`);
   };
 
-  // Manejar edición de restaurante
   const handleEdit = (e) => {
     e.stopPropagation();
     navigate(`/admin/restaurantes/editar/${restaurant.id}`);
@@ -34,8 +32,6 @@ const RestaurantCard = ({ restaurant, onRestaurantDeleted, onError }) => {
       await api.delete(`/restaurantes/eliminar/${restaurant.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-
-      // Notificar al componente padre que el restaurante fue eliminado
       if (onRestaurantDeleted) {
         onRestaurantDeleted(restaurant.id);
       }

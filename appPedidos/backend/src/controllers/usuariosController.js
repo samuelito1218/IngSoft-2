@@ -1,7 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const bcrypt = require('bcrypt');
-//
 exports.getUserProfile = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -26,8 +25,6 @@ exports.getUserProfile = async (req, res) => {
     if (!usuario) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
-    
-    // Si el usuario es Admin, obtener información de sus restaurantes
     let restaurantes = [];
     if (usuario.rol === 'Admin' && usuario.restaurantesIds && usuario.restaurantesIds.length > 0) {
       restaurantes = await prisma.restaurantes.findMany({
@@ -36,8 +33,6 @@ exports.getUserProfile = async (req, res) => {
         }
       });
     }
-    
-    // Agregar la información de restaurantes a la respuesta
     const respuesta = {
       ...usuario,
       restaurantes: usuario.rol === 'Admin' ? restaurantes : undefined
@@ -54,7 +49,6 @@ exports.getUserById = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Buscar usuario por ID
     const usuario = await prisma.Usuarios.findUnique({
       where: { id },
       select: {
@@ -70,8 +64,7 @@ exports.getUserById = async (req, res) => {
     if (!usuario) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
-    
-    // Devolver información limitada del usuario (por seguridad)
+
     res.status(200).json(usuario);
   } catch (error) {
     console.error('Error al obtener información del usuario:', error);
@@ -96,8 +89,7 @@ exports.updateUserProfile = async (req, res) => {
     if (isNaN(telefonoNum) || isNaN(comunaNum)) {
       return res.status(400).json({ message: 'Teléfono y comuna deben ser valores numéricos' });
     }
-    
-    // Primero, buscar el usuario actual para obtener su cédula
+
     const usuarioActual = await prisma.Usuarios.findUnique({
       where: { id: userId }
     });
@@ -106,15 +98,13 @@ exports.updateUserProfile = async (req, res) => {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
     
-    // Actualizar usuario con todos los campos necesarios
     const usuarioActualizado = await prisma.Usuarios.update({
       where: { id: userId },
       data: {
         nombreCompleto,
         telefono: telefonoNum,
         direccion,
-        cedula: usuarioActual.cedula, // Mantener la cédula actual
-        // Actualizar historialDirecciones con la nueva dirección
+        cedula: usuarioActual.cedula, 
         historialDirecciones: {
           push: {
             comuna: comunaNum,
@@ -171,20 +161,17 @@ exports.updateProfileImage = async (req, res) => {
   }
 };
 
-// Método corregido para obtener direcciones guardadas del usuario
 exports.obtenerDirecciones = async (req, res) => {
   try {
     console.log('Procesando solicitud para obtener direcciones...');
     
-    // Verificar que req.user existe
     if (!req.user || !req.user.id) {
       console.error('Error: req.user o req.user.id es undefined');
       return res.status(401).json({ message: "Usuario no autenticado o token inválido" });
     }
 
     console.log(`Buscando usuario con ID: ${req.user.id}`);
-    
-    // Utilizar findUnique con el ID como parámetro de búsqueda
+
     const usuario = await prisma.Usuarios.findUnique({
       where: { 
         id: req.user.id 
@@ -198,8 +185,7 @@ exports.obtenerDirecciones = async (req, res) => {
       console.log(`Usuario con ID ${req.user.id} no encontrado`);
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
-    
-    // Asegurarse de que historialDirecciones sea un array
+  
     const direcciones = Array.isArray(usuario.historialDirecciones) ? usuario.historialDirecciones : [];
     console.log(`Se encontraron ${direcciones.length} direcciones para el usuario`);
     
@@ -217,22 +203,19 @@ exports.guardarDireccion = async (req, res) => {
   try {
     console.log('Procesando solicitud para guardar dirección...');
     console.log('Datos recibidos:', req.body);
-    
-    // Validar que req.user existe
+
     if (!req.user || !req.user.id) {
       console.error('Error: req.user o req.user.id es undefined');
       return res.status(401).json({ message: "Usuario no autenticado o token inválido" });
     }
     
     const { direccion } = req.body;
-    
-    // Validar datos de la dirección
+  
     if (!direccion || !direccion.barrio || !direccion.comuna || !direccion.direccionEspecifica) {
       console.error('Error: Datos de dirección incompletos');
       return res.status(400).json({ message: "Datos de dirección incompletos" });
     }
-    
-    // Asegurarse de que la comuna sea un número
+
     let comunaNum;
     try {
       comunaNum = typeof direccion.comuna === 'string' 
@@ -248,8 +231,7 @@ exports.guardarDireccion = async (req, res) => {
     }
     
     console.log(`Buscando usuario con ID: ${req.user.id}`);
-    
-    // Primero, verificar si el usuario existe
+
     const usuarioExistente = await prisma.Usuarios.findUnique({
       where: { 
         id: req.user.id 
@@ -262,8 +244,7 @@ exports.guardarDireccion = async (req, res) => {
     }
     
     console.log('Usuario encontrado, procediendo a actualizar historialDirecciones');
-    
-    // Formatear la dirección correctamente
+
     const nuevaDireccion = {
       barrio: direccion.barrio,
       comuna: comunaNum,
@@ -272,7 +253,6 @@ exports.guardarDireccion = async (req, res) => {
     
     console.log('Nueva dirección a guardar:', nuevaDireccion);
     
-    // Actualizar el usuario - tenemos que manejar el historialDirecciones como un array
     const usuarioActualizado = await prisma.Usuarios.update({
       where: { 
         id: req.user.id 
@@ -306,8 +286,7 @@ exports.guardarDireccion = async (req, res) => {
 exports.obtenerPedidosUsuario = async (req, res) => {
   try {
     const userId = req.user.id;
-    
-    // Obtener pedidos del usuario
+
     const pedidos = await prisma.pedidos.findMany({
       where: { usuario_id: userId },
       orderBy: { fechaDeCreacion: 'desc' }
@@ -322,7 +301,7 @@ exports.obtenerPedidosUsuario = async (req, res) => {
     });
   }
 };
-// Añade esta función a usuariosController.js
+
 exports.cambiarContrasena = async (req, res) => {
   console.log("Función cambiarContrasena ejecutándose con:", req.body);
   
@@ -333,8 +312,7 @@ exports.cambiarContrasena = async (req, res) => {
     if (!newPassword) {
       return res.status(400).json({ message: 'La nueva contraseña es requerida' });
     }
-    
-    // Buscar el usuario
+
     const usuario = await prisma.Usuarios.findUnique({
       where: { id: userId }
     });
@@ -360,8 +338,6 @@ exports.cambiarContrasena = async (req, res) => {
   }
 };
 
-//Método para eliminar usuario
-
 exports.eliminarCuentaUsuario = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -375,7 +351,6 @@ exports.eliminarCuentaUsuario = async (req, res) => {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
 
-    // Eliminar el usuario
     await prisma.Usuarios.delete({
       where: { id: userId }
     });

@@ -1,13 +1,10 @@
-// ubicacionController.js
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-//
-// Obtener ubicación de un pedido
+
 exports.obtenerUbicacionPedido = async (req, res) => {
   try {
     const { pedidoId } = req.params;
-    
-    // Buscar la ubicación en la base de datos
+
     const ubicacion = await prisma.ubicacion.findFirst({
       where: { pedidoId: pedidoId }
     });
@@ -23,13 +20,11 @@ exports.obtenerUbicacionPedido = async (req, res) => {
   }
 };
 
-// Actualizar ubicación de un pedido
 exports.actualizarUbicacionPedido = async (req, res) => {
   try {
     const { pedidoId } = req.params;
     const { latitud, longitud, heading } = req.body;
     
-    // Verificar que el pedido existe
     const pedido = await prisma.pedidos.findUnique({
       where: { id: pedidoId }
     });
@@ -38,7 +33,6 @@ exports.actualizarUbicacionPedido = async (req, res) => {
       return res.status(404).json({ message: 'Pedido no encontrado' });
     }
     
-    // Buscar si ya existe una ubicación para este pedido
     const existingUbicacion = await prisma.ubicacion.findUnique({
       where: { pedidoId: pedidoId }
     });
@@ -46,7 +40,6 @@ exports.actualizarUbicacionPedido = async (req, res) => {
     let ubicacion;
     
     if (existingUbicacion) {
-      // Actualizar si existe
       ubicacion = await prisma.ubicacion.update({
         where: { id: existingUbicacion.id },
         data: { 
@@ -57,7 +50,6 @@ exports.actualizarUbicacionPedido = async (req, res) => {
         }
       });
     } else {
-      // Crear si no existe
       ubicacion = await prisma.ubicacion.create({
         data: {
           pedidoId,

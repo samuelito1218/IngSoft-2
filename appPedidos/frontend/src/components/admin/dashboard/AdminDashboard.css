@@ -1,4 +1,3 @@
-/* Dashboard Mejorado /*/
 .admin-dashboard {
   max-width: 1200px;
   margin: 0 auto;
@@ -171,7 +170,6 @@
   color: #FFAA13;
 }
 
-/* Mejoras para las acciones rápidas */
 .dashboard-section {
   background: white;
   border-radius: 15px;
@@ -260,7 +258,6 @@
   line-height: 1.4;
 }
 
-/* Tarjetas de restaurantes */
 .restaurants-list {
   padding: 20px;
   display: grid;
@@ -268,7 +265,6 @@
   gap: 20px;
 }
 
-/* Pedidos recientes */
 .recent-orders {
   padding: 20px;
 }
@@ -407,7 +403,6 @@
   transform: translateY(-2px);
 }
 
-/* Estado vacío mejorado */
 .empty-state {
   padding: 40px 20px;
   text-align: center;

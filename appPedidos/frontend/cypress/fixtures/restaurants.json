@@ -1,0 +1,22 @@
+[
+  {
+    "id": "rest-1",
+    "nombre": "Pizza Palace",
+    "descripcion": "La mejor pizza de la ciudad",
+    "imageUrl": "https://example.com/pizza.jpg",
+    "categorias": ["Pizza", "Italiana"],
+    "ubicaciones": [
+      {
+        "comuna": "Comuna 14",
+        "sucursal_Id": "suc-1"
+      }
+    ]
+  },
+  {
+    "id": "rest-2", 
+    "nombre": "Burger House",
+    "descripcion": "Hamburguesas artesanales",
+    "imageUrl": null,
+    "categorias": ["Hamburguesa", "Americana"]
+  }
+]

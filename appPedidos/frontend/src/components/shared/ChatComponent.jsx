@@ -1,4 +1,3 @@
-// src/components/shared/ChatComponent.jsx - Versión mejorada//
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import ChatService from '../../services/ChatService';
@@ -15,7 +14,6 @@ function ChatComponent({ pedidoId, receptorId, receptorNombre }) {
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
   
-  // Función para hacer scroll al final de los mensajes
   const scrollToBottom = (smooth = true) => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ 
@@ -25,7 +23,7 @@ function ChatComponent({ pedidoId, receptorId, receptorNombre }) {
     }
   };
   
-  // Cargar mensajes y suscribirse a actualizaciones
+  
   useEffect(() => {
     if (!pedidoId || !user || !receptorId) {
       console.log('Falta información necesaria para el chat:', { pedidoId, userId: user?.id, receptorId });
@@ -36,11 +34,11 @@ function ChatComponent({ pedidoId, receptorId, receptorNombre }) {
     setError(null);
     
     try {
-      // Suscribirse a actualizaciones en tiempo real
+      
       const unsubscribe = ChatService.subscribeToMessages(pedidoId, (newMessages) => {
         setMessages(newMessages);
         setLoading(false);
-        // Pequeño retraso para asegurar que el DOM se actualice
+        
         setTimeout(() => scrollToBottom(), 100);
       });
       
@@ -56,7 +54,7 @@ function ChatComponent({ pedidoId, receptorId, receptorNombre }) {
     }
   }, [pedidoId, user, receptorId]);
   
-  // Marcar mensajes como leídos cuando son visibles
+  
   useEffect(() => {
     if (!user || messages.length === 0) return;
     
@@ -73,7 +71,7 @@ function ChatComponent({ pedidoId, receptorId, receptorNombre }) {
     });
   }, [messages, user]);
   
-  // Enviar un nuevo mensaje
+  // función para enviar un nuevo mensaje
   const handleSendMessage = async (e) => {
     e.preventDefault();
     
@@ -97,7 +95,7 @@ function ChatComponent({ pedidoId, receptorId, receptorNombre }) {
     }
   };
   
-  // Manejar tecla Enter para enviar mensaje
+  // Manejo de la tecla Enter para enviar mensaje
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -105,7 +103,7 @@ function ChatComponent({ pedidoId, receptorId, receptorNombre }) {
     }
   };
   
-  // Formatear fecha para mostrar
+  
   const formatMessageTime = (timestamp) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], {

@@ -1,4 +1,3 @@
-/* src/components/admin/statistics/Statistics.css //*/
 .statistics-container {
   padding: 20px;
   max-width: 1200px;
@@ -351,7 +350,6 @@
   background-color: #b71c1c;
 }
 
-/* Responsive styles */
 @media (max-width: 1024px) {
   .stats-details {
     grid-template-columns: 1fr;
@@ -391,9 +389,6 @@
     flex: 1;
   }
 
-  /* Agregar al final de tu Statistics.css existente */
-
-/* Sección de calificaciones */
 .rating-summary {
   background: #f8f9fa;
   padding: 20px;
@@ -435,7 +430,6 @@
   color: #666;
 }
 
-/* Calificaciones recientes */
 .recent-ratings h4 {
   margin-bottom: 15px;
   color: #333;
@@ -496,8 +490,6 @@
   border-radius: 6px;
   border: 1px solid #e9ecef;
 }
-
-/* Responsive para calificaciones */
 @media (max-width: 768px) {
   .rating-overview {
     flex-direction: column;

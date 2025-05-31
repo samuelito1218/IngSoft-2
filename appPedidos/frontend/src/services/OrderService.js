@@ -1,12 +1,7 @@
-// src/services/OrderService.js//
 import api from './api';
 
 const OrderService = {
-  /**
-   * Crear un nuevo pedido
-   * @param {Object} orderData - Datos del pedido
-   * @returns {Promise} - Respuesta con el pedido creado
-   */
+  
   createOrder: async (orderData) => {
     try {
       const response = await api.post('/pedidos/crear', orderData);
@@ -24,10 +19,7 @@ const OrderService = {
     }
   },
   
-  /**
-   * Obtener el pedido activo del cliente
-   * @returns {Promise} - Pedido activo o null
-   */
+  
   getActiveOrder: async () => {
     try {
       const response = await api.get('/pedidos/cliente/activo');
@@ -37,7 +29,6 @@ const OrderService = {
       };
     } catch (error) {
       if (error.response && error.response.status === 404) {
-        // No hay pedido activo, esto no es un error
         return {
           success: true,
           data: null
@@ -53,10 +44,7 @@ const OrderService = {
     }
   },
   
-  /**
-   * Obtener historial de pedidos del cliente
-   * @returns {Promise} - Lista de pedidos
-   */
+  
   getOrderHistory: async () => {
     try {
       const response = await api.get('/pedidos/cliente');
@@ -74,11 +62,7 @@ const OrderService = {
     }
   },
   
-  /**
-   * Obtener detalle de un pedido
-   * @param {string} id - ID del pedido
-   * @returns {Promise} - Detalle del pedido
-   */
+  
   getOrderById: async (id) => {
     try {
       const response = await api.get(`/pedidos/${id}`);
@@ -96,11 +80,7 @@ const OrderService = {
     }
   },
   
-  /**
-   * Cancelar un pedido
-   * @param {string} id - ID del pedido
-   * @returns {Promise} - Respuesta de la API
-   */
+  
   cancelOrder: async (id) => {
     try {
       const response = await api.delete(`/pedidos/eliminar/${id}`);
@@ -118,12 +98,7 @@ const OrderService = {
     }
   },
   
-  /**
-   * Calificar un pedido entregado
-   * @param {string} id - ID del pedido
-   * @param {Object} ratingData - Datos de calificación
-   * @returns {Promise} - Respuesta de la API
-   */
+  
   rateOrder: async (id, ratingData) => {
     try {
       const response = await api.post(`/calificaciones/calificar/${id}`, ratingData);
@@ -141,12 +116,7 @@ const OrderService = {
     }
   },
   
-  /**
-   * Procesar pago de un pedido
-   * @param {string} orderId - ID del pedido
-   * @param {Object} paymentData - Datos del pago
-   * @returns {Promise} - Respuesta de la API
-   */
+  
   processPayment: async (orderId, paymentData) => {
     try {
       const response = await api.post(`/pagos/${orderId}/procesar`, paymentData);
@@ -164,11 +134,7 @@ const OrderService = {
     }
   },
   
-  /**
-   * Obtener ubicación del repartidor para un pedido
-   * @param {string} orderId - ID del pedido
-   * @returns {Promise} - Ubicación del repartidor
-   */
+  
   getDeliveryLocation: async (orderId) => {
     try {
       const response = await api.get(`/ubicacion/pedido/${orderId}`);
@@ -258,7 +224,6 @@ rejectOrder: async (orderId, reason = '') => {
   }
 },
 
-// Marcar un pedido como preparado (listo para entrega)
 markOrderAsReady: async (orderId) => {
   try {
     const response = await api.put(`/pedidos/preparado/${orderId}`);

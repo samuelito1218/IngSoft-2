@@ -1,4 +1,3 @@
-/* RestaurantDetails.css - Updated for better organizationn */
 .restaurant-details-wrapper {
   max-width: 1200px;
   margin: 0 auto;
@@ -14,7 +13,6 @@
   overflow: hidden;
 }
 
-/* Estilos para el encabezado del restaurante */
 .restaurant-header {
   margin-bottom: 20px;
   border-radius: 12px;
@@ -109,14 +107,12 @@
   font-size: 14px;
 }
 
-/* Layout principal de productos */
 .products-main-container {
   display: grid;
   grid-template-columns: 230px 1fr;
   gap: 20px;
 }
 
-/* Sidebar con categorías */
 .products-sidebar {
   background-color: white;
   border-radius: 12px;
@@ -134,7 +130,6 @@
   margin: 16px 0 12px 0;
 }
 
-/* Buscador mejorado */
 .products-search {
   margin-bottom: 16px;
 }
@@ -168,7 +163,6 @@
   outline: none;
 }
 
-/* Categorías de productos mejoradas */
 .product-categories {
   display: flex;
   flex-direction: column;
@@ -231,7 +225,6 @@
   color: #ff4b2b;
 }
 
-/* Contenido principal de productos */
 .products-content {
   background-color: white;
   border-radius: 12px;
@@ -259,14 +252,12 @@
   border-radius: 2px;
 }
 
-/* Grid de productos mejorado */
 .products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 16px;
 }
 
-/* Estilos para FoodItem */
 .food-item {
   background-color: white;
   border-radius: 10px;
@@ -343,7 +334,6 @@
   background-color: #e63e1a;
 }
 
-/* Mensaje de no productos */
 .no-products {
   text-align: center;
   padding: 30px 20px;
@@ -373,7 +363,6 @@
   box-shadow: 0 4px 10px rgba(255, 75, 43, 0.15);
 }
 
-/* Estilos de carga */
 .restaurant-details-loading,
 .restaurant-details-error {
   display: flex;
@@ -433,7 +422,6 @@
   border: 1px solid #d32f2f;
 }
 
-/* Media queries para responsividad */
 @media (max-width: 992px) {
   .products-main-container {
     grid-template-columns: 1fr;

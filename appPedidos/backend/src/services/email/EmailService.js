@@ -1,14 +1,6 @@
-// services/emailService.js
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-/**
- * Envía un correo electrónico
- * @param {string} to - Destinatario del correo
- * @param {string} subject - Asunto del correo
- * @param {string} htmlContent - Contenido HTML del correo
- * @returns {Promise<boolean>} - true si se envía correctamente, false en caso contrario
- */
 const sendEmail = async (to, subject, htmlContent) => {
   // Para el modo desarrollo, solo mostrar en consola
   if (process.env.EMAIL_SERVICE === 'console' || process.env.NODE_ENV === 'development') {
@@ -20,8 +12,7 @@ const sendEmail = async (to, subject, htmlContent) => {
     console.log('========================================\n');
     return true;
   }
-  
-  // Para modo producción, intentar enviar el correo real
+
   try {
     // Verificar configuración necesaria
     if (!process.env.EMAIL_SERVICE || !process.env.EMAIL_USER) {

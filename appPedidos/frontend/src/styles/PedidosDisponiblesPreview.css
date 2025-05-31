@@ -1,5 +1,3 @@
-/* PedidosDisponiblesPreview.css y PedidosActivosPreview.css */
-/*Versión Samuel*/
 .pedidos-disponibles-preview,
 .pedidos-activos-preview {
   width: 100%;
@@ -112,7 +110,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  background-color: #3498db; /* Mismo azul que el botón grande */
+  background-color: #3498db; 
   color: white;
   border: none;
   border-radius: 50px;
@@ -181,26 +179,26 @@
 }
 
 .view-detail-btn-sm {
-  background-color: #3498db !important;
-  color: white !important;
-  border: none !important;
-  border-radius: 8px !important;
-  padding: 12px 15px !important;
-  font-size: 0.9rem !important;
-  font-weight: 600 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 100% !important; /* Igual que el botón de chat */
-  height: auto !important; /* Mismo alto que el chat */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
-  margin: 0 !important; /* Quita cualquier margen que pudiera tener */
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 15px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin: 0;
 }
 
 .view-detail-btn-sm:hover {
-  background-color: #2980b9 !important; /* Azul más sutil para hover */
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2) !important;
+  background-color: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
 }
 
 .btn-spinner-sm {
@@ -239,7 +237,6 @@
   }
 }
 
-/* Estilos responsivos */
 @media (max-width: 768px) {
   .preview-grid {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

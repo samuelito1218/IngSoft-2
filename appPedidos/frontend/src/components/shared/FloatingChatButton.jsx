@@ -1,4 +1,3 @@
-// src/components/shared/FloatingChatButton.jsx//
 import React, { useState, useEffect } from 'react';
 import { FaComments, FaTimes, FaPaperPlane } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -98,7 +97,6 @@ const FloatingChatButton = () => {
                 throw new Error('No se pudo identificar al destinatario del mensaje');
             }
     
-    // Agregar mensaje optimista
     const mensajeOptimista = {
       id: `temp-${Date.now()}`,
       contenido: nuevoMensaje.trim(),
@@ -110,11 +108,10 @@ const FloatingChatButton = () => {
     setMensajes(prev => [...prev, mensajeOptimista]);
     setNuevoMensaje('');
     
-    // Enviar al servidor con el orden correcto de parámetros
     const response = await ApiService.mensajes.enviar(
-      pedidoActivo.id,      // 1. pedidoId
-      usuarioReceptorId,    // 2. receptorId
-      nuevoMensaje.trim()   // 3. texto
+      pedidoActivo.id,      
+      usuarioReceptorId,    
+      nuevoMensaje.trim()   
     );
     
     console.log("Respuesta del servidor:", response);
@@ -160,7 +157,6 @@ const FloatingChatButton = () => {
     }
   };
 
-  // Formatear fecha para los mensajes
   const formatFecha = (fechaStr) => {
     if (!fechaStr) return '';
     try {
@@ -171,12 +167,11 @@ const FloatingChatButton = () => {
     }
   };
 
-  // No mostrar el botón si no hay pedidos activos
+  // No mostrar el icono si no hay un pedido activo
   if (loading || !pedidoActivo || !pedidoActivo.id) {
     return null;
   }
 
-  // Asegúrate de que tienes un clienteNombre para mostrar
   const clienteNombre = pedidoActivo.cliente?.nombreCompleto || 
                         (pedidoActivo.cliente?.nombre || 'Cliente');
 

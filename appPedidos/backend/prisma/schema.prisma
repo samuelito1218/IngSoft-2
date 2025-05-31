@@ -1,5 +1,3 @@
-//
-// appPedidos/backend/prisma/schema.prisma (actualizado)
 generator client {
   provider = "prisma-client-js"
 }
@@ -20,7 +18,6 @@ type PedidosProductos {
   productoId String @db.ObjectId
 }
 
-/// This collection uses a JSON Schema defined in the database, which requires additional setup for migrations. Visit https://pris.ly/d/mongodb-json-schema for more info.
 model Restaurantes {
   id          String                      @id @default(auto()) @map("_id") @db.ObjectId
   nombre      String
@@ -71,7 +68,6 @@ type RestaurantesVerificacionesDirecciones {
   direccion   String
 }
 
-/// This collection uses a JSON Schema defined in the database, which requires additional setup for migrations. Visit https://pris.ly/d/mongodb-json-schema for more info.
 model Mensajes {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
   pedido_Id       String   @db.ObjectId
@@ -89,7 +85,6 @@ type UbicacionRepartidor {
   timestamp   DateTime @db.Date
 }
 
-/// This collection uses a JSON Schema defined in the database, which requires additional setup for migrations. Visit https://pris.ly/d/mongodb-json-schema for more info.
 model Pedidos {
   id                  String                  @id @default(auto()) @map("_id") @db.ObjectId
   estado              EstadoPedido
@@ -117,7 +112,6 @@ enum EstadoPedido {
   Cancelado
 }
 
-/// This collection uses a JSON Schema defined in the database, which requires additional setup for migrations. Visit https://pris.ly/d/mongodb-json-schema for more info.
 
 model Productos {
   id               String       @id @default(auto()) @map("_id") @db.ObjectId
@@ -131,7 +125,6 @@ model Productos {
   sucursales_Ids   String[]     @db.ObjectId
 }
 
-/// This collection uses a JSON Schema defined in the database, which requires additional setup for migrations. Visit https://pris.ly/d/mongodb-json-schema for more info.
 model Usuarios {
   id                   String               @id @default(auto()) @map("_id") @db.ObjectId
   nombreCompleto       String

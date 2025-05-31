@@ -1,9 +1,6 @@
-// Controlador de productos
-//
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// Método para listar todos los productos
 exports.listarProductos = async (req, res) => {
   try {
     const productos = await prisma.productos.findMany();
@@ -18,7 +15,6 @@ exports.listarProductos = async (req, res) => {
   }
 };
 
-// Método para obtener un producto específico por ID
 exports.obtenerProducto = async (req, res) => {
   try {
     const { id } = req.params;
@@ -48,8 +44,7 @@ exports.obtenerProducto = async (req, res) => {
 exports.listarProductosPorRestaurante = async (req, res) => {
   try {
     const { restauranteId } = req.params;
-    
-    // Verificar que el restaurante existe
+
     const restaurante = await prisma.restaurantes.findUnique({
       where: { id: restauranteId }
     });
@@ -57,8 +52,7 @@ exports.listarProductosPorRestaurante = async (req, res) => {
     if (!restaurante) {
       return res.status(404).json({ message: "Restaurante no encontrado" });
     }
-    
-    // Buscar productos del restaurante
+
     const productos = await prisma.productos.findMany({
       where: { restaurante_Id: restauranteId }
     });
@@ -74,18 +68,13 @@ exports.listarProductosPorRestaurante = async (req, res) => {
 };
 
 // Método para crear un producto
-
-// Método para crear un producto - VERSIÓN CORREGIDA
-// Método para crear un producto - VERSIÓN CON DEBUGGING COMPLETO
-// Método para crear un producto - ADAPTADO A TU ESQUEMA
 exports.crearProducto = async (req, res) => {
   console.log("=== INICIANDO CREACIÓN DE PRODUCTO ===");
   console.log("Body recibido:", JSON.stringify(req.body, null, 2));
   
   try {
     const { nombre, precio, especificaciones, categoria, imageUrl, sucursalesIds, restaurante_Id, todasLasSucursales } = req.body;
-    
-    // Validaciones según tu esquema de MongoDB
+B
     if (!nombre || !nombre.trim()) {
       return res.status(400).json({ 
         message: 'El nombre es obligatorio según el esquema de BD'
@@ -97,22 +86,16 @@ exports.crearProducto = async (req, res) => {
         message: 'El precio es obligatorio según el esquema de BD'
       });
     }
-
-    // ✅ IMPORTANTE: especificaciones es OBLIGATORIO en tu BD
     if (!especificaciones || !especificaciones.trim()) {
       return res.status(400).json({ 
         message: 'Las especificaciones son obligatorias según el esquema de BD'
       });
     }
-
-    // ✅ IMPORTANTE: categoria es OBLIGATORIO en tu BD
     if (!categoria || !categoria.trim()) {
       return res.status(400).json({ 
         message: 'La categoría es obligatoria según el esquema de BD'
       });
     }
-
-    // Validar que la categoría esté en el enum permitido
     const categoriasPermitidas = ['Hamburguesa', 'Pizza', 'Sushi', 'Ensaladas', 'Perro', 'Picadas', 'Postres', 'Otras'];
     if (!categoriasPermitidas.includes(categoria)) {
       return res.status(400).json({ 
@@ -128,7 +111,6 @@ exports.crearProducto = async (req, res) => {
       });
     }
 
-    // Validar precio (debe ser double según tu esquema)
     const precioNumero = parseFloat(precio);
     if (isNaN(precioNumero) || precioNumero <= 0) {
       return res.status(400).json({ 
@@ -138,14 +120,12 @@ exports.crearProducto = async (req, res) => {
       });
     }
 
-    // Verificar usuario autenticado
     if (!req.user || !req.user.id) {
       return res.status(401).json({ message: 'Usuario no autenticado' });
     }
     
     console.log("=== BUSCANDO RESTAURANTE ===");
     
-    // Verificar restaurante y permisos
     const restaurante = await prisma.restaurantes.findUnique({
       where: { id: restaurante_Id },
       include: { sucursales: true }
@@ -161,7 +141,6 @@ exports.crearProducto = async (req, res) => {
     
     console.log("=== PROCESANDO SUCURSALES ===");
     
-    // Determinar sucursales (obligatorio según tu esquema)
     let sucursales_Ids = [];
     
     if (todasLasSucursales === true) {
@@ -187,13 +166,12 @@ exports.crearProducto = async (req, res) => {
     }
     
     console.log("Sucursales finales:", sucursales_Ids);
-    
-    // ✅ Preparar datos según TU esquema exacto
+
     const datosProducto = {
       nombre: String(nombre).trim(),
-      precio: Number(precioNumero), // Double según tu esquema
-      especificaciones: String(especificaciones).trim(), // ✅ OBLIGATORIO
-      categoria: String(categoria).trim(), // ✅ Singular, no plural
+      precio: Number(precioNumero), 
+      especificaciones: String(especificaciones).trim(), 
+      categoria: String(categoria).trim(), 
       imageUrl: imageUrl ? String(imageUrl).trim() : null,
       restaurante_Id: String(restaurante_Id),
       sucursales_Ids: sucursales_Ids
@@ -201,8 +179,6 @@ exports.crearProducto = async (req, res) => {
     
     console.log("=== DATOS FINALES PARA PRISMA ===");
     console.log(JSON.stringify(datosProducto, null, 2));
-    
-    // Verificar tipos según tu esquema
     console.log("Validación de tipos:");
     console.log("- nombre (string):", typeof datosProducto.nombre);
     console.log("- precio (number/double):", typeof datosProducto.precio);
@@ -270,8 +246,6 @@ exports.crearProducto = async (req, res) => {
   }
 };
 
-// Método para actualizar un producto
-// Controlador para editar un producto
 exports.editarProducto = async (req, res) => {
   try {
     const { productoId } = req.params;
@@ -288,25 +262,19 @@ exports.editarProducto = async (req, res) => {
     if (!producto) {
       return res.status(404).json({ message: 'Producto no encontrado' });
     }
-    
-    // Verificar permisos (que el usuario sea dueño del restaurante)
+
     if (producto.restaurante.ownerId !== req.user.id) {
       return res.status(403).json({ message: 'No tienes permiso para editar este producto' });
     }
-    
-    // Obtener todas las sucursales del restaurante
     const sucursalesRestaurante = await prisma.sucursales.findMany({
       where: { restaurante_Id: producto.restaurante_Id }
     });
     
-    // Determinar a qué sucursales asignar el producto
-    let sucursales_Ids = [...producto.sucursales_Ids]; // Mantener las sucursales existentes por defecto
+    let sucursales_Ids = [...producto.sucursales_Ids];
     
     if (todasLasSucursales) {
-      // Si se seleccionó "todas las sucursales", asignamos a todas
       sucursales_Ids = sucursalesRestaurante.map(s => s.id);
     } else if (Array.isArray(sucursalesIds)) {
-      // Verificar que las sucursales seleccionadas pertenezcan al restaurante
       const sucursalesDelRestaurante = sucursalesRestaurante.map(s => s.id);
       const sucursalesValidas = sucursalesIds.filter(id => sucursalesDelRestaurante.includes(id));
       
@@ -345,7 +313,6 @@ exports.editarProducto = async (req, res) => {
   }
 };
 
-// Método para eliminar un producto
 exports.eliminarProducto = async (req, res) => {
   try {
     const { id } = req.params;
@@ -358,8 +325,6 @@ exports.eliminarProducto = async (req, res) => {
     if (!producto) {
       return res.status(404).json({ message: "Producto no encontrado" });
     }
-    
-    // Eliminar el producto
     await prisma.productos.delete({
       where: { id }
     });
@@ -376,12 +341,9 @@ exports.eliminarProducto = async (req, res) => {
   }
 };
 
-// Obtener productos de una sucursal específica
 exports.listarProductosPorSucursal = async (req, res) => {
   try {
     const { sucursalId } = req.params;
-    
-    // Verificar que la sucursal existe
     const sucursal = await prisma.sucursales.findUnique({
       where: { id: sucursalId }
     });
@@ -389,8 +351,6 @@ exports.listarProductosPorSucursal = async (req, res) => {
     if (!sucursal) {
       return res.status(404).json({ message: 'Sucursal no encontrada' });
     }
-    
-    // Buscar productos que incluyan esta sucursal en su array de sucursales_Ids
     const productos = await prisma.productos.findMany({
       where: {
         sucursales_Ids: {

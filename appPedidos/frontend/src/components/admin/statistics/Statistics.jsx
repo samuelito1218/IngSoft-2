@@ -15,15 +15,13 @@ import './Statistics.css';
 const Statistics = () => {
   const navigate = useNavigate();
   
-  // Estados
   const [restaurants, setRestaurants] = useState([]);
   const [selectedRestaurant, setSelectedRestaurant] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState('mes');
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // Cargar restaurantes
+
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
@@ -44,28 +42,24 @@ const Statistics = () => {
     
     fetchRestaurants();
   }, []);
-  
-  // Cargar estadísticas cuando cambia el restaurante o periodo
+
   useEffect(() => {
     if (!selectedRestaurant) return;
     
     const fetchStats = async () => {
       try {
         setLoading(true);
-        
-        // USAR EL NUEVO ENDPOINT CON CALIFICACIONES DINÁMICAS
+      
         const response = await api.get(`/calificaciones/restaurante/${selectedRestaurant}/estadisticas?periodo=${selectedPeriod}`);
         
         setStats(response.data);
         setLoading(false);
       } catch (err) {
         console.error('Error al cargar estadísticas:', err);
-        
-        // Si falla el nuevo endpoint, usar el anterior como fallback
+
         try {
           const response = await api.get(`/pedidos/restaurante/${selectedRestaurant}/estadisticas?periodo=${selectedPeriod}`);
-          
-          // Agregar calificación dinámica al response del endpoint anterior
+
           try {
             const calificacionesResponse = await api.get(`/calificaciones/restaurante/${selectedRestaurant}`);
             if (calificacionesResponse.data && calificacionesResponse.data.restaurante) {
@@ -93,17 +87,14 @@ const Statistics = () => {
     fetchStats();
   }, [selectedRestaurant, selectedPeriod]);
   
-  // Cambiar restaurante
   const handleRestaurantChange = (e) => {
     setSelectedRestaurant(e.target.value);
   };
-  
-  // Cambiar periodo
+ 
   const handlePeriodChange = (e) => {
     setSelectedPeriod(e.target.value);
   };
-  
-  // Formatear moneda
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -111,8 +102,7 @@ const Statistics = () => {
       minimumFractionDigits: 0
     }).format(amount);
   };
-  
-  // Ir a la página de gestión del restaurante
+
   const handleViewRestaurant = () => {
     navigate(`/admin/restaurantes/${selectedRestaurant}`);
   };
@@ -322,12 +312,8 @@ const Statistics = () => {
                 )}
               </div>
             </div>
-
-            {/* NUEVA SECCIÓN: Calificaciones del Restaurante */}
             <div className="stats-section">
               <h3>Calificaciones del Restaurante</h3>
-              
-              {/* Resumen de calificaciones */}
               <div className="rating-summary">
                 <div className="rating-overview">
                   <div className="rating-stars">
@@ -348,8 +334,6 @@ const Statistics = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Calificaciones recientes */}
               {stats.calificacionesRecientes && stats.calificacionesRecientes.length > 0 ? (
                 <div className="recent-ratings">
                   <h4>Calificaciones Recientes</h4>

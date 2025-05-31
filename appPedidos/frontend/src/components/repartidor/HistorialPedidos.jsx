@@ -1,4 +1,3 @@
-//
 import React, { useState, useEffect } from 'react';
 import { FaHistory, FaStore, FaUser, FaCalendarAlt, FaComments, FaStar, FaTrophy, FaMoneyBillWave, FaSearch, FaFilter } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -33,7 +32,6 @@ const HistorialPedidos = () => {
     fetchHistorial();
   }, []);
 
-  // Aplicar filtros cuando cambien
   useEffect(() => {
     aplicarFiltros();
   }, [pedidos, filtros]);
@@ -112,11 +110,9 @@ const HistorialPedidos = () => {
       return;
     }
 
-    // Usar el cache para búsquedas si hay texto de búsqueda
     let pedidosParaFiltrar = pedidos;
     
     if (filtros.busqueda.trim()) {
-      // Buscar en cache primero
       const resultadosCache = pedidoCache.search({
         restaurante: filtros.busqueda,
         cliente: filtros.busqueda
@@ -125,7 +121,6 @@ const HistorialPedidos = () => {
       if (resultadosCache.length > 0) {
         pedidosParaFiltrar = resultadosCache;
       } else {
-        // Búsqueda manual si no hay resultados en cache
         pedidosParaFiltrar = pedidos.filter(pedido => 
           pedido.restaurante?.nombre?.toLowerCase().includes(filtros.busqueda.toLowerCase()) ||
           pedido.cliente?.nombreCompleto?.toLowerCase().includes(filtros.busqueda.toLowerCase())
@@ -133,28 +128,23 @@ const HistorialPedidos = () => {
       }
     }
 
-    // Aplicar otros filtros
     let resultado = pedidosParaFiltrar.filter(pedido => {
-      // Filtro por estado
       if (filtros.estado !== 'todos' && pedido.estado !== filtros.estado) {
         return false;
       }
 
-      // Filtro por fecha desde
       if (filtros.fechaDesde) {
         const fechaPedido = new Date(pedido.fechaDeCreacion);
         const fechaDesde = new Date(filtros.fechaDesde);
         if (fechaPedido < fechaDesde) return false;
       }
 
-      // Filtro por fecha hasta
       if (filtros.fechaHasta) {
         const fechaPedido = new Date(pedido.fechaDeCreacion);
         const fechaHasta = new Date(filtros.fechaHasta);
         if (fechaPedido > fechaHasta) return false;
       }
 
-      // Filtro por monto mínimo
       if (filtros.montoMinimo && (pedido.total || 0) < parseFloat(filtros.montoMinimo)) {
         return false;
       }
@@ -162,7 +152,6 @@ const HistorialPedidos = () => {
       return true;
     });
 
-    // Ordenar por fecha (más recientes primero)
     resultado.sort((a, b) => new Date(b.fechaDeCreacion) - new Date(a.fechaDeCreacion));
 
     setPedidosFiltrados(resultado);

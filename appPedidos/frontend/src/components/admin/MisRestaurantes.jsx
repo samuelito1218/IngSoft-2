@@ -1,4 +1,4 @@
-//
+
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { api } from '../../services/api';
@@ -16,10 +16,10 @@ export default function MisRestaurantes() {
   const [error, setError] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [restaurantToDelete, setRestaurantToDelete] = useState(null);
-  const [mostrarSucursales, setMostrarSucursales] = useState(false); //Nuevo
-  const [restauranteSeleccionado, setRestauranteSeleccionado] = useState(null); //Nuevo
+  const [mostrarSucursales, setMostrarSucursales] = useState(false); 
+  const [restauranteSeleccionado, setRestauranteSeleccionado] = useState(null); 
 
-  // Cargar restaurantes
+  
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
@@ -42,23 +42,22 @@ export default function MisRestaurantes() {
     fetchRestaurants();
   }, [token]);
 
-  // Manejar edición de restaurante
+  
   const handleEdit = (id) => {
     navigate(`/admin/restaurantes/editar/${id}`);
   };
 
-  // Ver detalle de restaurante (con productos y pedidos)
+  
   const handleViewDetails = (id) => {
     navigate(`/admin/restaurantes/${id}`);
   };
 
-  // Mostrar modal de confirmación para eliminar
   const confirmDelete = (restaurant) => {
     setRestaurantToDelete(restaurant);
     setShowDeleteModal(true);
   };
 
-  // Eliminar restaurante
+  
   const handleDelete = async () => {
     if (!restaurantToDelete) return;
 
@@ -67,7 +66,6 @@ export default function MisRestaurantes() {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // Actualizar la lista de restaurantes
       setRestaurants(prevRestaurants => 
         prevRestaurants.filter(r => r.id !== restaurantToDelete.id)
       );
@@ -80,12 +78,10 @@ export default function MisRestaurantes() {
     }
   };
 
-  // Manejar gestión de productos
   const handleManageProducts = (id) => {
     navigate(`/admin/productos/${id}`);
   };
 
-  // Manejar gestión de sucursales - NUEVO
   const handleManageSucursales = (restaurant) => {
     setRestauranteSeleccionado(restaurant);
     setMostrarSucursales(true);
@@ -174,7 +170,7 @@ export default function MisRestaurantes() {
                 >
                   <FaUtensils />
                 </button>
-                {/* NUEVO BOTÓN DE SUCURSALES */}
+                
                 <button 
                   className="action-button sucursales" 
                   onClick={(e) => {
@@ -185,16 +181,7 @@ export default function MisRestaurantes() {
                 >
                   <FaBuilding />
                 </button>
-                <button 
-                  className="action-button view" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.open(`/cliente/restaurante/${restaurant.id}`, '_blank');
-                  }}
-                  title="Ver como cliente"
-                >
-                  <FaExternalLinkAlt />
-                </button>
+               
                 <button 
                   className="action-button delete" 
                   onClick={(e) => {
@@ -236,7 +223,7 @@ export default function MisRestaurantes() {
         </div>
       )}
 
-      {/* NUEVO MODAL DE SUCURSALES */}
+    
       {mostrarSucursales && restauranteSeleccionado && (
         <SucursalesManagement
           restaurante={restauranteSeleccionado}

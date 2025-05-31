@@ -6,14 +6,11 @@ import './RestaurantCard.css';
 const DEFAULT_IMAGE = '/images/restaurant-placeholder.jpg';
 
 const RestaurantCard = ({ restaurant, onClick }) => {
-  // Usar el hook para obtener calificaciones reales
   const { calificacionPromedio, totalCalificaciones, loading } = useRating(restaurant.id);
   
-  // Adaptador para manejar diferentes formatos de datos
   const restaurantData = {
     nombre: restaurant.nombre || 'Restaurante sin nombre',
     descripcion: restaurant.descripcion || '',
-    // Usa imageUrl si existe, sino imagen, o valor por defecto
     imagen: restaurant.imageUrl || restaurant.imagen || DEFAULT_IMAGE,
     tiempoEntrega: restaurant.tiempoEntrega || '30-45 min',
     categorias: restaurant.categorias || ['General'],
@@ -21,7 +18,6 @@ const RestaurantCard = ({ restaurant, onClick }) => {
     envioGratis: restaurant.envioGratis || false
   };
   
-  // Formatear la calificación para mostrar
   const formatRating = (rating) => {
     if (rating === 0) return '0.0';
     return Number(rating).toFixed(1);

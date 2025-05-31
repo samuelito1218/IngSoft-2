@@ -1,7 +1,3 @@
-/*Versión Samuel*/
-/* src/styles/admin.css //*/
-
-/* Global reset */
 html, body, #root {
     width: 100%;
     height: 100%;
@@ -11,14 +7,12 @@ html, body, #root {
     background: #f8f9fa;
   }
   
-  /* Container */
   .admin-layout {
     display: flex;
     height: 100vh;
     overflow: hidden;
   }
   
-  /* Sidebar */
   .sidebar {
     width: 260px;
     background: #ffffff;
@@ -49,7 +43,6 @@ html, body, #root {
     color: #ff6f3b;
   }
   
-  /* Close button */
   .close-btn {
     margin-top: auto;
     padding: 12px;
@@ -65,7 +58,6 @@ html, body, #root {
     background-color: #e65c30;
   }
   
-  /* Main content area */
   .main {
     flex: 1;
     padding: 40px;
@@ -73,7 +65,6 @@ html, body, #root {
     background: #f1f3f5;
   }
   
-  /* Form card */
   .form-card {
     background: #ffffff;
     border-radius: 12px;
@@ -87,7 +78,6 @@ html, body, #root {
     transform: translateY(-4px);
   }
   
-  /* Headings */
   .form-card h1 {
     font-size: 2rem;
     color: #333333;
@@ -103,7 +93,6 @@ html, body, #root {
     margin-top: 8px;
   }
   
-  /* Inputs & selects */
   .form-card input,
   .form-card select {
     width: 100%;
@@ -121,7 +110,6 @@ html, body, #root {
     border-color: #ff6f3b;
   }
   
-  /* Checkbox label styling */
   .form-card label {
     display: flex;
     align-items: center;
@@ -134,7 +122,6 @@ html, body, #root {
     width: auto;
   }
   
-  /* Add field button */
   .add-field-btn {
     background: none;
     color: #00c3a6;
@@ -149,7 +136,6 @@ html, body, #root {
     color: #008f7e;
   }
   
-  /* Submit button */
   .form-card button[type='submit'] {
     width: 100%;
     padding: 16px;
@@ -166,7 +152,6 @@ html, body, #root {
     background: #e65c30;
   }
   
-  /* Message text */
   .message {
     text-align: center;
     margin-top: 24px;
@@ -179,4 +164,3 @@ html, body, #root {
     gap: 16px;
     margin-bottom: 16px;
   }
-  

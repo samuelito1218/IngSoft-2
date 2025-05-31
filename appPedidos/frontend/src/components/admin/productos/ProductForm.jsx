@@ -24,15 +24,12 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
   const [error, setError] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
   
-  // Estados para sucursales y categorías
   const [sucursales, setSucursales] = useState([]);
   const [loadingSucursales, setLoadingSucursales] = useState(true);
   const [showSucursalDropdown, setShowSucursalDropdown] = useState(false);
-  
-  // Lista de categorías
+
   const categorias = ['Hamburguesa', 'Pizza', 'Sushi', 'Ensaladas', 'Perro', 'Picadas', 'Postres', 'Otras'];
 
-  // Cargar sucursales cuando se inicia el componente
   useEffect(() => {
     const fetchSucursales = async () => {
       try {
@@ -52,10 +49,9 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
     fetchSucursales();
   }, [restauranteId, token]);
 
-  // Si estamos editando, cargar datos del producto
   useEffect(() => {
     if (isEditing && product) {
-      // Verificar si todas las sucursales están seleccionadas
+
       const todasSeleccionadas = 
         sucursales.length > 0 && 
         product.sucursales_Ids && 
@@ -78,7 +74,6 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
     }
   }, [isEditing, product, sucursales]);
 
-  // Manejar cambios en los campos del formulario
   const handleChange = e => {
     const { name, value, type, checked } = e.target;
     
@@ -106,7 +101,6 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
         }));
       }
     } else if (name === 'precio') {
-      // Permitir números y hasta un punto decimal
       if (value === '' || /^[0-9]*(\.[0-9]{0,2})?$/.test(value)) {
         setForm(prev => ({ ...prev, [name]: value }));
       }
@@ -115,21 +109,18 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
     }
   };
 
-  // Manejar cambio de imagen
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     setForm(prev => ({ ...prev, image: file }));
 
-    // Crear URL para vista previa
     const reader = new FileReader();
     reader.onload = () => {
       setPreview(reader.result);
     };
     reader.readAsDataURL(file);
     
-    // Subir imagen inmediatamente
     try {
       setUploadingImage(true);
       const imageUrl = await CloudinaryService.uploadImage(file, 'productos');
@@ -154,7 +145,7 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
     setError('');
 
     try {
-      // Validaciones según tu esquema de BD
+
       if (!form.nombre.trim()) {
         throw new Error('El nombre del producto es obligatorio');
       }
@@ -162,23 +153,19 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
       if (!form.precio || parseFloat(form.precio) <= 0) {
         throw new Error('El precio debe ser un valor válido mayor a cero');
       }
-      
-      // especificaciones es obligatorio según tu esquema
+ 
       if (!form.especificaciones.trim()) {
         throw new Error('La descripción del producto es obligatoria');
       }
 
-      // categoria es obligatorio según tu esquema
       if (!form.categoria || form.categoria.trim() === '') {
         throw new Error('La categoría es obligatoria');
       }
-      
-      // Validar selección de sucursales
+
       if (!form.todasLasSucursales && form.sucursales_Ids.length === 0) {
         throw new Error('Debe seleccionar al menos una sucursal');
       }
 
-      // Subir imagen si se seleccionó una nueva
       let imagenFinal = form.imageUrl;
       if (form.image && !form.imageUrl) {
         try {
@@ -191,21 +178,19 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
         }
       }
 
-      // Crear objeto según tu esquema exacto
       const productData = {
         nombre: form.nombre.trim(),
-        especificaciones: form.especificaciones.trim(), // Obligatorio
+        especificaciones: form.especificaciones.trim(), 
         precio: parseFloat(form.precio), 
         imageUrl: imagenFinal || null,
-        categoria: form.categoria.trim(), // Singular, obligatorio
+        categoria: form.categoria.trim(), 
         restaurante_Id: restauranteId,
         sucursalesIds: form.sucursales_Ids,
         todasLasSucursales: form.todasLasSucursales
       };
 
       console.log("Datos que se envían al backend:", productData);
-      
-      // Llamar a la función onSave
+ 
       await onSave(productData);
       
       setLoading(false);
@@ -216,7 +201,6 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
     }
   };
 
-  // Cerrar dropdown cuando se hace clic afuera
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -249,7 +233,7 @@ const ProductForm = ({ product, isEditing, onSave, onCancel, restauranteId }) =>
       {error && <div className="error-message">{error}</div>}
 
       <form onSubmit={handleSubmit}>
-        {/* Imagen del producto */}
+
         <div className="image-upload-section">
           {preview ? (
             <div className="image-preview-container">

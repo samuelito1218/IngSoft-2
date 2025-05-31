@@ -1,12 +1,9 @@
-/* Contenedor principal */
-/*Versión Samuel*/
 .pedidos-activos-container {
     padding: 1rem;
     max-width: 1200px;
     margin: 0 auto;
 }
 
-/* Encabezado de la página */
 .pedidos-header {
     margin-bottom: 2rem;
     text-align: center;
@@ -23,7 +20,6 @@
     font-size: 1rem;
 }
 
-/* Contenedor de tarjetas de pedidos */
 .pedidos-activos-grid {
     display: flex;
     flex-direction: column;
@@ -32,7 +28,6 @@
     width: 100%;
 }
 
-/* Tarjeta de pedido */
 .pedido-activo-card {
     max-width: 600px;
     width: 100%;
@@ -48,7 +43,6 @@
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
-/* Encabezado de tarjeta */
 .pedido-header {
     background-color: #f5f7fa !important;
     border-bottom: 1px solid #eee;
@@ -85,7 +79,7 @@
     background-color: #3498db !important;
 }
 
-/* Cuerpo de tarjeta */
+
 .pedido-body {
     padding: 15px !important;
     background-color: white !important;
@@ -132,14 +126,12 @@
     font-weight: 500;
 }
 
-/* Pie de tarjeta y botones */
 .pedido-footer {
     padding: 15px !important;
     border-top: 1px solid #eee;
     background-color: white !important;
 }
 
-/* Contenedor de botones */
 .action-buttons {
     display: flex;
     flex-wrap: wrap;
@@ -148,7 +140,6 @@
     padding: 5px 0;
 }
 
-/* BOTÓN INICIAR ENTREGA - TOTALMENTE INDEPENDIENTE */
 .pickup-btn {
     background-color: #3498db !important;
     color: white !important;
@@ -190,7 +181,6 @@
     font-size: 18px !important;
 }
 
-/* BOTÓN CONFIRMAR ENTREGA - TOTALMENTE INDEPENDIENTE */
 .deliver-btn {
     background-color: #27ae60 !important;
     color: white !important;
@@ -232,7 +222,6 @@
     font-size: 18px !important;
 }
 
-/* BOTÓN CHAT - TOTALMENTE INDEPENDIENTE */
 .chat-button {
     background-color: #e74c3c !important;
     color: white !important;
@@ -274,7 +263,6 @@
     font-size: 18px !important;
 }
 
-/* Spinner de carga */
 .btn-spinner {
     width: 20px;
     height: 20px;
@@ -288,7 +276,6 @@
     to { transform: rotate(360deg); }
 }
 
-/* Mensaje de estado */
 .mensaje-estado {
     padding: 0.5rem 0;
     text-align: center;
@@ -307,7 +294,6 @@
     margin: 0;
 }
 
-/* Estado sin pedidos */
 .empty-pedidos {
     display: flex;
     flex-direction: column;
@@ -337,7 +323,6 @@
     max-width: 300px;
 }
 
-/* Estados de carga y error */
 .pedidos-loading, .pedidos-error {
     display: flex;
     flex-direction: column;
@@ -357,7 +342,6 @@
     margin-bottom: 1rem;
 }
 
-/* Estilos responsivos */
 @media (max-width: 768px) {
     .action-buttons {
         gap: 12px;
@@ -392,7 +376,7 @@
         width: 100% !important;
     }
 }
-/* Para PedidosActivos.css */
+
 .warning-banner {
   background-color: #fff3cd;
   border: 1px solid #ffeaa7;
@@ -408,7 +392,6 @@
   background-color: #ccc;
 }
 
-/* Para PedidosDisponiblesPreview.css */
 .warning-banner-sm {
   background-color: #fff3cd;
   border: 1px solid #ffeaa7;

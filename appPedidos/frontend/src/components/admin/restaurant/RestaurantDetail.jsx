@@ -1,4 +1,3 @@
-//
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
@@ -17,10 +16,9 @@ const RestaurantDetail = () => {
   const { restaurantId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  
-  // Estados principales
+
   const [restaurant, setRestaurant] = useState(null);
-  const [activeTab, setActiveTab] = useState('products'); // 'products', 'orders'
+  const [activeTab, setActiveTab] = useState('products');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -36,69 +34,41 @@ const RestaurantDetail = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
   
-  // Estados para pedidos (solo visualización)
   const [orders, setOrders] = useState([]);
   const [pendingOrders, setPendingOrders] = useState([]);
   const [inProcessOrders, setInProcessOrders] = useState([]);
   const [readyOrders, setReadyOrders] = useState([]);
   const [completedOrders, setCompletedOrders] = useState([]);
-  const [activeOrdersTab, setActiveOrdersTab] = useState('completed'); // ✅ CAMBIADO: Inicializar en 'completed'
-  
-  // Estado para imagen
+  const [activeOrdersTab, setActiveOrdersTab] = useState('completed');
+
   const [isUploading, setIsUploading] = useState(false);
 
-  // Función para abrir modal de sucursales
   const handleOpenSucursales = () => {
     setShowSucursalesModal(true);
   };
-  
-  // Función para cerrar modal de sucursales
+
   const handleCloseSucursales = () => {
     setShowSucursalesModal(false);
   };
-  
-  // Obtener datos del restaurante
+
   useEffect(() => {
     const fetchRestaurantData = async () => {
       try {
         setLoading(true);
         setError(null);
-        
-        // Obtener información del restaurante
+
         const response = await api.get(`/restaurantes/${restaurantId}`);
         setRestaurant(response.data);
-        
-        // Obtener productos del restaurante
-        const productsResponse = await api.get(`/restaurantes/${restaurantId}/productos`);
-        console.log("🔍 RESPUESTA COMPLETA DE PRODUCTOS:", productsResponse.data);
 
-        // Debug cada producto individualmente
-        if (productsResponse.data && productsResponse.data.length > 0) {
-          productsResponse.data.forEach((product, index) => {
-            console.log(`📦 PRODUCTO ${index + 1}:`, {
-              id: product.id,
-              nombre: product.nombre,
-              imagen: product.imagen,
-              imageUrl: product.imageUrl,
-              image: product.image,
-              foto: product.foto,
-              picture: product.picture,
-              media: product.media,
-              // Mostrar TODAS las propiedades
-              todasLasPropiedades: Object.keys(product)
-            });
-          });
-        }
+        const productsResponse = await api.get(`/restaurantes/${restaurantId}/productos`);
 
         setProducts(productsResponse.data || []);
         setFilteredProducts(productsResponse.data || []);
-        
-        // Obtener pedidos del restaurante (solo para visualización)
+  
         try {
           const ordersResponse = await api.get(`/pedidos/restaurante/${restaurantId}`);
           setOrders(ordersResponse.data || []);
-          
-          // Clasificar pedidos para mostrar en diferentes pestañas
+
           const pendingOrders = ordersResponse.data?.filter(order => order.estado === 'Pendiente') || [];
           const inProcessOrders = ordersResponse.data?.filter(order => order.estado === 'En_Preparacion') || [];
           const readyOrders = ordersResponse.data?.filter(order => order.estado === 'Preparado') || [];
@@ -112,7 +82,6 @@ const RestaurantDetail = () => {
           setCompletedOrders(completedOrders);
         } catch (err) {
           console.error('Error al cargar pedidos:', err);
-          // No establecemos error global, solo mostramos mensaje en consola
         }
         
         setLoading(false);
@@ -126,7 +95,6 @@ const RestaurantDetail = () => {
     fetchRestaurantData();
   }, [restaurantId, refreshTrigger]);
   
-  // Filtrar productos cuando cambia el término de búsqueda
   useEffect(() => {
     if (searchTerm.trim() === '') {
       setFilteredProducts(products);
@@ -139,49 +107,41 @@ const RestaurantDetail = () => {
     }
   }, [searchTerm, products]);
   
-  // Manejar cambio en el campo de búsqueda
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
   
-  // Navegar hacia atrás
   const handleBack = () => {
     navigate('/admin/restaurantes');
   };
-  
-  // Editar restaurante
+
   const handleEditRestaurant = () => {
     navigate(`/admin/restaurantes/editar/${restaurantId}`);
   };
-  
-  // Abrir modal para agregar nuevo producto
+
   const handleAddProduct = () => {
     setCurrentProduct(null);
     setIsEditing(false);
     setShowProductModal(true);
   };
-  
-  // Abrir modal para editar producto
+
   const handleEditProduct = (product) => {
     setCurrentProduct(product);
     setIsEditing(true);
     setShowProductModal(true);
   };
-  
-  // Confirmar eliminación de producto
+
   const confirmDeleteProduct = (product) => {
     setProductToDelete(product);
     setShowDeleteModal(true);
   };
   
-  // Eliminar producto
   const handleDeleteProduct = async () => {
     if (!productToDelete) return;
     
     try {
       await api.delete(`/productos/${productToDelete.id}`);
-      
-      // Actualizar lista de productos
+
       setProducts(prevProducts => 
         prevProducts.filter(p => p.id !== productToDelete.id)
       );
@@ -193,18 +153,15 @@ const RestaurantDetail = () => {
       setError('No se pudo eliminar el producto. Por favor, intente de nuevo.');
     }
   };
-  
-  // Guardar producto (nuevo o editado)
+
   const handleSaveProduct = async (productData) => {
     try {
       let savedProduct;
       
       if (isEditing && currentProduct) {
-        // Actualizar producto existente
         const res = await api.put(`/productos/${currentProduct.id}`, productData);
         savedProduct = res.data.producto || res.data;
-        
-        // Actualizar en la lista
+
         setProducts(prevProducts => 
           prevProducts.map(p => p.id === savedProduct.id ? savedProduct : p)
         );
@@ -227,22 +184,18 @@ const RestaurantDetail = () => {
       setError('No se pudo guardar el producto. Por favor, intente de nuevo.');
     }
   };
-  
-  // Manejar la subida de imagen del restaurante
+
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     
     try {
       setIsUploading(true);
-      
-      // Subir imagen a Cloudinary
+
       const imageUrl = await CloudinaryService.uploadImage(file, 'restaurantes');
-      
-      // Actualizar restaurante con nueva imagen
+
       await api.put(`/restaurantes/${restaurantId}/imagen`, { imageUrl });
       
-      // Actualizar estado local
       setRestaurant(prev => ({
         ...prev,
         imageUrl
@@ -255,7 +208,6 @@ const RestaurantDetail = () => {
     }
   };
   
-  // Formatear precio
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -263,8 +215,7 @@ const RestaurantDetail = () => {
       minimumFractionDigits: 0
     }).format(price);
   };
-  
-  // Formatear fecha
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('es-CO', {
@@ -276,7 +227,6 @@ const RestaurantDetail = () => {
     }).format(date);
   };
   
-  // Renderizar lista de productos
   const renderProductsList = () => {
     if (filteredProducts.length === 0) {
       return (
@@ -356,8 +306,7 @@ const RestaurantDetail = () => {
       </div>
     );
   };
-  
-  // Renderizar pedidos según pestaña activa (SOLO VISUALIZACIÓN)
+
   const renderOrders = () => {
     let ordersToShow = [];
     
@@ -375,7 +324,7 @@ const RestaurantDetail = () => {
         ordersToShow = completedOrders;
         break;
       default:
-        ordersToShow = completedOrders; // ✅ CAMBIADO: Default a completedOrders
+        ordersToShow = completedOrders;
     }
     
     if (ordersToShow.length === 0) {
@@ -425,8 +374,7 @@ const RestaurantDetail = () => {
               <p className="order-total">
                 <strong>Total:</strong> {formatPrice(order.total)}
               </p>
-              
-              {/* ✅ ELIMINADO: Ya no hay botones de acción para gestionar pedidos */}
+            
               <div className="order-info-note">
                 <p style={{ 
                   fontSize: '14px', 
@@ -438,7 +386,7 @@ const RestaurantDetail = () => {
                   backgroundColor: '#f8f9fa',
                   borderRadius: '4px'
                 }}>
-                  📋 Este pedido es gestionado por el sistema de reparto
+                  Este pedido es gestionado por el sistema de reparto
                 </p>
               </div>
             </div>
@@ -485,8 +433,7 @@ const RestaurantDetail = () => {
         <div className="restaurant-info">
           <div className="restaurant-title-section">
             <h2>{restaurant.nombre}</h2>
-            
-            {/* Botón Gestión de Sucursales */}
+
             <button 
               className="manage-branches-btn"
               onClick={handleOpenSucursales}
@@ -559,7 +506,7 @@ const RestaurantDetail = () => {
           className={`tab-button ${activeTab === 'orders' ? 'active' : ''}`}
           onClick={() => {
             setActiveTab('orders');
-            setActiveOrdersTab('completed'); // ✅ AGREGADO: Establecer automáticamente en completados
+            setActiveOrdersTab('completed');
           }}
         >
           <FaClipboardList /> Ver Pedidos

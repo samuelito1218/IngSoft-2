@@ -1,9 +1,7 @@
-// src/components/client/ClientHome.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth';
 import { useMultipleRatings } from '../../../hooks/useRating';
-import ExploreMenu from '../ExploreMenu';
 import RestaurantCard from '../restaurantcard/RestaurantCard';
 import OrderActiveAlert from '../orderactivealert/OrderActiveAlert';
 import ApiService from '../../../services/api';
@@ -22,20 +20,16 @@ const ClientHome = () => {
   
   const { user } = useAuth();
   const navigate = useNavigate();
-  
-  // Obtener IDs de restaurantes para las calificaciones
+
   const restaurantIds = restaurants.map(restaurant => restaurant.id);
   
-  // Usar el hook para obtener múltiples calificaciones
   const { ratings, loading: ratingsLoading } = useMultipleRatings(restaurantIds);
-  
-  // Cargar restaurantes al iniciar
+
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
         setLoading(true);
-        
-        // Usar una estructura try/catch independiente para cada llamada API
+
         let restaurantsData = [];
         
         try {
@@ -44,24 +38,19 @@ const ClientHome = () => {
           console.log('Data:', response.data);
           console.log('¿Es un array?', Array.isArray(response.data));
           console.log('Longitud:', response.data ? response.data.length : 'N/A');
-          
-          // Manejo más flexible de la respuesta
+
           if (response && response.data) {
-            // Si es un array directamente
+
             if (Array.isArray(response.data)) {
               restaurantsData = response.data;
             } 
-            // Si la respuesta tiene una propiedad 'restaurantes' o similar
             else if (response.data.restaurantes && Array.isArray(response.data.restaurantes)) {
               restaurantsData = response.data.restaurantes;
             }
-            // Si es un objeto simple, convertirlo en array
             else if (typeof response.data === 'object' && !Array.isArray(response.data)) {
               restaurantsData = [response.data];
             }
           }
-          
-          // Asegurarse de que los restaurantes tengan las propiedades necesarias
           restaurantsData = restaurantsData.map(r => ({
             id: r.id || `temp-${Math.random()}`,
             nombre: r.nombre || 'Restaurante sin nombre',
@@ -78,7 +67,6 @@ const ClientHome = () => {
         } catch (apiError) {
           console.error('Error en API de restaurantes:', apiError);
           
-          // Agregar al menos un restaurante ficticio si hay un error
           restaurantsData = [{
             id: 'demo-1',
             nombre: 'Restaurante Demo',
@@ -92,8 +80,7 @@ const ClientHome = () => {
           }];
           console.log('Usando restaurante de demostración:', restaurantsData);
         }
-        
-        // Si después de todo no hay restaurantes, agregar uno ficticio
+
         if (restaurantsData.length === 0) {
           restaurantsData = [{
             id: 'demo-2',
@@ -111,8 +98,7 @@ const ClientHome = () => {
         
         setRestaurants(restaurantsData);
         setFilteredRestaurants(restaurantsData);
-        
-        // Extraer categorías únicas de manera segura
+
         const uniqueCategories = [...new Set(
           restaurantsData.flatMap(restaurant => 
             restaurant.categorias || ['General']
@@ -120,8 +106,7 @@ const ClientHome = () => {
         )];
         
         setCategories(['All', ...uniqueCategories]);
-        
-        // Pedido activo en bloque try/catch separado
+
         try {
           const pedidoResponse = await ApiService.pedidos.activo();
           console.log('Respuesta de pedido activo:', pedidoResponse);
@@ -131,7 +116,6 @@ const ClientHome = () => {
           }
         } catch (pedidoError) {
           console.error('Error al cargar pedido activo:', pedidoError);
-          // No bloqueamos la UI por este error
         }
         
         setLoading(false);
@@ -145,19 +129,15 @@ const ClientHome = () => {
     fetchRestaurants();
   }, []);
   
-  // Filtrar restaurantes cuando cambia la categoría o el término de búsqueda
   useEffect(() => {
     let filtered = [...restaurants];
-    
-    // Filtrar por categoría
+
     if (selectedCategory !== 'All') {
       filtered = filtered.filter(restaurant => 
         restaurant.categorias && 
         restaurant.categorias.includes(selectedCategory)
       );
     }
-    
-    // Filtrar por término de búsqueda
     if (searchTerm.trim() !== '') {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(restaurant => 
@@ -168,23 +148,19 @@ const ClientHome = () => {
     
     setFilteredRestaurants(filtered);
   }, [selectedCategory, searchTerm, restaurants]);
-  
-  // Manejar la selección de categoría
+ 
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);
   };
-  
-  // Manejar cambio en el campo de búsqueda
+ 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
-  
-  // Ir al detalle del restaurante
+
   const handleRestaurantClick = (restaurantId) => {
     navigate(`/cliente/restaurante/${restaurantId}`);
   };
-  
-  // Ir al seguimiento del pedido activo
+ 
   const goToActiveOrder = () => {
     if (activePedido && activePedido.pedido) {
       navigate(`/cliente/delivery-tracking/${activePedido.pedido.id}`);
@@ -236,11 +212,6 @@ const ClientHome = () => {
       </div>
       
       <div className="content-container">
-        <ExploreMenu 
-          categories={categories}
-          selectedCategory={selectedCategory}
-          onCategoryChange={handleCategoryChange}
-        />
         
         {filteredRestaurants.length === 0 ? (
           <div className="no-results">
@@ -251,10 +222,8 @@ const ClientHome = () => {
         ) : (
           <div className="restaurants-grid">
             {filteredRestaurants.map(restaurant => {
-              // Combinar datos del restaurante con su calificación
               const restaurantWithRating = {
                 ...restaurant,
-                // Agregar datos de calificación si están disponibles
                 calificacionPromedio: ratings[restaurant.id]?.calificacionPromedio || 0,
                 totalCalificaciones: ratings[restaurant.id]?.totalCalificaciones || 0,
                 ratingLoading: ratingsLoading

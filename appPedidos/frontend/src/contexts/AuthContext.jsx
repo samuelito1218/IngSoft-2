@@ -1,11 +1,10 @@
-// src/contexts/AuthContext.jsx - SOLUCIÓN FINAL
 import React, { createContext, useState, useEffect } from 'react';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);  // ✅ AGREGADO
+  const [token, setToken] = useState(null); 
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   
@@ -32,7 +31,7 @@ export const AuthProvider = ({ children }) => {
       }
       
       console.log('Token encontrado, verificando autenticación...');
-      setToken(storedToken);  // ✅ ESTABLECER TOKEN
+      setToken(storedToken);  
       
       try {
         const response = await fetch(`${API_URL}/auth/me`, {
@@ -65,7 +64,7 @@ export const AuthProvider = ({ children }) => {
             setIsAuthenticated(true);
           } else {
             localStorage.removeItem('token');
-            setToken(null);  // ✅ LIMPIAR TOKEN
+            setToken(null);
           }
         }
       } catch (error) {
@@ -76,7 +75,7 @@ export const AuthProvider = ({ children }) => {
           setUser(storedUser);
           setIsAuthenticated(true);
         } else {
-          setToken(null);  // ✅ LIMPIAR TOKEN
+          setToken(null); 
         }
       } finally {
         setLoading(false);
@@ -104,7 +103,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('token', userToken);
         saveUserToLocalStorage(user);
 
-        setToken(userToken);  // ✅ ESTABLECER TOKEN
+        setToken(userToken);
         setUser(user);
         setIsAuthenticated(true);
         return { success: true, user, token: userToken };
@@ -128,7 +127,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     localStorage.removeItem("user_data");
 
-    setToken(null);  // ✅ LIMPIAR TOKEN
+    setToken(null);
     setUser(null);
     setIsAuthenticated(false);
   };
@@ -149,7 +148,7 @@ export const AuthProvider = ({ children }) => {
       if (response.status === 201) {
         const { token: userToken, user } = data;
         localStorage.setItem('token', userToken);
-        setToken(userToken);  // ✅ ESTABLECER TOKEN
+        setToken(userToken); 
         setUser(user);
         setIsAuthenticated(true);
         return { success: true, user };
@@ -220,7 +219,7 @@ export const AuthProvider = ({ children }) => {
   
   const value = {
     user,
-    token,  // ✅ INCLUIR TOKEN EN VALUE
+    token,  
     loading,
     isAuthenticated,
     login,

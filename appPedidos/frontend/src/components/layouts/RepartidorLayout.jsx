@@ -1,4 +1,3 @@
-// src/components/layouts/RepartidorLayout.jsx - CON IMAGEN DE PERFIL CORREGIDA Y N-ARY TREES
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -9,7 +8,6 @@ import { useAuth } from '../../hooks/useAuth';
 import './layouts.css';
 import FloatingChatButton from '../shared/FloatingChatButton';
 
-// Implementación de N-ary Tree según las diapositivas
 class Nodo {
   constructor(valor) {
     this.valor = valor;
@@ -21,7 +19,6 @@ class Nodo {
   }
 }
 
-// Clase para manejar el árbol de menús del repartidor
 class RepartidorMenuTree {
   constructor() {
     this.root = null;
@@ -29,7 +26,6 @@ class RepartidorMenuTree {
   }
 
   initializeTree() {
-    // Crear el árbol de menús del repartidor
     this.root = new Nodo({
       title: "Repartidor Menu Principal",
       link: "/repartidor",
@@ -38,7 +34,6 @@ class RepartidorMenuTree {
       icon: null
     });
 
-    // Menús principales de navegación
     const homeMenu = new Nodo({
       title: "Inicio",
       link: "/repartidor",
@@ -72,7 +67,6 @@ class RepartidorMenuTree {
       icon: FaHistory
     });
 
-    // Menú de usuario con submenús
     const userMenu = new Nodo({
       title: "Usuario",
       link: "#",
@@ -81,7 +75,6 @@ class RepartidorMenuTree {
       icon: FaUser
     });
 
-    // Submenús del usuario
     const perfilSubmenu = new Nodo({
       title: "Perfil",
       link: "/repartidor/perfil",
@@ -98,11 +91,9 @@ class RepartidorMenuTree {
       icon: FaSignOutAlt
     });
 
-    // Agregar submenús al menú de usuario
     userMenu.agregarHijo(perfilSubmenu);
     userMenu.agregarHijo(logoutSubmenu);
 
-    // Agregar menús principales al root
     this.root.agregarHijo(homeMenu);
     this.root.agregarHijo(pedidosDisponiblesMenu);
     this.root.agregarHijo(pedidosActivosMenu);
@@ -110,7 +101,6 @@ class RepartidorMenuTree {
     this.root.agregarHijo(userMenu);
   }
 
-  // DFS para buscar un nodo por key
   dfs(nodo, targetKey) {
     if (!nodo) return null;
     
@@ -126,7 +116,6 @@ class RepartidorMenuTree {
     return null;
   }
 
-  // BFS para obtener menús principales de navegación
   bfs() {
     if (!this.root) return [];
     
@@ -136,10 +125,9 @@ class RepartidorMenuTree {
     while (cola.length > 0) {
       const actual = cola.shift();
       
-      // Solo agregar los hijos del root que son menús de navegación
       if (actual === this.root) {
         for (let hijo of actual.hijos) {
-          if (hijo.valor.key !== 'user') { // Excluir user del menú de navegación
+          if (hijo.valor.key !== 'user') {
             resultado.push(hijo);
           }
         }
@@ -149,18 +137,15 @@ class RepartidorMenuTree {
     return resultado;
   }
 
-  // Obtener submenús de usuario
   getUserSubmenus() {
     const userNode = this.dfs(this.root, 'user');
     return userNode ? userNode.hijos : [];
   }
 
-  // Buscar menú por key
   findMenu(key) {
     return this.dfs(this.root, key);
   }
 
-  // Obtener todos los menús (incluyendo submenús) usando DFS
   getAllMenus() {
     const menus = [];
     
@@ -189,28 +174,22 @@ const RepartidorLayout = ({ children }) => {
   const [activePedidos, setActivePedidos] = useState(0);
   const [imageError, setImageError] = useState(false);
   
-  // Inicializar el árbol de menús
   const [menuTree] = useState(new RepartidorMenuTree());
   const [navigationMenus, setNavigationMenus] = useState([]);
   const [userSubmenus, setUserSubmenus] = useState([]);
   
-  // Inicializar los menús usando BFS al montar el componente
   useEffect(() => {
-    // Usar BFS para obtener menús de navegación principales
     const navMenus = menuTree.bfs();
     setNavigationMenus(navMenus);
     
-    // Obtener submenús de usuario
     const userSubs = menuTree.getUserSubmenus();
     setUserSubmenus(userSubs);
   }, [menuTree]);
   
-  // Verificar si una ruta está activa usando el árbol
   const isActive = (path) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
   
-  // Manejar acciones de menú usando el árbol
   const handleMenuAction = (menuKey) => {
     const menuNode = menuTree.findMenu(menuKey);
     
@@ -235,7 +214,6 @@ const RepartidorLayout = ({ children }) => {
     }
   };
   
-  // Obtener cantidad de pedidos activos
   useEffect(() => {
     const checkActivePedidos = async () => {
       try {
@@ -250,41 +228,34 @@ const RepartidorLayout = ({ children }) => {
           setActivePedidos(data.length || 0);
         }
       } catch (error) {
-        console.error('Error al obtener pedidos activos:', error);
+        
       }
     };
     
-    const interval = setInterval(checkActivePedidos, 30000); // Verificar cada 30 segundos
-    checkActivePedidos(); // Verificar al inicio
+    const interval = setInterval(checkActivePedidos, 30000);
+    checkActivePedidos();
     
     return () => clearInterval(interval);
   }, [location]);
   
-  // Manejar cierre de sesión
   const handleLogout = () => {
     logout();
     navigate('/');
   };
   
-  // Alternar menú en móvil
   const toggleMenu = () => {
     setShowMenu(!showMenu);
   };
   
-  // Cerrar menú al hacer clic en un enlace
   const closeMenu = () => {
     setShowMenu(false);
   };
 
-  // Manejar error de imagen de perfil
   const handleImageError = (e) => {
-    console.log('Error cargando imagen de perfil del repartidor:', e);
     setImageError(true);
-    // Ocultar la imagen problemática
     e.target.style.display = 'none';
   };
 
-  // Obtener iniciales del usuario
   const getUserInitials = () => {
     if (user?.nombreCompleto) {
       const names = user.nombreCompleto.split(' ');
@@ -296,7 +267,6 @@ const RepartidorLayout = ({ children }) => {
     return 'R';
   };
 
-  // Verificar si debe mostrar imagen
   const shouldShowImage = () => {
     return user?.imageUrl && 
            !imageError && 
@@ -305,13 +275,11 @@ const RepartidorLayout = ({ children }) => {
            user.imageUrl.trim() !== '';
   };
 
-  // Manejar click en perfil usando el árbol
   const handleUserInfoClick = (e) => {
     e.preventDefault();
     handleMenuAction('perfil');
   };
 
-  // Función para renderizar menús de navegación usando el árbol
   const renderNavigationMenus = () => {
     return navigationMenus.map((menuNode) => {
       const menuData = menuNode.valor;
@@ -336,7 +304,6 @@ const RepartidorLayout = ({ children }) => {
     });
   };
 
-  // Función para renderizar submenús de usuario (no se usan en este layout específico)
   const renderUserSubmenus = () => {
     return userSubmenus.map((submenuNode) => {
       const submenuData = submenuNode.valor;
@@ -375,7 +342,6 @@ const RepartidorLayout = ({ children }) => {
             </nav>
             
             <div className="user-section">
-              {/* SECCIÓN DE USUARIO CON IMAGEN DE PERFIL CORREGIDA */}
               <div 
                 className={`user-info ${isActive('/repartidor/perfil') ? 'active' : ''}`}
                 onClick={handleUserInfoClick}
@@ -388,7 +354,6 @@ const RepartidorLayout = ({ children }) => {
                 }}
                 style={{ cursor: 'pointer', textDecoration: 'none' }}
               >
-                {/* AVATAR COMPLETAMENTE CONTROLADO */}
                 <div 
                   className="user-avatar"
                   data-initials={getUserInitials()}

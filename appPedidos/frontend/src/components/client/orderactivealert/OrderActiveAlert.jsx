@@ -1,10 +1,8 @@
-// src/components/client/OrderActiveAlerrt.jsx
 import React from 'react';
 import { FaMotorcycle, FaArrowRight } from 'react-icons/fa';
 import './OrderActiveAlert.css';
 
 const OrderActiveAlert = ({ pedido, onClick }) => {
-  // Determinar emoji según estado
   const getStatusEmoji = () => {
     switch (pedido.estado) {
       case 'Pendiente':
@@ -18,7 +16,6 @@ const OrderActiveAlert = ({ pedido, onClick }) => {
     }
   };
   
-  // Formatear mensaje según estado
   const getStatusMessage = () => {
     switch (pedido.estado) {
       case 'Pendiente':

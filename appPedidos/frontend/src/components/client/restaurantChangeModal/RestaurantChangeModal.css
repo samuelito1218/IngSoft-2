@@ -1,5 +1,3 @@
-/* src/components/client/restaurantchangemodal/RestaurantChangeModal.css */
-
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -229,7 +227,6 @@
   transform: translateY(0);
 }
 
-/* Responsive */
 @media (max-width: 480px) {
   .modal-overlay {
     padding: 10px;

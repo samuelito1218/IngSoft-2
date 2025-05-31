@@ -1,4 +1,3 @@
-// components/layouts/AdminLayout.jsx - VERSIÓN COMPLETA CON N-ARY TREES
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { 
@@ -9,7 +8,6 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import './layouts.css';
 
-// Implementación de N-ary Tree según las diapositivas
 class Nodo {
   constructor(valor) {
     this.valor = valor;
@@ -21,7 +19,6 @@ class Nodo {
   }
 }
 
-// Clase para manejar el árbol de menús del administrador
 class AdminMenuTree {
   constructor() {
     this.root = null;
@@ -29,7 +26,6 @@ class AdminMenuTree {
   }
 
   initializeTree() {
-    // Crear el árbol de menús del administrador
     this.root = new Nodo({
       title: "Admin Menu Principal",
       path: "/admin",
@@ -37,8 +33,6 @@ class AdminMenuTree {
       key: "root",
       icon: null
     });
-
-    // Menús principales de navegación
     const dashboardMenu = new Nodo({
       title: "Dashboard",
       path: "/admin",
@@ -56,7 +50,6 @@ class AdminMenuTree {
       icon: FaStore
     });
 
-    // Submenús para Restaurantes
     const listarRestaurantesSubmenu = new Nodo({
       title: "Listar Restaurantes",
       path: "/admin/restaurantes",
@@ -81,12 +74,10 @@ class AdminMenuTree {
       icon: FaCog
     });
 
-    // Agregar submenús a Restaurantes
     restaurantesMenu.agregarHijo(listarRestaurantesSubmenu);
     restaurantesMenu.agregarHijo(nuevoRestauranteSubmenu);
     restaurantesMenu.agregarHijo(editarRestauranteSubmenu);
 
-    // Menú independiente para Nuevo Restaurante (como en el original)
     const nuevoRestauranteMenu = new Nodo({
       title: "Nuevo Restaurante",
       path: "/admin/restaurantes/nuevo",
@@ -103,7 +94,6 @@ class AdminMenuTree {
       icon: FaClipboardList
     });
 
-    // Submenús para Pedidos
     const pedidosActivosSubmenu = new Nodo({
       title: "Pedidos Activos",
       path: "/admin/pedidos/activos",
@@ -128,7 +118,6 @@ class AdminMenuTree {
       icon: FaChartLine
     });
 
-    // Agregar submenús a Pedidos
     pedidosMenu.agregarHijo(pedidosActivosSubmenu);
     pedidosMenu.agregarHijo(historialPedidosSubmenu);
     pedidosMenu.agregarHijo(reportesPedidosSubmenu);
@@ -141,7 +130,6 @@ class AdminMenuTree {
       icon: FaChartLine
     });
 
-    // Submenús para Estadísticas
     const ventasSubmenu = new Nodo({
       title: "Estadísticas de Ventas",
       path: "/admin/estadisticas/ventas",
@@ -166,12 +154,10 @@ class AdminMenuTree {
       icon: FaStore
     });
 
-    // Agregar submenús a Estadísticas
     estadisticasMenu.agregarHijo(ventasSubmenu);
     estadisticasMenu.agregarHijo(usuariosSubmenu);
     estadisticasMenu.agregarHijo(restaurantesStatsSubmenu);
 
-    // Menú de usuario con submenús
     const userMenu = new Nodo({
       title: "Usuario",
       path: "#",
@@ -180,7 +166,6 @@ class AdminMenuTree {
       icon: FaUser
     });
 
-    // Submenús del usuario
     const perfilSubmenu = new Nodo({
       title: "Perfil",
       path: "/admin/perfil",
@@ -205,12 +190,10 @@ class AdminMenuTree {
       icon: FaSignOutAlt
     });
 
-    // Agregar submenús al menú de usuario
     userMenu.agregarHijo(perfilSubmenu);
     userMenu.agregarHijo(configuracionSubmenu);
     userMenu.agregarHijo(logoutSubmenu);
 
-    // Agregar menús principales al root
     this.root.agregarHijo(dashboardMenu);
     this.root.agregarHijo(restaurantesMenu);
     this.root.agregarHijo(nuevoRestauranteMenu);
@@ -219,7 +202,6 @@ class AdminMenuTree {
     this.root.agregarHijo(userMenu);
   }
 
-  // DFS para buscar un nodo por key
   dfs(nodo, targetKey) {
     if (!nodo) return null;
     
@@ -235,7 +217,6 @@ class AdminMenuTree {
     return null;
   }
 
-  // BFS para obtener menús principales de navegación
   bfs() {
     if (!this.root) return [];
     
@@ -244,11 +225,10 @@ class AdminMenuTree {
     
     while (cola.length > 0) {
       const actual = cola.shift();
-      
-      // Solo agregar los hijos del root que son menús principales
+  
       if (actual === this.root) {
         for (let hijo of actual.hijos) {
-          if (hijo.valor.key !== 'user') { // Excluir user del menú principal
+          if (hijo.valor.key !== 'user') { 
             resultado.push(hijo);
           }
         }
@@ -258,18 +238,15 @@ class AdminMenuTree {
     return resultado;
   }
 
-  // Obtener submenús de usuario
   getUserSubmenus() {
     const userNode = this.dfs(this.root, 'user');
     return userNode ? userNode.hijos : [];
   }
 
-  // Buscar menú por key
   findMenu(key) {
     return this.dfs(this.root, key);
   }
 
-  // Buscar menú por path usando DFS
   findMenuByPath(path) {
     function dfsSearch(nodo) {
       if (!nodo) return null;
@@ -289,7 +266,6 @@ class AdminMenuTree {
     return dfsSearch(this.root);
   }
 
-  // Obtener todos los menús (incluyendo submenús) usando DFS
   getAllMenus() {
     const menus = [];
     
@@ -315,34 +291,29 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showMenu, setShowMenu] = useState(false);
-  
-  // ESTADOS PARA MANEJO DE IMAGEN DE PERFIL
+
   const [userImageUrl, setUserImageUrl] = useState(null);
   const [imageError, setImageError] = useState(false);
   const [userLoaded, setUserLoaded] = useState(false);
 
-  // Inicializar el árbol de menús
   const [menuTree] = useState(new AdminMenuTree());
   const [navigationMenus, setNavigationMenus] = useState([]);
   const [userSubmenus, setUserSubmenus] = useState([]);
-  
-  // Inicializar los menús usando BFS al montar el componente
+
   useEffect(() => {
-    // Usar BFS para obtener menús principales
+
     const mainMenus = menuTree.bfs();
     setNavigationMenus(mainMenus);
     
-    // Obtener submenús de usuario
+
     const userSubs = menuTree.getUserSubmenus();
     setUserSubmenus(userSubs);
   }, [menuTree]);
 
-  // EFECTO PARA CARGAR IMAGEN CUANDO EL USUARIO ESTÉ DISPONIBLE
   useEffect(() => {
     if (user) {
       setUserLoaded(true);
       
-      // Cargar imagen de perfil si existe
       if (user.imageUrl && user.imageUrl.trim() !== '' && 
           user.imageUrl !== 'undefined' && user.imageUrl !== 'null') {
         setUserImageUrl(user.imageUrl);
@@ -353,7 +324,6 @@ const AdminLayout = () => {
     }
   }, [user]);
 
-  // EFECTO PARA VERIFICAR IMAGEN PERIÓDICAMENTE
   useEffect(() => {
     if (user?.imageUrl && !userImageUrl && !imageError) {
       const checkImage = () => {
@@ -372,18 +342,16 @@ const AdminLayout = () => {
     }
   }, [user, userImageUrl, imageError]);
   
-  // Verificar si una ruta está activa usando el árbol
+
   const isActive = (path) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
-  // Función mejorada para verificar rutas activas específicas
   const isActiveAdvanced = (path, exactMatch = false) => {
     if (exactMatch) {
       return location.pathname === path;
     }
-    
-    // Casos especiales usando el árbol para determinar activación
+  
     if (path === '/admin' && 
         !location.pathname.startsWith('/admin/restaurantes/nuevo') && 
         !location.pathname.startsWith('/admin/productos')) {
@@ -398,7 +366,6 @@ const AdminLayout = () => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
-  // Manejar acciones de menú usando el árbol
   const handleMenuAction = (menuKey) => {
     const menuNode = menuTree.findMenu(menuKey);
     
@@ -428,37 +395,31 @@ const AdminLayout = () => {
     logout();
     navigate('/');
   };
-  
-  // Alternar menú en móvil
+
   const toggleMenu = () => {
     setShowMenu(!showMenu);
   };
-  
-  // Cerrar menú al hacer clic en un enlace
+
   const closeMenu = () => {
     setShowMenu(false);
   };
 
-  // Manejar click en perfil usando el árbol
   const handleUserInfoClick = (e) => {
     e.preventDefault();
     handleMenuAction('perfil');
   };
 
-  // Manejar error de imagen
   const handleImageError = (e) => {
     console.log('Error cargando imagen de perfil:', e);
     setImageError(true);
     setUserImageUrl(null);
     e.target.style.display = 'none';
   };
-
-  // Manejar carga exitosa de imagen
+  
   const handleImageLoad = () => {
     setImageError(false);
   };
 
-  // Obtener iniciales del usuario
   const getUserInitials = () => {
     if (user?.nombreCompleto) {
       const names = user.nombreCompleto.split(' ');
@@ -470,7 +431,6 @@ const AdminLayout = () => {
     return 'A';
   };
 
-  // Verificar si debe mostrar imagen
   const shouldShowImage = () => {
     return userLoaded && 
            userImageUrl && 
@@ -480,7 +440,6 @@ const AdminLayout = () => {
            userImageUrl.trim() !== '';
   };
 
-  // Función para renderizar menús de navegación usando el árbol
   const renderNavigationMenus = () => {
     return navigationMenus.map((menuNode) => {
       const menuData = menuNode.valor;
@@ -500,7 +459,6 @@ const AdminLayout = () => {
     });
   };
 
-  // Función para renderizar submenús de usuario
   const renderUserSubmenus = () => {
     return userSubmenus.map((submenuNode) => {
       const submenuData = submenuNode.valor;
@@ -520,7 +478,7 @@ const AdminLayout = () => {
         );
       }
       
-      return null; // El perfil y configuración se manejan en la info del usuario
+      return null; 
     });
   };
   
@@ -560,7 +518,6 @@ const AdminLayout = () => {
                   }
                 }}
               >
-                {/* AVATAR CON CARGA MEJORADA */}
                 <div 
                   className="user-avatar"
                   data-initials={getUserInitials()}

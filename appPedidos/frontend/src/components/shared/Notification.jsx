@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import "../../styles/Notificacion.css";
-// Componente de notificación que se puede reutilizar en toda la aplicación//
 const Notification = ({ message, type = 'success', duration = 3000, onClose }) => {
   const [visible, setVisible] = useState(true);
 
@@ -32,7 +31,7 @@ const Notification = ({ message, type = 'success', duration = 3000, onClose }) =
   ) : null;
 };
 
-// Componente NotificationManager para gestionar múltiples notificaciones
+// Componente para gestionar múltiples notificaciones
 const NotificationManager = () => {
   const [notifications, setNotifications] = useState([]);
 
@@ -43,12 +42,10 @@ const NotificationManager = () => {
     return id;
   };
 
-  // Función para eliminar una notificación específica
   const removeNotification = (id) => {
     setNotifications(prev => prev.filter(notification => notification.id !== id));
   };
 
-  // Exportar estas funciones para usarlas en cualquier parte de la aplicación
   window.showNotification = addNotification;
 
   return (

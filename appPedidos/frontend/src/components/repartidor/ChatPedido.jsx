@@ -1,4 +1,4 @@
-//
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaPaperPlane, FaArrowLeft, FaMotorcycle, FaUser, FaStore, FaSpinner } from 'react-icons/fa';
@@ -24,7 +24,6 @@ const ChatPedido = () => {
   const mensajesFinalRef = useRef(null);
   const intervalRef = useRef(null);
 
-  // Determinar el ID y nombre del receptor basado en el rol del usuario
 useEffect(() => {
   if (!pedidoInfo) return;
   
@@ -45,24 +44,19 @@ useEffect(() => {
     
     let idReceptor, nombreReceptor;
     
-    // El problema es que necesitamos usar el rol y el ID correctamente
-    // Si pedidoInfo tiene una estructura anidada
     if (pedidoInfo.pedido) {
       const pedido = pedidoInfo.pedido;
       
-      // Si soy repartidor, el receptor es el usuario/cliente
       if (user.id === pedido.repartidor_Id) {
         idReceptor = pedido.usuario_id;
         nombreReceptor = (pedido.cliente && pedido.cliente.nombreCompleto) || 'Cliente';
         console.log("Soy repartidor, enviando al cliente:", idReceptor);
       } 
-      // Si soy cliente, el receptor es el repartidor
       else if (user.id === pedido.usuario_id) {
         idReceptor = pedido.repartidor_Id;
         nombreReceptor = (pedido.repartidor && pedido.repartidor.nombreCompleto) || 'Repartidor';
         console.log("Soy cliente, enviando al repartidor:", idReceptor);
       }
-      // Si no coincido con ninguno, determinar basado en rol
       else {
         console.log("No coinciden IDs, determinando por rol");
         if (user.rol === 'REPARTIDOR') {
@@ -74,21 +68,17 @@ useEffect(() => {
         }
       }
     } 
-    // Si la estructura no está anidada
     else {
-      // Si soy repartidor, el receptor es el usuario/cliente
       if (user.id === pedidoInfo.repartidor_Id) {
         idReceptor = pedidoInfo.usuario_id;
         nombreReceptor = (pedidoInfo.cliente && pedidoInfo.cliente.nombreCompleto) || 'Cliente';
         console.log("Soy repartidor, enviando al cliente:", idReceptor);
       } 
-      // Si soy cliente, el receptor es el repartidor
       else if (user.id === pedidoInfo.usuario_id) {
         idReceptor = pedidoInfo.repartidor_Id;
         nombreReceptor = (pedidoInfo.repartidor && pedidoInfo.repartidor.nombreCompleto) || 'Repartidor';
         console.log("Soy cliente, enviando al repartidor:", idReceptor);
       }
-      // Si no coincido con ninguno, determinar basado en rol
       else {
         console.log("No coinciden IDs, determinando por rol");
         if (user.rol === 'REPARTIDOR') {
@@ -106,32 +96,24 @@ useEffect(() => {
     console.log("¿Son iguales?", idReceptor === user.id);
     console.log("Nombre del receptor identificado:", nombreReceptor);
     
-    // Verificar que no estamos enviando mensajes a nosotros mismos
     if (idReceptor && idReceptor !== user.id) {
       setReceptorId(idReceptor);
       setReceptorNombre(nombreReceptor);
     } else {
       console.warn("Posible error: ID del receptor igual al del emisor:", { idReceptor, userId: user.id });
       
-      // SOLUCIÓN ALTERNATIVA:
-      // Si pedidoInfo tiene repartidor o cliente como objeto anidado, usar esos IDs
       if (pedidoInfo.repartidor && user.rol !== 'REPARTIDOR') {
-        // Si no soy repartidor y hay objeto repartidor, usar su ID
         idReceptor = pedidoInfo.repartidor.id;
         nombreReceptor = pedidoInfo.repartidor.nombreCompleto || 'Repartidor';
         console.log("Usando ID del repartidor como alternativa:", idReceptor);
       } else if (pedidoInfo.cliente && user.rol === 'REPARTIDOR') {
-        // Si soy repartidor y hay objeto cliente, usar su ID
         idReceptor = pedidoInfo.cliente.id;
         nombreReceptor = pedidoInfo.cliente.nombreCompleto || 'Cliente';
         console.log("Usando ID del cliente como alternativa:", idReceptor);
       } 
-      // SOLUCIÓN DE ÚLTIMO RECURSO:
-      // Si nada más funciona, buscar cualquier ID que no sea el nuestro
       else {
         console.log("Buscando cualquier ID que no sea el nuestro");
         
-        // Extraer todos los IDs del objeto pedidoInfo
         const extractIds = (obj, path = '') => {
           const ids = [];
           
@@ -157,7 +139,6 @@ useEffect(() => {
         console.log("Todos los IDs encontrados:", allIds);
         
         if (allIds.length > 0) {
-          // Buscar un ID que sea más probable que sea de un usuario
           const userIdCandidate = allIds.find(item => 
             item.path.includes('usuario') || item.path.includes('cliente') || item.path.includes('repartidor')
           ) || allIds[0];
@@ -180,7 +161,6 @@ useEffect(() => {
   }
 }, [pedidoInfo, user]);
 
-  // Cargar información del pedido y mensajes al montar
   useEffect(() => {
     const cargarDatos = async () => {
       if (!pedidoId) {
@@ -190,9 +170,7 @@ useEffect(() => {
       }
       
       try {
-        // Cargar información del pedido
         await fetchPedidoInfo();
-        // Cargar mensajes
         await fetchMensajes();
       } catch (err) {
         console.error("Error en cargarDatos:", err);
@@ -203,7 +181,6 @@ useEffect(() => {
     
     cargarDatos();
     
-    // Configurar intervalo para actualizar mensajes periódicamente
     if (pedidoId) {
       intervalRef.current = setInterval(() => {
         fetchMensajes().catch(err => 
@@ -220,7 +197,6 @@ useEffect(() => {
     };
   }, [pedidoId]);
   
-  // Hacer scroll al último mensaje
   useEffect(() => {
     if (mensajesFinalRef.current) {
       setTimeout(() => {
@@ -294,7 +270,6 @@ useEffect(() => {
   const handleEnviarMensaje = async (e) => {
     e.preventDefault();
     
-    // Validar que tenemos toda la información necesaria
     if (!nuevoMensaje.trim() || !pedidoId || !receptorId || enviando) {
       if (!receptorId) {
         console.error("Falta receptorId para enviar mensaje");
@@ -312,22 +287,19 @@ useEffect(() => {
         mensaje: nuevoMensaje.trim()
       });
       
-      // Agregar mensaje optimista para feedback inmediato
       const mensajeOptimista = {
         id: `temp-${Date.now()}`,
         contenido: nuevoMensaje.trim(),
         fechaCreacion: new Date().toISOString(),
-        tipoEmisor: 'REPARTIDOR', // Asumiendo que somos el remitente
+        tipoEmisor: 'REPARTIDOR', 
         pendiente: true
       };
       
       setMensajes(prev => [...prev, mensajeOptimista]);
       
-      // Guardar y limpiar el mensaje
       const mensajeTexto = nuevoMensaje.trim();
       setNuevoMensaje('');
       
-      // Enviar al servidor
       const response = await ApiService.mensajes.enviar(
         pedidoId,
         receptorId,
@@ -336,7 +308,6 @@ useEffect(() => {
       
       console.log("Respuesta del servidor:", response);
       
-      // Recargar mensajes para confirmar
       await fetchMensajes();
     } catch (error) {
       console.error('Error al enviar mensaje:', error);
@@ -352,7 +323,6 @@ useEffect(() => {
       
       alert(errorMessage);
       
-      // Restaurar el mensaje si falló
       setNuevoMensaje(nuevoMensaje.trim());
     } finally {
       setEnviando(false);

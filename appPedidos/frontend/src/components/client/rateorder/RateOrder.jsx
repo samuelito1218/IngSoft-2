@@ -1,12 +1,10 @@
-// src/components/client/RateOrder.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaStar, FaRegStar, FaClock, FaUser, FaMotorcycle } from 'react-icons/fa';
 import { useAuth } from '../../../hooks/useAuth';
 import ApiService from '../../../services/api';
-import axios from 'axios'; //Nueva importación
+import axios from 'axios';
 import './RateOrder.css';
-
 
 const RateOrder = () => {
   const { pedidoId } = useParams();
@@ -19,20 +17,16 @@ const RateOrder = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  
-  // Estado para calificaciones
   const [repartidorRating, setRepartidorRating] = useState(5);
   const [pedidoRating, setPedidoRating] = useState(5);
   const [comentarios, setComentarios] = useState('');
   
-  // Cargar información del pedido
   useEffect(() => {
     const fetchPedidoData = async () => {
       try {
         setLoading(true);
         setError(null);
         
-        // Obtener información del pedido usando ApiService
         const responsePedido = await ApiService.pedidos.detalle(pedidoId);
         
         if (!responsePedido.data || !responsePedido.data.pedido) {
@@ -41,7 +35,6 @@ const RateOrder = () => {
         
         const pedidoData = responsePedido.data.pedido;
         
-        // Verificar que el pedido esté en estado Entregado
         if (pedidoData.estado !== 'Entregado') {
           setError('Solo puedes calificar pedidos entregados');
           setLoading(false);
@@ -50,29 +43,23 @@ const RateOrder = () => {
         
         setPedido(pedidoData);
         
-        // Obtener información del repartidor si existe
         if (pedidoData.repartidor_Id) {
           try {
-            // Verificar si tenemos el método implementado
             if (typeof ApiService.usuarios.obtenerUsuario === 'function') {
               const repartidorResponse = await ApiService.usuarios.obtenerUsuario(pedidoData.repartidor_Id);
               if (repartidorResponse.data) {
                 setRepartidor(repartidorResponse.data);
               }
             } else {
-              // Si el método no existe, usar información del repartidor de la respuesta del pedido
               if (responsePedido.data.repartidor) {
                 setRepartidor(responsePedido.data.repartidor);
               } else {
-                // Usar información mínima
                 setRepartidor({
                   nombreCompleto: 'Repartidor #' + pedidoData.repartidor_Id.slice(-4)
                 });
               }
             }
           } catch (repartidorError) {
-            console.error('Error al obtener información del repartidor:', repartidorError);
-            // Si falla, mostrar información básica
             setRepartidor({
               nombreCompleto: 'Repartidor #' + pedidoData.repartidor_Id.slice(-4)
             });
@@ -81,7 +68,6 @@ const RateOrder = () => {
         
         setLoading(false);
       } catch (error) {
-        console.error('Error al cargar información del pedido:', error);
         setError('No se pudo cargar la información del pedido. Intente nuevamente.');
         setLoading(false);
       }
@@ -90,7 +76,6 @@ const RateOrder = () => {
     fetchPedidoData();
   }, [pedidoId]);
   
-  // Formatear fecha
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-CO', {
@@ -102,7 +87,6 @@ const RateOrder = () => {
     });
   };
   
-  // Formatear precio
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -111,71 +95,50 @@ const RateOrder = () => {
     }).format(price);
   };
   
-  // Manejar hover sobre estrellas de repartidor
   const handleRepartidorHover = (rating) => {
     if (!submitting) {
       setRepartidorRating(rating);
     }
   };
   
-  // Manejar hover sobre estrellas de pedido
   const handlePedidoHover = (rating) => {
     if (!submitting) {
       setPedidoRating(rating);
     }
   };
   
-  // Manejar cambio en comentarios
   const handleComentariosChange = (e) => {
     setComentarios(e.target.value);
   };
   
-  // Enviar calificación
   const handleSubmit = async () => {
   try {
     setSubmitting(true);
     setError(null);
     
-    // Crear objeto de calificación
     const calificacionData = {
       calificacionRepartidor: Number(repartidorRating),
       calificacionPedido: Number(pedidoRating),
       comentarios: comentarios.trim()
     };
     
-    console.log(`Enviando calificación para pedido ${pedidoId}:`, calificacionData);
-    
-    // Intentar con ApiService
     try {
       const response = await ApiService.pedidos.calificar(pedidoId, calificacionData);
-      console.log('Respuesta del servidor (calificar):', response);
       
       if (response.data && (response.data.message || response.status === 200 || response.status === 201)) {
         setSuccess(true);
         setSubmitting(false);
-        return; // Salir si es exitoso
+        return;
       }
     } catch (apiError) {
-      console.error('Error con ApiService.pedidos.calificar:', apiError);
-      
-      // Verificar errores específicos que podrían dar pistas
       if (apiError.response) {
-        console.log('Respuesta de error:', apiError.response.data);
-        console.log('Estado del error:', apiError.response.status);
-        console.log('Headers de respuesta:', apiError.response.headers);
-
-        console.log('Error detallado:', JSON.stringify(apiError, null, 2));
-        
-        // Manejar errores específicos del servidor
         if (apiError.response.status === 400 && apiError.response.data.message) {
-          console.log("Error interno del servidor, verificar los logs del servidor");
           setError(apiError.response.data.message);
           setSubmitting(false);
-          return; // Salir para mostrar el mensaje de error específico
+          return;
         }
       }
       
-      // Intentar directamente con axios como último recurso
       try {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -193,20 +156,15 @@ const RateOrder = () => {
           }
         );
         
-        console.log('Respuesta directa de axios:', axiosResponse);
         if (axiosResponse.data) {
           setSuccess(true);
           setSubmitting(false);
           return;
         }
       } catch (axiosError) {
-        console.error('Error con llamada directa de axios:', axiosError);
-        
         if (axiosError.response && axiosError.response.data && axiosError.response.data.message) {
-          // Usar el mensaje de error del servidor si está disponible
           setError(axiosError.response.data.message);
         } else {
-          // Mensaje genérico
           setError('No se pudo enviar la calificación. Intente nuevamente.');
         }
         
@@ -215,32 +173,26 @@ const RateOrder = () => {
       }
     }
     
-    // Si llegamos aquí, algo falló sin un error específico
     setError('No se pudo procesar la calificación. Intente nuevamente más tarde.');
     setSubmitting(false);
   } catch (error) {
-    console.error('Error al enviar calificación:', error);
     setError('Ocurrió un error inesperado. Intente nuevamente.');
     setSubmitting(false);
   }
 };
   
-  // Volver a la página anterior
   const handleBack = () => {
     navigate(-1);
   };
   
-  // Ver más pedidos
   const verPedidos = () => {
     navigate('/cliente/pedidos');
   };
   
-  // Volver al inicio
   const volverInicio = () => {
     navigate('/cliente');
   };
   
-  // Renderizar estrellas
   const renderStars = (currentRating, onHover, onSelect) => {
     const stars = [];
     

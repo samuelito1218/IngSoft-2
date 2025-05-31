@@ -1,4 +1,3 @@
-// ProductManagement.jsx - SOLUCIÓN RÁPIDA COMPLETA
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaPlus, FaEdit, FaTrash, FaSearch } from 'react-icons/fa';
@@ -8,7 +7,6 @@ import ProductForm from './ProductForm';
 import './ProductManagement.css';
 
 export default function ProductManagement() {
-  // ✅ SOLUCIÓN: Obtener el ID de cualquier forma posible
   const params = useParams();
   const restaurantId = params.restaurantId || params.restauranteId || params.id;
   
@@ -22,16 +20,13 @@ export default function ProductManagement() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Estado para el modal de producto
   const [showProductModal, setShowProductModal] = useState(false);
   const [currentProduct, setCurrentProduct] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  
-  // Estado para el modal de confirmación de eliminación
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
 
-  // Cargar datos iniciales
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -48,14 +43,12 @@ export default function ProductManagement() {
           setLoading(false);
           return;
         }
-        
-        // Obtener información del restaurante
+
         const restaurantRes = await api.get(`/restaurantes/${restaurantId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setRestaurant(restaurantRes.data);
-        
-        // Obtener productos del restaurante
+
         const productsRes = await api.get(`/restaurantes/${restaurantId}/productos`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -75,8 +68,7 @@ export default function ProductManagement() {
         setLoading(false);
       }
     };
-    
-    // Solo ejecutar si tenemos token y no estamos cargando auth
+
     if (token && !authLoading && restaurantId) {
       fetchData();
     } else if (!authLoading && !token) {
@@ -85,7 +77,6 @@ export default function ProductManagement() {
     }
   }, [restaurantId, token, isAuthenticated, authLoading]);
 
-  // Filtrar productos cuando cambia el término de búsqueda
   useEffect(() => {
     if (searchTerm.trim() === '') {
       setFilteredProducts(products);
@@ -98,32 +89,27 @@ export default function ProductManagement() {
     }
   }, [searchTerm, products]);
 
-  // Manejar cambio en el campo de búsqueda
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  // Abrir modal para agregar nuevo producto
   const handleAddProduct = () => {
     setCurrentProduct(null);
     setIsEditing(false);
     setShowProductModal(true);
   };
 
-  // Abrir modal para editar producto
   const handleEditProduct = (product) => {
     setCurrentProduct(product);
     setIsEditing(true);
     setShowProductModal(true);
   };
 
-  // Confirmar eliminación de producto
   const confirmDeleteProduct = (product) => {
     setProductToDelete(product);
     setShowDeleteModal(true);
   };
 
-  // Eliminar producto
   const handleDeleteProduct = async () => {
     if (!productToDelete) return;
     
@@ -131,8 +117,7 @@ export default function ProductManagement() {
       await api.delete(`/productos/${productToDelete.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      // Actualizar lista de productos
+
       setProducts(prevProducts => 
         prevProducts.filter(p => p.id !== productToDelete.id)
       );
@@ -145,7 +130,6 @@ export default function ProductManagement() {
     }
   };
 
-  // Guardar producto (nuevo o editado)
   const handleSaveProduct = async (productData) => {
     try {
       if (!token || !isAuthenticated) {
@@ -155,7 +139,7 @@ export default function ProductManagement() {
       let savedProduct;
       
       if (isEditing && currentProduct) {
-        // Actualizar producto existente
+
         const res = await api.put(`/productos/${currentProduct.id}`, productData, {
           headers: { 
             Authorization: `Bearer ${token}`,
@@ -163,8 +147,7 @@ export default function ProductManagement() {
           }
         });
         savedProduct = res.data.producto || res.data;
-        
-        // Actualizar en la lista
+      
         setProducts(prevProducts => 
           prevProducts.map(p => p.id === savedProduct.id ? savedProduct : p)
         );
@@ -204,7 +187,6 @@ export default function ProductManagement() {
     }
   };
 
-  // Formatear precio
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -213,7 +195,6 @@ export default function ProductManagement() {
     }).format(price);
   };
 
-  // Si estamos cargando la autenticación
   if (authLoading) {
     return (
       <div className="loading-container">
@@ -223,7 +204,6 @@ export default function ProductManagement() {
     );
   }
 
-  // Si no está autenticado
   if (!isAuthenticated || !token) {
     return (
       <div className="error-container">
@@ -288,7 +268,7 @@ export default function ProductManagement() {
         </div>
       </div>
       
-      {filteredProducts.length === 0 ? (
+      {Array.isArray(filteredProducts) && filteredProducts.length === 0 ? (
         <div className="empty-products">
           <h3>No hay productos</h3>
           <p>Comienza agregando productos a tu restaurante</p>
@@ -297,61 +277,65 @@ export default function ProductManagement() {
           </button>
         </div>
       ) : (
-        <div className="products-table-container">
-          <table className="products-table">
-            <thead>
-              <tr>
-                <th className="image-column">Imagen</th>
-                <th>Nombre</th>
-                <th>Descripción</th>
-                <th>Precio</th>
-                <th className="actions-column">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredProducts.map(product => (
-                <tr key={product.id}>
-                  <td className="image-column">
-                    <div className="product-image-wrapper">
-                      {product.imagen || product.imageUrl ? (
-                        <img 
-                          src={product.imagen || product.imageUrl} 
-                          alt={product.nombre} 
-                          className="product-image"
-                          title={`Ver imagen de ${product.nombre}`}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="image-placeholder">
-                          <span>Sin Imagen</span>
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td>{product.nombre}</td>
-                  <td>{product.especificaciones || 'Sin descripción'}</td>
-                  <td>{formatPrice(product.precio)}</td>
-                  <td className="actions-column">
-                    <button 
-                      className="action-button edit" 
-                      onClick={() => handleEditProduct(product)}
-                      title="Editar producto"
-                    >
-                      <FaEdit />
-                    </button>
-                    <button 
-                      className="action-button delete" 
-                      onClick={() => confirmDeleteProduct(product)}
-                      title="Eliminar producto"
-                    >
-                      <FaTrash />
-                    </button>
-                  </td>
+        filteredProducts.length > 0 && (
+          <div className="products-table-container">
+            <table className="products-table">
+              <thead>
+                <tr>
+                  <th className="image-column">Imagen</th>
+                  <th>Nombre</th>
+                  <th>Descripción</th>
+                  <th>Precio</th>
+                  <th className="actions-column">Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filteredProducts.map(product => (
+                  <tr key={product.id}>
+                    <td className="image-column">
+                      <div className="product-image-wrapper">
+                        {product.imagen || product.imageUrl ? (
+                          <img 
+                            src={product.imagen || product.imageUrl} 
+                            alt={product.nombre} 
+                            className="product-image"
+                            title={`Ver imagen de ${product.nombre}`}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="image-placeholder">
+                            <span>Sin Imagen</span>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td>{product.nombre}</td>
+                    <td>{product.especificaciones || 'Sin descripción'}</td>
+                    <td>{formatPrice(product.precio)}</td>
+                    <td className="actions-column">
+                      <button 
+                        className="action-button edit" 
+                        onClick={() => handleEditProduct(product)}
+                        title="Editar producto"
+                        aria-label="Editar producto"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button 
+                        className="action-button delete" 
+                        onClick={() => confirmDeleteProduct(product)}
+                        title="Eliminar producto"
+                        aria-label="Eliminar producto"
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
       )}
       
       {/* Modal para agregar/editar producto */}

@@ -1,12 +1,10 @@
-// backend/src/controllers/sucursalesController.js
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-//
+
 exports.crearSucursal = async (req, res) => {
   try {
     const { nombre, direccion, comuna, restaurante_Id } = req.body;
 
-    // Validaciones básicas
     if (!nombre || !direccion || !comuna || !restaurante_Id) {
       return res.status(400).json({ message: 'Faltan datos obligatorios' });
     }

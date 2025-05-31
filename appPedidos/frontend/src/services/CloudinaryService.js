@@ -1,9 +1,8 @@
-// src/services/CloudinaryService.js - Con compresión de imágenes//
 import ApiService from './api';
 
 const CLOUDINARY_UPLOAD_PRESET = 'perfil_usuarios';
 const CLOUDINARY_CLOUD_NAME = 'dwubcvtsh';
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB en bytes
+const MAX_FILE_SIZE = 10 * 1024 * 1024; 
 
 const CloudinaryService = {
     // Método para comprimir imagen
@@ -18,29 +17,24 @@ const CloudinaryService = {
           img.onload = function() {
             let width = img.width;
             let height = img.height;
-            let quality = 0.7; // Calidad inicial: 70%
+            let quality = 0.7; 
             
-            // Factor de escala para redimensionar si la imagen es muy grande
             if (file.size > MAX_FILE_SIZE) {
-              const scale = Math.sqrt(MAX_FILE_SIZE / (file.size * 2)); // Redimensionar con margen
+              const scale = Math.sqrt(MAX_FILE_SIZE / (file.size * 2)); 
               width *= scale;
               height *= scale;
             }
             
-            // Crear canvas para comprimir
             const canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
             
-            // Dibujar imagen en el canvas
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
             
-            // Convertir a Blob
             canvas.toBlob(
               (blob) => {
                 if (blob) {
-                  // Crear nuevo archivo
                   const compressedFile = new File([blob], file.name, {
                     type: file.type,
                     lastModified: Date.now()
@@ -66,21 +60,17 @@ const CloudinaryService = {
       });
     },
 
-    // Método original para imágenes de perfil
-    // Método original para imágenes de perfil
 async uploadProfileImage(file) {
   try {
     if (!file) {
       throw new Error('Se requiere un archivo');
     }
     
-    // Usar el método general uploadImage que ya funciona
     const secureUrl = await this.uploadImage(file, 'perfiles');
 
     const formDataToBackend = new FormData();
     formDataToBackend.append('imageUrl', secureUrl);
     
-    // Actualizar el perfil en el backend usando FormData
     try {
       await ApiService.usuarios.actualizarImagen({
         imageUrl: secureUrl});
@@ -95,14 +85,12 @@ async uploadProfileImage(file) {
   }
 },
 
-    // Método general para subir cualquier imagen a Cloudinary - CORREGIDO con compresión
     async uploadImage(file, folder = '') {
       try {
         if (!file) {
           throw new Error('Se requiere un archivo');
         }
   
-        // Comprimir imagen si es demasiado grande
         let fileToUpload = file;
         if (file.size > MAX_FILE_SIZE) {
           console.log(`Comprimiendo imagen: tamaño original = ${(file.size / 1024 / 1024).toFixed(2)} MB`);
@@ -110,12 +98,10 @@ async uploadProfileImage(file) {
           console.log(`Imagen comprimida: ${(fileToUpload.size / 1024 / 1024).toFixed(2)} MB`);
         }
         
-        // IMPORTANTE: Usar el mismo preset que funciona para uploadProfileImage
         const formData = new FormData();
         formData.append('file', fileToUpload);
         formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
         
-        // Añadir folder solo si se proporciona
         if (folder) {
           formData.append('folder', folder);
         }
@@ -127,7 +113,6 @@ async uploadProfileImage(file) {
           fileSize: (fileToUpload.size / 1024 / 1024).toFixed(2) + ' MB'
         });
   
-        // Subir a Cloudinary
         const response = await fetch(
           `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
           {
@@ -136,7 +121,6 @@ async uploadProfileImage(file) {
           }
         );
   
-        // Manejar errores con más detalle
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           console.error('Error detallado de Cloudinary:', errorData);
@@ -152,20 +136,17 @@ async uploadProfileImage(file) {
       }
     },
     
-    // Método para subir imagen de restaurante - usa uploadImage para reutilizar código
     async uploadRestaurantImage(file, restaurantId) {
       try {
         if (!file) {
           throw new Error('Se requiere un archivo');
         }
         
-        // Usar el método general uploadImage para evitar duplicar código
         const secureUrl = await this.uploadImage(
           file, 
           restaurantId ? `restaurantes/${restaurantId}` : 'restaurantes'
         );
         
-        // Si se proporcionó un ID de restaurante y tenemos un endpoint, actualizar en el backend
         if (restaurantId && ApiService.restaurantes && ApiService.restaurantes.actualizarImagen) {
           try {
             await ApiService.restaurantes.actualizarImagen(restaurantId, {
@@ -183,18 +164,15 @@ async uploadProfileImage(file) {
       }
     },
     
-    // Método para subir imagen de producto - usa uploadImage para reutilizar código
     async uploadProductImage(file, productId, restaurantId) {
       try {
         if (!file) {
           throw new Error('Se requiere un archivo');
         }
         
-        // Usar el método general uploadImage
         const folder = restaurantId ? `productos/${restaurantId}` : 'productos';
         const secureUrl = await this.uploadImage(file, folder);
         
-        // Si se proporcionó un ID de producto y tenemos un endpoint, actualizar en el backend
         if (productId && ApiService.productos && ApiService.productos.actualizarImagen) {
           try {
             await ApiService.productos.actualizarImagen(productId, {

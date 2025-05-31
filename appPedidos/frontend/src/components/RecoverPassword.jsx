@@ -23,7 +23,6 @@ function RecoverPassword() {
       return;
     }
 
-    // Validar formato de email
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     if (!emailRegex.test(email)) {
       setError('Por favor ingresa un correo electrónico válido');
@@ -34,15 +33,10 @@ function RecoverPassword() {
       setIsLoading(true);
       setError('');
       
-      // Usar el servicio API correcto
       await ApiService.auth.forgotPassword(email);
       
-      // Mostrar mensaje de éxito al usuario
       setMessage(`Hemos enviado un correo de recuperación a ${email}. Por favor revisa tu bandeja de entrada y sigue las instrucciones para restablecer tu contraseña.`);
     } catch (error) {
-      console.error('Error al solicitar recuperación:', error);
-      
-      // Mostrar mensaje de error específico del servidor
       if (error.response && error.response.data) {
         setError(error.response.data.message || 'Error al procesar la solicitud');
       } else {

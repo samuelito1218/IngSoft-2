@@ -20,8 +20,7 @@ exports.obtenerMisRestaurantes = async (req, res) => {
         });
         
         console.log(`Se encontraron ${restaurantes.length} restaurantes para el admin ${userId}`);
-        
-        // Log detallado para depuración
+
         restaurantes.forEach((r, i) => {
             console.log(`Restaurante ${i+1}: ${r.nombre} (ID: ${r.id})`);
             console.log(`  - Sucursales: ${r.sucursales.length}`);
@@ -37,7 +36,6 @@ exports.obtenerMisRestaurantes = async (req, res) => {
     }
 };
 
-// Listar todos los restaurantes (público)
 exports.listarRestaurantes = async (req, res) => {
     try {
         console.log("Obteniendo listado de todos los restaurantes");
@@ -61,7 +59,6 @@ exports.listarRestaurantes = async (req, res) => {
     }
 };
 
-// Obtener un restaurante específico por ID
 exports.obtenerRestaurante = async (req, res) => {
     try {
         const { id } = req.params;
@@ -87,16 +84,12 @@ exports.obtenerRestaurante = async (req, res) => {
     }
 };
 
-// Listar productos de un restaurante específico
-// En restaurantesController.js - REEMPLAZA esta función:
-// En restaurantesController.js - REEMPLAZA esta función:
 exports.listarProductosPorRestaurante = async (req, res) => {
   try {
     const { restauranteId } = req.params;
     
     console.log("Buscando productos del restaurante:", restauranteId);
-    
-    // ✅ Buscar productos SIN filtros restrictivos
+
     const productos = await prisma.Productos.findMany({
       where: { 
         restaurante_Id: restauranteId
@@ -104,8 +97,7 @@ exports.listarProductosPorRestaurante = async (req, res) => {
     });
     
     console.log(`Encontrados ${productos.length} productos`);
-    
-    // ✅ Procesar productos con valores por defecto pero SIN filtrar
+
     const productosLimpios = productos.map(prod => ({
       id: prod.id,
       nombre: prod.nombre || 'Producto sin nombre',
@@ -122,7 +114,6 @@ exports.listarProductosPorRestaurante = async (req, res) => {
     
   } catch (error) {
     console.error("Error al listar productos del restaurante:", error);
-    // ✅ Solo en caso de error devolver array vacío
     res.status(200).json([]);
   }
 };
@@ -130,18 +121,15 @@ exports.listarProductosPorRestaurante = async (req, res) => {
 // Crear restaurante
 exports.crearRestaurante = async (req, res) => {
     try {
-        // 1) Validar rol Admin
         if (req.user.rol !== "Admin") {
             return res.status(403).json({ message: "Acceso denegado. Sólo Admin puede crear restaurantes" });
         }
-        
-        // 2) Extraer y validar datos
+
         const { nombre, descripcion, sucursales, imageUrl, categorias } = req.body;
         if (!nombre || !descripcion) {
             return res.status(400).json({ message: "Faltan datos obligatorios: nombre, descripcion" });
         }
-        
-        // 3) Crear el restaurante con el usuario como dueño
+
         const nuevoRestaurante = await prisma.restaurantes.create({
             data: {
                 nombre,
@@ -154,7 +142,6 @@ exports.crearRestaurante = async (req, res) => {
         
         console.log(`Restaurante creado: ${nuevoRestaurante.id} por usuario ${req.user.id}`);
         
-        // 4) Crear las sucursales vinculadas al restaurante
         const sucursalesCreadas = [];
         if (Array.isArray(sucursales) && sucursales.length > 0) {
             for (const sucursal of sucursales) {
@@ -177,12 +164,10 @@ exports.crearRestaurante = async (req, res) => {
                     sucursalesCreadas.push(nuevaSucursal);
                 } catch (sucursalError) {
                     console.error("Error al crear sucursal:", sucursalError);
-                    // Continuamos con la siguiente sucursal
                 }
             }
         }
-        
-        // 5) Actualizar el usuario para incluir este restaurante en su lista
+    
         try {
             await prisma.usuarios.update({
                 where: { id: req.user.id },
@@ -195,10 +180,8 @@ exports.crearRestaurante = async (req, res) => {
             console.log(`Usuario ${req.user.id} actualizado con nuevo restaurante ${nuevoRestaurante.id}`);
         } catch (userError) {
             console.warn("No se pudo actualizar el usuario:", userError);
-            // No fallamos la operación completa por esto
         }
         
-        // 6) Devolver restaurante con sus sucursales
         const restauranteCompleto = {
             ...nuevoRestaurante,
             sucursales: sucursalesCreadas
@@ -277,8 +260,7 @@ exports.editarRestaurante = async (req, res) => {
         if (!restaurante) {
             return res.status(404).json({ message: "Restaurante no encontrado" });
         }
-        
-        // Verificar que el usuario es dueño del restaurante
+    
         if (restaurante.ownerId !== req.user.id) {
             return res.status(403).json({ message: "Solo puedes editar restaurantes de tu propiedad" });
         }
@@ -311,19 +293,16 @@ exports.editarRestaurante = async (req, res) => {
     }
 };
 
-// Eliminar un restaurante
 exports.eliminarRestaurante = async (req, res) => {
     try {
         const { restauranteId } = req.params;
-        
-        // Validar rol Admin
+
         if (req.user.rol !== "Admin") {
             return res.status(403).json({
                 message: "Acceso denegado. Solo los administradores pueden eliminar restaurantes."
             });
         }
-        
-        // Verificar que el restaurante existe
+
         const restaurante = await prisma.restaurantes.findUnique({
             where: { id: restauranteId },
             include: {
@@ -334,33 +313,26 @@ exports.eliminarRestaurante = async (req, res) => {
         if (!restaurante) {
             return res.status(404).json({ message: "Restaurante no encontrado" });
         }
-        
-        // Verificar que el usuario es dueño del restaurante
+
         if (restaurante.ownerId !== req.user.id) {
             return res.status(403).json({ message: "Solo puedes eliminar restaurantes de tu propiedad" });
         }
         
-        // Procedemos a eliminar en el siguiente orden para mantener integridad referencial:
-        
-        // 1. Eliminar sucursales
         if (restaurante.sucursales && restaurante.sucursales.length > 0) {
             await prisma.sucursales.deleteMany({
                 where: { restaurante_Id: restauranteId }
             });
             console.log(`Eliminadas ${restaurante.sucursales.length} sucursales del restaurante ${restauranteId}`);
         }
-        
-        // 2. Eliminar productos
+
         await prisma.productos.deleteMany({
             where: { restaurante_Id: restauranteId }
         });
-        
-        // 3. Eliminar el restaurante
+
         await prisma.restaurantes.delete({
             where: { id: restauranteId }
         });
-        
-        // 4. Actualizar la lista de restaurantes del usuario
+
         try {
             const usuario = await prisma.usuarios.findUnique({
                 where: { id: req.user.id },
@@ -379,7 +351,6 @@ exports.eliminarRestaurante = async (req, res) => {
             }
         } catch (userError) {
             console.warn("Error al actualizar usuario:", userError);
-            // No fallamos la operación completa por esto
         }
         
         res.status(200).json({
@@ -394,8 +365,6 @@ exports.eliminarRestaurante = async (req, res) => {
     }
 };
 
-//Métodos para sucursales:
-
 // Crear una nueva sucursal
 exports.crearSucursal = async (req, res) => {
     try {
@@ -403,15 +372,13 @@ exports.crearSucursal = async (req, res) => {
         if (req.user.rol !== "Admin") {
             return res.status(403).json({ message: "Acceso denegado. Sólo Admin puede crear sucursales" });
         }
-        
-        // Extraer y validar datos
+
         const { nombre, direccion, comuna, restaurante_Id } = req.body;
         
         if (!nombre || !direccion || !comuna || !restaurante_Id) {
             return res.status(400).json({ message: "Faltan datos obligatorios para la sucursal" });
         }
         
-        // Verificar que el restaurante existe
         const restaurante = await prisma.restaurantes.findUnique({
             where: { id: restaurante_Id }
         });
@@ -419,13 +386,11 @@ exports.crearSucursal = async (req, res) => {
         if (!restaurante) {
             return res.status(404).json({ message: "Restaurante no encontrado" });
         }
-        
-        // Verificar que el usuario es dueño del restaurante
+
         if (restaurante.ownerId !== req.user.id) {
             return res.status(403).json({ message: "No tienes permiso para añadir sucursales a este restaurante" });
         }
-        
-        // Crear la sucursal
+
         const nuevaSucursal = await prisma.sucursales.create({
             data: {
                 nombre,
@@ -477,7 +442,7 @@ exports.listarSucursalesPorRestaurante = async (req, res) => {
     }
 };
 
-// Eliminar una sucursal
+
 exports.eliminarSucursal = async (req, res) => {
     try {
         const { id } = req.params;
@@ -493,13 +458,11 @@ exports.eliminarSucursal = async (req, res) => {
         if (!sucursal) {
             return res.status(404).json({ message: "Sucursal no encontrada" });
         }
-        
-        // Verificar que el usuario es dueño del restaurante asociado
+
         if (sucursal.restaurante.ownerId !== req.user.id) {
             return res.status(403).json({ message: "No tienes permiso para eliminar esta sucursal" });
         }
         
-        // Eliminar la sucursal
         await prisma.sucursales.delete({
             where: { id }
         });
@@ -516,13 +479,11 @@ exports.eliminarSucursal = async (req, res) => {
     }
 };
 
-// Actualizar una sucursal
 exports.actualizarSucursal = async (req, res) => {
     try {
         const { id } = req.params;
         const { nombre, direccion, comuna } = req.body;
-        
-        // Buscar la sucursal
+
         const sucursal = await prisma.sucursales.findUnique({
             where: { id },
             include: {
@@ -533,19 +494,16 @@ exports.actualizarSucursal = async (req, res) => {
         if (!sucursal) {
             return res.status(404).json({ message: "Sucursal no encontrada" });
         }
-        
-        // Verificar que el usuario es dueño del restaurante asociado
+
         if (sucursal.restaurante.ownerId !== req.user.id) {
             return res.status(403).json({ message: "No tienes permiso para modificar esta sucursal" });
         }
-        
-        // Preparar datos para actualizar
+
         const datosActualizados = {};
         if (nombre) datosActualizados.nombre = nombre;
         if (direccion) datosActualizados.direccion = direccion;
         if (comuna) datosActualizados.comuna = comuna;
-        
-        // Actualizar la sucursal
+
         const sucursalActualizada = await prisma.sucursales.update({
             where: { id },
             data: datosActualizados

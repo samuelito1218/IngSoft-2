@@ -1,4 +1,3 @@
-// src/services/ProfileService.js
 import ApiService from './api';
 import CloudinaryService from './CloudinaryService';
 
@@ -10,7 +9,6 @@ const ProfileService = {
         throw new Error('Se requiere un archivo');
       }
       
-      // Usar el servicio de Cloudinary para subir la imagen
       const imageUrl = await CloudinaryService.uploadProfileImage(file);
       
       return imageUrl;
@@ -31,14 +29,12 @@ const ProfileService = {
     }
   },
 
-  // Modificar en ProfileService.js
   async changePassword(newPassword) {
     try {
       if (!newPassword) {
         throw new Error('La nueva contraseña es requerida');
       }
       
-      // Usar la ruta específica para cambio de contraseña
       const response = await ApiService.usuarios.cambiarContrasena({ newPassword });
       
       return response.data;
@@ -51,20 +47,17 @@ const ProfileService = {
   // Actualizar perfil del usuario
   async updateUserProfile(profileData) {
     try {
-      // Asegurarse de que todos los campos están presentes
       if (!profileData.nombreCompleto || !profileData.telefono || 
           !profileData.direccion || !profileData.comuna) {
         throw new Error('Todos los campos son requeridos');
       }
       
-      // Convertir campos numéricos a números
       const dataToSend = {
         ...profileData,
         telefono: parseInt(profileData.telefono),
         comuna: parseInt(profileData.comuna)
       };
       
-      // Cambiado de actualizarPerfil a actualizar para coincidir con ApiService
       const response = await ApiService.usuarios.actualizar(dataToSend);
       return response.data.usuario || response.data;
     } catch (error) {
@@ -73,7 +66,6 @@ const ProfileService = {
     }
   },
 
-  // Eliminar cuenta del usuario
   async eliminarCuenta(){
     try{
       const response = await ApiService.usuarios.eliminarCuenta();

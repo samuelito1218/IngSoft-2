@@ -181,12 +181,10 @@ const calcularCalificacionRestaurante = async (restauranteId) => {
       }
     });
 
-    // 3. Filtrar pedidos que tienen calificaciones
     const pedidosConCalificaciones = pedidosEntregados.filter(
       pedido => pedido.calificaciones && pedido.calificaciones.length > 0
     );
 
-    // 4. Calcular estadísticas
     if (pedidosConCalificaciones.length === 0) {
       return {
         promedio: 0,
@@ -240,10 +238,8 @@ exports.getCalificacionesRestaurante = async (req, res) => {
       return res.status(404).json({ message: 'Restaurante no encontrado' });
     }
 
-    // Calcular calificaciones dinámicamente
     const estadisticasCompletas = await calcularCalificacionRestaurante(restauranteId);
 
-    // Paginar calificaciones
     const inicio = (pagina - 1) * limite;
     const fin = inicio + parseInt(limite);
     const calificacionesPaginadas = estadisticasCompletas.calificaciones.slice(inicio, fin);
@@ -286,8 +282,6 @@ exports.getEstadisticasRestauranteConCalificaciones = async (req, res) => {
     if (!restaurante) {
       return res.status(404).json({ message: 'Restaurante no encontrado' });
     }
-
-    // Calcular fecha desde según el período
     let fechaDesde = new Date();
     switch (periodo) {
       case 'hoy':
@@ -428,7 +422,6 @@ exports.getRestaurantesConCalificaciones = async (req, res) => {
 
     let where = {};
 
-    // Filtrar por categoría si se proporciona
     if (categoria) {
       where.categorias = {
         has: categoria
@@ -442,7 +435,6 @@ exports.getRestaurantesConCalificaciones = async (req, res) => {
       }
     });
 
-    // Calcular calificaciones para cada restaurante
     const restaurantesConCalificaciones = await Promise.all(
       restaurantes.map(async (restaurante) => {
         const estadisticas = await calcularCalificacionRestaurante(restaurante.id);
@@ -455,7 +447,6 @@ exports.getRestaurantesConCalificaciones = async (req, res) => {
       })
     );
 
-    // Ordenar según el criterio
     switch (ordenarPor) {
       case 'calificacion':
         restaurantesConCalificaciones.sort((a, b) => b.calificacionPromedio - a.calificacionPromedio);

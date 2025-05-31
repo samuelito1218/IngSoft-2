@@ -23,9 +23,8 @@ const PedidosDisponibles = () => {
 
   useEffect(() => {
     fetchPedidosDisponibles();
-    
-    // Actualizar periódicamente la lista de pedidos disponibles
-    const interval = setInterval(fetchPedidosDisponibles, 30000); // Cada 30 segundos
+  
+    const interval = setInterval(fetchPedidosDisponibles, 30000); 
     
     return () => clearInterval(interval);
   }, []);
@@ -36,16 +35,13 @@ const PedidosDisponibles = () => {
       const response = await ApiService.pedidos.disponibles();
       
       if (response.data) {
-        // Limpiar la cola y cache antes de agregar nuevos pedidos
         pedidoPriorityQueue.clear();
-        
-        // Agregar pedidos a la cola de prioridad y cache
+
         response.data.forEach(pedido => {
           pedidoPriorityQueue.enqueue(pedido);
           pedidoCache.put(pedido);
         });
-        
-        // Obtener pedidos ordenados por prioridad (precio)
+
         const pedidosConPrioridad = pedidoPriorityQueue.getAllSorted();
         
         setPedidos(response.data);
@@ -61,7 +57,6 @@ const PedidosDisponibles = () => {
     }
   };
 
-  // Nuevo método para mostrar la confirmación
   const handleMostrarConfirmacion = (pedido) => {
     setPedidoSeleccionado(pedido);
     setErrorMessage('');
@@ -83,17 +78,13 @@ const PedidosDisponibles = () => {
       });
       
       if (response.ok) {
-        // Remover el pedido de la cola de prioridad y cache
         pedidoPriorityQueue.removeById(pedidoSeleccionado.id);
         pedidoCache.remove(pedidoSeleccionado.id);
-        
-        // Mostrar notificación de éxito antes de navegar
+      
         window.showNotification('¡Pedido asignado correctamente!', 'success');
         
-        // Cerrar el modal
         setShowConfirmModal(false);
-        
-        // Breve retraso para permitir que la notificación se muestre antes de la navegación
+
         setTimeout(() => {
           navigate('/repartidor/pedidos-activos');
         }, 1000);
@@ -125,7 +116,7 @@ const PedidosDisponibles = () => {
     return `${dir.direccionEspecifica}, ${dir.barrio}, Comuna ${dir.comuna}`;
   };
 
-  // Función para obtener el color de prioridad basado en el precio
+
   const getPriorityColor = (precio) => {
     if (precio >= 50) return '#27ae60'; // Verde para pedidos de alto valor
     if (precio >= 25) return '#f39c12'; // Naranja para pedidos de valor medio
@@ -152,7 +143,6 @@ const PedidosDisponibles = () => {
 
   return (
     <div className="pedidos-disponibles-container">
-      {/* Añadir NotificationManager */}
       <NotificationManager />
       
       <div className="pedidos-header">

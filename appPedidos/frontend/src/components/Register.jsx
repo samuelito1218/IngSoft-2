@@ -31,7 +31,6 @@ function Register() {
   const [successMessage, setSuccessMessage] = useState('');
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   
-  // Estados para la validación de unicidad
   const [validatingCedula, setValidatingCedula] = useState(false);
   const [validatingTelefono, setValidatingTelefono] = useState(false);
   const [cedulaError, setCedulaError] = useState('');
@@ -48,49 +47,40 @@ function Register() {
   }, []);
 
   useEffect(() => {
-    // Lista para almacenar errores de validación de contraseña
     const errors = [];
     
-    // Validar longitud mínima
     if (formData.password.length > 0 && formData.password.length < 8) {
       errors.push('La contraseña debe tener al menos 8 caracteres');
     }
     
-    // Validar letra mayúscula
     if (formData.password.length > 0 && !/[A-Z]/.test(formData.password)) {
       errors.push('La contraseña debe incluir al menos una letra mayúscula');
     }
     
-    // Validar número
     if (formData.password.length > 0 && !/[0-9]/.test(formData.password)) {
       errors.push('La contraseña debe incluir al menos un número');
     }
     
-    // Actualizar lista de errores
     setPasswordErrors(errors);
     
-    // Evaluar fuerza de la contraseña
     if (formData.password.length === 0) {
       setPasswordStrength(0);
     } else if (errors.length >= 2) {
-      setPasswordStrength(1); // Débil
+      setPasswordStrength(1);
     } else if (errors.length === 1) {
-      setPasswordStrength(2); // Media
+      setPasswordStrength(2);
     } else {
-      setPasswordStrength(3); // Fuerte
+      setPasswordStrength(3);
     }
   }, [formData.password]);
 
-  // Validar unicidad de la cédula con debounce
   useEffect(() => {
-    // Define la función dentro del useEffect para evitar errores de "undefined"
     const validateCedula = async () => {
       if (formData.cedula && formData.cedula.length >= 5) {
         try {
           setValidatingCedula(true);
           setCedulaError('');
           
-          // Usar api.get directamente para evitar problemas con ApiService
           const response = await ApiService.auth.validateCedula(formData.cedula);
           
           setCedulaValid(true);
@@ -99,8 +89,6 @@ function Register() {
           if (error.response && error.response.status === 409) {
             setCedulaError('Esta cédula ya está registrada en el sistema');
             setCedulaValid(false);
-          } else {
-            console.error('Error al validar cédula:', error);
           }
           setValidatingCedula(false);
         }
@@ -110,7 +98,6 @@ function Register() {
       }
     };
 
-    // Debounce la validación para evitar demasiadas solicitudes
     const timeoutId = setTimeout(() => {
       if (formData.cedula && formData.cedula.length >= 5) {
         validateCedula();
@@ -120,16 +107,13 @@ function Register() {
     return () => clearTimeout(timeoutId);
   }, [formData.cedula]);
 
-  // Validar unicidad del teléfono con debounce
   useEffect(() => {
-    // Define la función dentro del useEffect para evitar errores de "undefined"
     const validateTelefono = async () => {
       if (formData.telefono && formData.telefono.length >= 6) {
         try {
           setValidatingTelefono(true);
           setTelefonoError('');
           
-          // Usar api.get directamente para evitar problemas con ApiService
           const response = await ApiService.auth.validateTelefono(formData.telefono);
           
           setTelefonoValid(true);
@@ -138,8 +122,6 @@ function Register() {
           if (error.response && error.response.status === 409) {
             setTelefonoError('Este número de teléfono ya está registrado');
             setTelefonoValid(false);
-          } else {
-            console.error('Error al validar teléfono:', error);
           }
           setValidatingTelefono(false);
         }
@@ -149,7 +131,6 @@ function Register() {
       }
     };
 
-    // Debounce la validación para evitar demasiadas solicitudes
     const timeoutId = setTimeout(() => {
       if (formData.telefono && formData.telefono.length >= 6) {
         validateTelefono();
@@ -166,7 +147,6 @@ function Register() {
       [name]: value
     });
 
-    // Limpiar errores cuando el usuario comienza a cambiar los campos
     if (name === 'cedula') {
       setCedulaError('');
     } else if (name === 'telefono') {
@@ -185,20 +165,17 @@ function Register() {
     setError('');
     
     if (formStep === 1) {
-      // Validar campos del primer paso
       if (!formData.nombreCompleto || !formData.email || !formData.telefono || !formData.cedula) {
         setError('Por favor completa todos los campos');
         return;
       }
       
-      // Validar email
       const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
       if (!emailRegex.test(formData.email)) {
         setError('El correo electrónico no es válido');
         return;
       }
       
-      // Validar que cédula y teléfono no estén duplicados
       if (cedulaError) {
         setError(cedulaError);
         return;
@@ -224,25 +201,21 @@ function Register() {
     e.preventDefault();
     setError('');
 
-    // Validar que la contraseña sea suficientemente fuerte
     if (passwordStrength < 3) {
       setError('La contraseña no cumple con los requisitos de seguridad');
       return;
     }
 
-    // Validar que las contraseñas coincidan
     if (formData.password !== formData.confirmPassword) {
       setError('Las contraseñas no coinciden');
       return;
     }
 
-    // Validar que si el rol es Repartidor, se haya seleccionado un vehículo
     if (formData.rol === 'Repartidor' && !formData.vehiculo) {
       setError('Por favor selecciona un tipo de vehículo');
       return;
     }
 
-    // Validar que los campos numéricos sean válidos
     const telefonoNum = parseInt(formData.telefono);
     const cedulaNum = parseInt(formData.cedula);
     const comunaNum = parseInt(formData.comuna);
@@ -252,7 +225,6 @@ function Register() {
       return;
     }
 
-    // Verificar nuevamente la unicidad de cédula y teléfono
     if (cedulaError || telefonoError) {
       setError(cedulaError || telefonoError);
       return;
@@ -261,7 +233,6 @@ function Register() {
     try {
       setIsLoading(true);
 
-      // Datos para enviar a la API
       const userData = {
         nombreCompleto: formData.nombreCompleto,
         email: formData.email,
@@ -272,20 +243,15 @@ function Register() {
         comuna: comunaNum.toString(),
         rol: formData.rol,
         vehiculo: formData.rol === 'Repartidor' ? formData.vehiculo : undefined,
-        // Añadir verificado=true para los administradores
-        verificado: true // Todos los usuarios verificados automáticamente
+        verificado: true
       };
 
-      // Llamada a la API para registro de usuario
       const response = await ApiService.auth.register(userData);
       
-      // Guardar datos de la respuesta
       const { token, user } = response.data;
       
-      // Mostrar mensaje de éxito y pantalla de confirmación
       setRegistrationSuccess(true);
       
-      // Mensaje personalizado según el rol
       let mensaje = '';
       if (formData.rol === 'Admin') {
         mensaje = `¡Tu cuenta de Administrador ha sido creada exitosamente! Ahora puedes iniciar sesión como ${formData.email} para gestionar tu restaurante. Verifica en tu bandeja de entrada o spam`;
@@ -299,8 +265,6 @@ function Register() {
       setIsLoading(false);
       
     } catch (error) {
-      console.error('Error de registro:', error);
-
       if (error.response && error.response.data) {
         setError(error.response.data.message || 'Error al registrar usuario');
       } else {
@@ -323,7 +287,6 @@ function Register() {
     }
   };
 
-  // Renderizar mensaje de éxito
   if (registrationSuccess) {
     return (
       <div className="register-container">

@@ -1,4 +1,3 @@
-//
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../../services/api';
@@ -16,39 +15,33 @@ import './AllOrders.css';
 
 const AllOrders = () => {
   const navigate = useNavigate();
-  
-  // Estados
+
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // Filtros
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRestaurant, setSelectedRestaurant] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  
-  // Paginación
+
   const [currentPage, setCurrentPage] = useState(1);
   const [ordersPerPage] = useState(10);
-  
-  // Cargar datos iniciales
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
-        
-        // 1. Obtener restaurantes del usuario
+
         const restaurantsResponse = await api.get('/restaurantes/mine');
         const userRestaurants = restaurantsResponse.data || [];
         setRestaurants(userRestaurants);
         
-        // 2. Obtener todos los pedidos de todos los restaurantes
         let allOrders = [];
         
         for (const restaurant of userRestaurants) {
@@ -56,7 +49,6 @@ const AllOrders = () => {
             const ordersResponse = await api.get(`/pedidos/restaurante/${restaurant.id}`);
             
             if (ordersResponse.data && Array.isArray(ordersResponse.data)) {
-              // Agregar nombre del restaurante a cada pedido
               const ordersWithRestaurant = ordersResponse.data.map(order => ({
                 ...order,
                 restaurantName: restaurant.nombre,
@@ -69,8 +61,7 @@ const AllOrders = () => {
             console.error(`Error al obtener pedidos del restaurante ${restaurant.id}:`, err);
           }
         }
-        
-        // Ordenar por fecha (más recientes primero)
+ 
         allOrders.sort((a, b) => new Date(b.fechaDeCreacion) - new Date(a.fechaDeCreacion));
         
         setOrders(allOrders);
@@ -85,12 +76,10 @@ const AllOrders = () => {
     
     fetchData();
   }, []);
-  
-  // Aplicar filtros cuando cambian
+
   useEffect(() => {
     let result = [...orders];
-    
-    // Filtrar por término de búsqueda
+
     if (searchTerm) {
       result = result.filter(order => 
         order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -98,43 +87,36 @@ const AllOrders = () => {
         (order.direccionEntrega?.direccionEspecifica?.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
-    
-    // Filtrar por restaurante
+ 
     if (selectedRestaurant !== 'all') {
       result = result.filter(order => order.restaurantId === selectedRestaurant);
     }
-    
-    // Filtrar por estado
+
     if (selectedStatus !== 'all') {
       result = result.filter(order => order.estado === selectedStatus);
     }
-    
-    // Filtrar por fecha desde
+
     if (dateFrom) {
       const fromDate = new Date(dateFrom);
       result = result.filter(order => new Date(order.fechaDeCreacion) >= fromDate);
     }
-    
-    // Filtrar por fecha hasta
+
     if (dateTo) {
       const toDate = new Date(dateTo);
-      toDate.setHours(23, 59, 59, 999); // Hasta el final del día
+      toDate.setHours(23, 59, 59, 999);
       result = result.filter(order => new Date(order.fechaDeCreacion) <= toDate);
     }
     
     setFilteredOrders(result);
-    setCurrentPage(1); // Reset a la primera página cuando cambian los filtros
+    setCurrentPage(1); 
   }, [searchTerm, selectedRestaurant, selectedStatus, dateFrom, dateTo, orders]);
   
-  // Obtener pedidos de la página actual
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
   const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
-  
-  // Cambiar página
+
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
-  
-  // Limpiar filtros
+
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedRestaurant('all');
@@ -142,13 +124,11 @@ const AllOrders = () => {
     setDateFrom('');
     setDateTo('');
   };
-  
-  // Ver detalle de pedido (SOLO VISUALIZACIÓN)
+
   const handleViewOrder = (restaurantId, orderId) => {
     navigate(`/admin/restaurantes/${restaurantId}?pedido=${orderId}`);
   };
-  
-  // Formatear fecha
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('es-CO', {
@@ -159,8 +139,7 @@ const AllOrders = () => {
       minute: '2-digit'
     }).format(date);
   };
-  
-  // Formatear precio
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -245,7 +224,6 @@ const AllOrders = () => {
               >
                 <option value="all">Todos los estados</option>
                 <option value="Pendiente">Pendiente</option>
-                <option value="En_Preparacion">En Preparación</option>
                 <option value="Preparado">Preparado</option>
                 <option value="En_Camino">En Camino</option>
                 <option value="Entregado">Entregado</option>
@@ -289,10 +267,6 @@ const AllOrders = () => {
         <div className="stat-box">
           <h3>Pendientes</h3>
           <p>{filteredOrders.filter(o => o.estado === 'Pendiente').length}</p>
-        </div>
-        <div className="stat-box">
-          <h3>En Preparación</h3>
-          <p>{filteredOrders.filter(o => o.estado === 'En_Preparacion').length}</p>
         </div>
         <div className="stat-box">
           <h3>En Camino</h3>
@@ -385,7 +359,6 @@ const AllOrders = () => {
             </table>
           </div>
           
-          {/* Paginación */}
           {filteredOrders.length > ordersPerPage && (
             <div className="pagination">
               <button 

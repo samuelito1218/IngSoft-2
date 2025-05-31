@@ -1,8 +1,3 @@
-/* src/components/layouts/layouts.css - Versión Profesional //*/
-
-/* Variables ya definidas en global.css */
-
-/* Header Layout */
 .layout-container {
   display: flex;
   flex-direction: column;
@@ -35,7 +30,6 @@
   justify-content: space-between;
 }
 
-/* Logo */
 .logo {
   display: flex;
   align-items: center;
@@ -77,7 +71,6 @@
   letter-spacing: 0.5px;
 }
 
-/* Menu Toggle for Mobile */
 .menu-toggle {
   display: none;
   background: none;
@@ -97,7 +90,6 @@
   background-color: var(--gray-200);
 }
 
-/* Navbar */
 .navbar {
   display: flex;
   align-items: center;
@@ -106,7 +98,6 @@
   margin-left: 30px;
 }
 
-/* Navigation Menu */
 .nav-menu {
   display: flex;
   align-items: center;
@@ -153,7 +144,6 @@
   font-size: 18px;
 }
 
-/* Cart icon with badge */
 .cart-icon-container {
   position: relative;
 }
@@ -175,7 +165,6 @@
   border: 2px solid white;
 }
 
-/* Icon with status badge */
 .icon-badge-container {
   position: relative;
 }
@@ -213,7 +202,6 @@
   padding: 0 var(--spacing-xs);
 }
 
-/* User Section */
 .user-section {
   display: flex;
   align-items: center;
@@ -250,10 +238,10 @@
 }
 
 .user-avatar img {
-  width: 100% !important;      /* Solo el 100% del contenedor (38px) */
-  height: 100% !important;     /* Solo el 100% del contenedor (38px) */
-  object-fit: cover !important; /* Ajusta sin deformar */
-  position: static !important;  /* Evita escape */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: static;
 }
 
 .user-name {
@@ -266,7 +254,6 @@
   text-overflow: ellipsis;
 }
 
-/* Logout Button */
 .logout-button {
   background: none;
   border: none;
@@ -294,7 +281,6 @@
   font-size: 16px;
 }
 
-/* Main Content */
 .layout-main {
   flex-grow: 1;
   padding: var(--spacing-xl) var(--spacing-md);
@@ -304,7 +290,6 @@
   box-sizing: border-box;
 }
 
-/* Footer */
 .layout-footer {
   background-color: white;
   border-top: 1px solid var(--gray-200);
@@ -481,7 +466,6 @@
   color: var(--gray-500);
 }
 
-/* Loading Screen */
 .loading-screen {
   display: flex;
   flex-direction: column;
@@ -513,7 +497,6 @@
   max-width: 80%;
 }
 
-/* Chat Icon Container */
 .chat-icon-container {
   position: fixed;
   bottom: 30px;
@@ -562,7 +545,6 @@
   100% { box-shadow: 0 0 0 0 rgba(255, 107, 61, 0); }
 }
 
-/* Responsive Styles */
 @media (max-width: 1024px) {
   .layout-main {
     padding: var(--spacing-lg) var(--spacing-md);
@@ -709,16 +691,12 @@
     padding: 0 var(--spacing-sm);
   }
 }
-/* Agregar al final de tu archivo layouts.css */
-
-/* ===== RESTAURANT===== */
 
 .restaurant-layout {
   display: flex;
   min-height: 100vh;
 }
 
-/* Sidebar para navegación de restaurantes */
 .sidebar {
   width: 250px;
   background-color: #747068;
@@ -761,7 +739,6 @@
   display: none;
 }
 
-/* Información de usuario en la sidebar */
 .sidebar .user-info {
   padding: 20px;
   display: flex;
@@ -819,7 +796,6 @@
   text-overflow: ellipsis;
 }
 
-/* Navegación en la sidebar */
 .sidebar-nav {
   flex: 1;
   overflow-y: auto;
@@ -867,7 +843,6 @@
   flex: 1;
 }
 
-/* Footer de la sidebar */
 .sidebar-footer {
   padding: 16px 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -894,7 +869,6 @@
   margin-left: 10px;
 }
 
-/* Contenido principal del panel de restaurante */
 .restaurant-layout .main-content {
   flex: 1;
   margin-left: 250px;
@@ -981,7 +955,6 @@
   font-size: 14px;
 }
 
-/* Overlay para sidebar en móviles */
 .sidebar-overlay {
   position: fixed;
   top: 0;
@@ -993,7 +966,6 @@
   display: none;
 }
 
-/* Dashboard de restaurante */
 .restaurant-dashboard {
   padding: 20px;
 }
@@ -1123,7 +1095,6 @@
   font-size: 14px;
 }
 
-/* Responsive para panel de restaurante */
 @media (max-width: 1024px) {
   .dashboard-stats, .dashboard-actions {
     grid-template-columns: repeat(2, 1fr);
@@ -1194,9 +1165,7 @@
     font-size: 24px;
   }
 }
-/* ===== ADMIN STYLES ===== */
 
-/* Header mejorado para Admin Layout */
 .layout-header {
   background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);

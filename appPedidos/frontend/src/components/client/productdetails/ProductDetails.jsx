@@ -1,27 +1,23 @@
-// src/components/client/ProductDetails.jsx
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaPlus, FaMinus, FaStore, FaShoppingCart } from 'react-icons/fa';
 import { useAuth } from '../../../hooks/useAuth';
 import { CartContext } from '../../../contexts/CartContext';
 import ApiService from '../../../services/api';
-import RestaurantChangeModal from '../restaurantChangeModal/RestaurantChangeModal';
-
+import RestaurantChangeModal from '../restaurantchangemodal/RestaurantChangeModal';
 import './ProductDetails.css';
-
 
 const DEFAULT_IMAGE = '/images/food-placeholder.jpg';
 
-// Función helper para obtener la URL de imagen correcta (igual que en FoodItem)
 const getImageUrl = (product) => {
   const imageFields = ['imagen', 'imageUrl', 'image', 'foto', 'picture'];
-  
+ 
   for (const field of imageFields) {
     if (product[field] && product[field].trim() !== '') {
       return product[field];
     }
   }
-  
+ 
   return DEFAULT_IMAGE;
 };
 
@@ -29,9 +25,9 @@ const ProductDetails = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  
-  const { addToCart, removeFromCart, getItemQuantity } = useContext(CartContext);
-  
+ 
+  const { addToCart, removeFromCart, getItemQuantity, clearCart } = useContext(CartContext);
+ 
   const [product, setProduct] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
@@ -39,68 +35,61 @@ const ProductDetails = () => {
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(0);
   const [imageError, setImageError] = useState(false);
-  const [relatedImageErrors, setRelatedImageErrors] = useState({}); // Para productos relacionados
+  const [relatedImageErrors, setRelatedImageErrors] = useState({});
+  const [showRestaurantModal, setShowRestaurantModal] = useState(false);
+  const [restrictionInfo, setRestrictionInfo] = useState(null);
 
+  const updateQuantityFromCart = useCallback(() => {
+    if (id) {
+      const cartQuantity = getItemQuantity(id);
+      setQuantity(cartQuantity);
+    }
+  }, [id, getItemQuantity]);
 
-  // Agregar estados para el modal (después de los estados existentes):
-const [showRestaurantModal, setShowRestaurantModal] = useState(false);
-const [restrictionInfo, setRestrictionInfo] = useState(null);
-
-  
-  // Cargar información del producto
   useEffect(() => {
     const fetchProductData = async () => {
       try {
         setLoading(true);
         setError(null);
-        
-        // Obtener información del producto
+       
         const response = await ApiService.productos.detalle(id);
-        
+       
         if (!response.data) {
           throw new Error('No se encontró información del producto');
         }
-        
+       
         const productData = response.data;
         setProduct(productData);
-        
-        // Resetear error de imagen cuando cambia el producto
         setImageError(false);
-        
-        // Obtener información del restaurante
+       
         if (productData.restaurante_Id) {
           const restaurantResponse = await ApiService.restaurantes.detalle(productData.restaurante_Id);
           if (restaurantResponse.data) {
             setRestaurant(restaurantResponse.data);
           }
-          
-          // Obtener productos relacionados
+         
           const relatedResponse = await ApiService.productos.porRestaurante(productData.restaurante_Id);
           if (relatedResponse.data && Array.isArray(relatedResponse.data)) {
-            // Filtrar el producto actual
             const filtered = relatedResponse.data.filter(item => item.id !== id);
             setRelatedProducts(filtered.slice(0, 4));
-            // Resetear errores de imágenes relacionadas
             setRelatedImageErrors({});
           }
         }
-        
-        // Obtener cantidad en carrito
-        const cartQuantity = getItemQuantity(id);
-        setQuantity(cartQuantity);
-        
+       
         setLoading(false);
       } catch (error) {
-        console.error('Error al cargar información del producto:', error);
         setError('No se pudo cargar la información del producto. Intente nuevamente.');
         setLoading(false);
       }
     };
-    
+   
     fetchProductData();
-  }, [id, getItemQuantity]);
-  
-  // Formatear precio
+  }, [id]);
+
+  useEffect(() => {
+    updateQuantityFromCart();
+  }, [updateQuantityFromCart]);
+ 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -108,88 +97,86 @@ const [restrictionInfo, setRestrictionInfo] = useState(null);
       minimumFractionDigits: 0
     }).format(price);
   };
-  
-  // Manejar error de imagen principal
-  const handleImageError = (e) => {
+ 
+  const handleImageError = useCallback((e) => {
     if (!imageError) {
       setImageError(true);
       e.target.src = DEFAULT_IMAGE;
     }
-  };
-  
-  // Manejar error de imagen de productos relacionados
-  const handleRelatedImageError = (productId) => {
+  }, [imageError]);
+ 
+  const handleRelatedImageError = useCallback((productId) => {
     setRelatedImageErrors(prev => ({
       ...prev,
       [productId]: true
     }));
-  };
-  
-  // Manejar incremento de cantidad
-  const handleIncrement = () => {
-  if (product) {
-    const result = addToCart(product, restaurant?.nombre);
-    
-    if (!result.success) {
-      setRestrictionInfo({
-        reason: result.reason,
-        currentRestaurant: result.currentRestaurant,
-        newRestaurant: restaurant?.nombre
-      });
-      setShowRestaurantModal(true);
-      return;
+  }, []);
+ 
+  const handleIncrement = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+   
+    if (product) {
+      const result = addToCart(product, restaurant?.nombre);
+     
+      if (!result.success) {
+        setRestrictionInfo({
+          reason: result.reason,
+          currentRestaurant: result.currentRestaurant,
+          newRestaurant: restaurant?.nombre
+        });
+        setShowRestaurantModal(true);
+        return;
+      }
+     
+      setQuantity(prev => prev + 1);
     }
-    
-    setQuantity(prev => prev + 1);
-  }
-};
+  }, [product, restaurant?.nombre, addToCart]);
 
-
-const handleRestaurantChange = () => {
-  clearCart();
-  const result = addToCart(product, restaurant?.nombre);
-  
-  if (result.success) {
-    setQuantity(1);
-    setShowRestaurantModal(false);
-    setRestrictionInfo(null);
-  }
-};
-
-const handleRestaurantCancel = () => {
-  setShowRestaurantModal(false);
-  setRestrictionInfo(null);
-};
-  // Manejar decremento de cantidad
-  const handleDecrement = () => {
+  const handleDecrement = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+   
     if (quantity > 0) {
       removeFromCart(id);
       setQuantity(prev => prev - 1);
     }
-  };
-  
-  // Ir al carrito
-  const goToCart = () => {
+  }, [quantity, id, removeFromCart]);
+
+  const handleRestaurantChange = useCallback(() => {
+    clearCart();
+    const result = addToCart(product, restaurant?.nombre);
+   
+    if (result.success) {
+      setQuantity(1);
+      setShowRestaurantModal(false);
+      setRestrictionInfo(null);
+    }
+  }, [clearCart, addToCart, product, restaurant?.nombre]);
+
+  const handleRestaurantCancel = useCallback(() => {
+    setShowRestaurantModal(false);
+    setRestrictionInfo(null);
+  }, []);
+ 
+  const goToCart = useCallback(() => {
     navigate('/cliente/carrito');
-  };
-  
-  // Ir al restaurante
-  const goToRestaurant = () => {
+  }, [navigate]);
+ 
+  const goToRestaurant = useCallback(() => {
     if (restaurant) {
       navigate(`/cliente/restaurante/${restaurant.id}`);
     }
-  };
-  
-  // Volver atrás
-  const handleBack = () => {
+  }, [restaurant, navigate]);
+ 
+  const handleBack = useCallback(() => {
     navigate(-1);
-  };
-  
-  // Ver producto relacionado
-  const viewRelatedProduct = (productId) => {
+  }, [navigate]);
+ 
+  const viewRelatedProduct = useCallback((productId) => {
     navigate(`/cliente/producto/${productId}`);
-  };
-  
+  }, [navigate]);
+ 
   if (loading) {
     return (
       <div className="product-details-loading">
@@ -198,7 +185,7 @@ const handleRestaurantCancel = () => {
       </div>
     );
   }
-  
+ 
   if (error) {
     return (
       <div className="product-details-error">
@@ -208,7 +195,7 @@ const handleRestaurantCancel = () => {
       </div>
     );
   }
-  
+ 
   if (!product) {
     return (
       <div className="product-details-error">
@@ -217,17 +204,16 @@ const handleRestaurantCancel = () => {
       </div>
     );
   }
-  
-  // Obtener URL de imagen del producto principal
+ 
   const productImageUrl = getImageUrl(product);
-  
+ 
   return (
     <div className="product-details">
       <div className="product-header">
         <button className="back-button" onClick={handleBack}>
           <FaArrowLeft />
         </button>
-        
+       
         <button className="cart-button" onClick={goToCart}>
           <FaShoppingCart />
           {quantity > 0 && (
@@ -235,10 +221,10 @@ const handleRestaurantCancel = () => {
           )}
         </button>
       </div>
-      
+     
       <div className="product-content">
         <div className="product-image-container">
-          <img 
+          <img
             src={imageError ? DEFAULT_IMAGE : productImageUrl}
             alt={product.nombre || 'Producto'}
             className="product-image"
@@ -246,27 +232,54 @@ const handleRestaurantCancel = () => {
             loading="lazy"
           />
         </div>
-        
+       
         <div className="product-info">
           <h1 className="product-name">{product.nombre}</h1>
-          
+         
           {restaurant && (
             <div className="restaurant-link" onClick={goToRestaurant}>
               <FaStore />
               <span>{restaurant.nombre}</span>
             </div>
           )}
-          
+         
           <p className="product-price">{formatPrice(product.precio)}</p>
-          
-          {product.descripcion && (
-            <p className="product-description">{product.descripcion}</p>
-          )}
-          
+         
+          {(() => {
+            const descripcionFields = [
+              'especificaciones', 'descripcion', 'description', 'desc', 'detalle', 'detalles',
+              'informacion', 'info', 'resumen', 'caracteristicas', 'observaciones'
+            ];
+           
+            let descripcion = null;
+           
+            for (const field of descripcionFields) {
+              if (product[field] && product[field].toString().trim() !== '') {
+                descripcion = product[field];
+                break;
+              }
+            }
+           
+            return descripcion ? (
+              <div className="product-description-container">
+                <h3>Descripción</h3>
+                <p className="product-description">{descripcion}</p>
+              </div>
+            ) : (
+              <div className="product-description-container">
+                <h3>Descripción</h3>
+                <p className="product-description no-description">
+                  Sin descripción disponible
+                </p>
+              </div>
+            );
+          })()}
+         
           <div className="product-actions">
             <div className="quantity-control">
-              <button 
-                className="quantity-button" 
+              <button
+                type="button"
+                className="quantity-button"
                 onClick={handleDecrement}
                 disabled={quantity === 0}
                 title="Disminuir cantidad"
@@ -277,8 +290,9 @@ const handleRestaurantCancel = () => {
               <span className="quantity" aria-label={`Cantidad: ${quantity}`}>
                 {quantity}
               </span>
-              <button 
-                className="quantity-button" 
+              <button
+                type="button"
+                className="quantity-button"
                 onClick={handleIncrement}
                 title="Aumentar cantidad"
                 aria-label="Aumentar cantidad"
@@ -286,8 +300,9 @@ const handleRestaurantCancel = () => {
                 <FaPlus />
               </button>
             </div>
-            
-            <button 
+           
+            <button
+              type="button"
               className="add-to-cart-button"
               onClick={quantity === 0 ? handleIncrement : goToCart}
             >
@@ -297,24 +312,24 @@ const handleRestaurantCancel = () => {
           </div>
         </div>
       </div>
-      
+     
       {relatedProducts.length > 0 && (
         <div className="related-products">
           <h2>Productos relacionados</h2>
-          
+         
           <div className="related-products-grid">
             {relatedProducts.map(relatedProduct => {
               const relatedImageUrl = getImageUrl(relatedProduct);
               const hasRelatedImageError = relatedImageErrors[relatedProduct.id];
-              
+             
               return (
-                <div 
-                  key={relatedProduct.id} 
+                <div
+                  key={relatedProduct.id}
                   className="related-product"
                   onClick={() => viewRelatedProduct(relatedProduct.id)}
                 >
                   <div className="related-product-image">
-                    <img 
+                    <img
                       src={hasRelatedImageError ? DEFAULT_IMAGE : relatedImageUrl}
                       alt={relatedProduct.nombre || 'Producto relacionado'}
                       onError={() => handleRelatedImageError(relatedProduct.id)}
@@ -332,17 +347,16 @@ const handleRestaurantCancel = () => {
         </div>
       )}
 
-      {/* Modal de cambio de restaurante */}
-    {showRestaurantModal && restrictionInfo && (
-      <RestaurantChangeModal
-        isOpen={showRestaurantModal}
-        onConfirm={handleRestaurantChange}
-        onCancel={handleRestaurantCancel}
-        currentRestaurant={restrictionInfo.currentRestaurant}
-        newRestaurant={restrictionInfo.newRestaurant}
-        reason={restrictionInfo.reason}
-      />
-    )}
+      {showRestaurantModal && restrictionInfo && (
+        <RestaurantChangeModal
+          isOpen={showRestaurantModal}
+          onConfirm={handleRestaurantChange}
+          onCancel={handleRestaurantCancel}
+          currentRestaurant={restrictionInfo.currentRestaurant}
+          newRestaurant={restrictionInfo.newRestaurant}
+          reason={restrictionInfo.reason}
+        />
+      )}
     </div>
   );
 };

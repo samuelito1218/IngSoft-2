@@ -1,7 +1,6 @@
-// src/controllers/mensajesController.js
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-//
+
 exports.enviarMensaje = async (req, res) => {
   try {
     const { pedidoId } = req.params;
@@ -115,12 +114,10 @@ exports.marcarMensajeLeido = async (req, res) => {
         return res.status(404).json({ message: 'Mensaje no encontrado' });
       }
   
-      // Verificar que el usuario es el receptor del mensaje
       if (mensaje.usuarioReceptor !== usuarioId) {
         return res.status(403).json({ message: 'No tienes permiso para marcar este mensaje como leído' });
       }
-  
-      // Marcar mensaje como leído
+      
       const mensajeActualizado = await prisma.mensajes.update({
         where: { id: mensajeId },
         data: { leido: true }

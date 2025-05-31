@@ -1,4 +1,3 @@
-//
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaMotorcycle, FaMapMarkerAlt, FaStore, FaCheck, FaExclamationTriangle, FaChevronRight, FaStar } from 'react-icons/fa';
@@ -36,17 +35,14 @@ const PedidosDisponiblesPreview = () => {
         if (response.ok) {
           const data = await response.json();
           const pedidosData = Array.isArray(data) ? data : (data.data ? data.data : []);
-          
-          // Limpiar la cola antes de agregar nuevos pedidos
+    
           pedidoPriorityQueue.clear();
           
-          // Agregar pedidos a la cola de prioridad y cache
           pedidosData.forEach(pedido => {
             pedidoPriorityQueue.enqueue(pedido);
             pedidoCache.put(pedido);
           });
-          
-          // Obtener los 3 primeros pedidos ordenados por prioridad (precio)
+ 
           const pedidosConPrioridad = pedidoPriorityQueue.getAllSorted().slice(0, 3);
           
           setPedidos(pedidosData.slice(0, 3));
@@ -97,17 +93,13 @@ const PedidosDisponiblesPreview = () => {
       });
       
       if (response.ok) {
-        // Remover el pedido de la cola de prioridad y cache
         pedidoPriorityQueue.removeById(pedidoSeleccionado.id);
         pedidoCache.remove(pedidoSeleccionado.id);
-        
-        // Mostrar notificación de éxito antes de navegar
+
         window.showNotification('¡Pedido asignado correctamente!', 'success');
-        
-        // Cerrar el modal
+
         setShowConfirmModal(false);
-        
-        // Breve retraso para permitir que la notificación se muestre antes de la navegación
+
         setTimeout(() => {
           navigate('/repartidor/pedidos-activos');
         }, 1000);
@@ -131,7 +123,6 @@ const PedidosDisponiblesPreview = () => {
     navigate('/repartidor/pedidos-disponibles');
   };
 
-  // Función para obtener el color de prioridad basado en el precio
   const getPriorityColor = (precio) => {
     if (precio >= 50) return '#27ae60'; // Verde para pedidos de alto valor
     if (precio >= 25) return '#f39c12'; // Naranja para pedidos de valor medio
@@ -163,7 +154,6 @@ const PedidosDisponiblesPreview = () => {
     );
   }
 
-  // Formatear dirección para mostrar
   const formatearDireccion = (dir) => {
     if (!dir) return "Dirección no disponible";
     return `${dir.direccionEspecifica}, ${dir.barrio}, Comuna ${dir.comuna}`;
@@ -171,7 +161,6 @@ const PedidosDisponiblesPreview = () => {
 
   return (
     <div className="pedidos-disponibles-preview">
-      {/* Agregar el NotificationManager */}
       <NotificationManager />
       
       <div className="preview-grid">
@@ -182,7 +171,6 @@ const PedidosDisponiblesPreview = () => {
                 <FaStore className="icon-sm" />
                 <h4>{pedido.restaurante?.nombre || 'Restaurante'}</h4>
               </div>
-              {/* Indicador de prioridad */}
               <div className="priority-indicator-sm">
                 <FaStar 
                   style={{ 

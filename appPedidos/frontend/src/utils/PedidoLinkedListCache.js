@@ -1,6 +1,4 @@
-// utils/PedidoLinkedListCache.js
 
-// Nodo de la lista enlazada
 class PedidoNode {
   constructor(pedido) {
     this.pedido = pedido;
@@ -11,23 +9,19 @@ class PedidoNode {
   }
 }
 
-// Lista enlazada doble para cache LRU (Least Recently Used)
 class PedidoLinkedListCache {
   constructor(maxSize = 50) {
     this.maxSize = maxSize;
     this.size = 0;
-    this.cache = new Map(); // Para acceso rápido O(1)
+    this.cache = new Map(); 
     
-    // Nodos dummy para cabeza y cola
     this.head = new PedidoNode({ id: 'HEAD', dummy: true });
     this.tail = new PedidoNode({ id: 'TAIL', dummy: true });
     
-    // Conectar nodos dummy
     this.head.next = this.tail;
     this.tail.prev = this.head;
   }
 
-  // Agregar nodo después de un nodo dado
   addAfter(prevNode, newNode) {
     const nextNode = prevNode.next;
     
@@ -37,7 +31,6 @@ class PedidoLinkedListCache {
     nextNode.prev = newNode;
   }
 
-  // Remover nodo de la lista
   removeNode(node) {
     const prevNode = node.prev;
     const nextNode = node.next;
@@ -49,7 +42,6 @@ class PedidoLinkedListCache {
     node.next = null;
   }
 
-  // Mover nodo al frente (más reciente)
   moveToFront(node) {
     this.removeNode(node);
     this.addAfter(this.head, node);
@@ -57,11 +49,9 @@ class PedidoLinkedListCache {
     node.accessCount++;
   }
 
-  // Agregar o actualizar pedido en cache
   put(pedido) {
     const pedidoId = pedido.id;
     
-    // Si ya existe, moverlo al frente
     if (this.cache.has(pedidoId)) {
       const existingNode = this.cache.get(pedidoId);
       existingNode.pedido = { ...existingNode.pedido, ...pedido }; // Actualizar datos
@@ -71,14 +61,11 @@ class PedidoLinkedListCache {
       return existingNode;
     }
     
-    // Crear nuevo nodo
     const newNode = new PedidoNode(pedido);
     
-    // Si cache está lleno, remover el menos reciente
     if (this.size >= this.maxSize) {
       const lru = this.tail.prev;
-      if (lru !== this.head) { // Verificar que no sea nodo dummy
-        this.removeNode(lru);
+      if (lru !== this.head) {
         this.cache.delete(lru.pedido.id);
         this.size--;
         
@@ -86,7 +73,6 @@ class PedidoLinkedListCache {
       }
     }
     
-    // Agregar al frente
     this.addAfter(this.head, newNode);
     this.cache.set(pedidoId, newNode);
     this.size++;
@@ -95,25 +81,22 @@ class PedidoLinkedListCache {
     return newNode;
   }
 
-  // Obtener pedido del cache
   get(pedidoId) {
     if (!this.cache.has(pedidoId)) {
       return null;
     }
     
     const node = this.cache.get(pedidoId);
-    this.moveToFront(node); // Marcar como recientemente usado
+    this.moveToFront(node);
     
     console.log(`Pedido ${pedidoId} obtenido del cache (acceso #${node.accessCount})`);
     return node.pedido;
   }
 
-  // Verificar si pedido existe en cache
   has(pedidoId) {
     return this.cache.has(pedidoId);
   }
 
-  // Remover pedido específico del cache
   remove(pedidoId) {
     if (!this.cache.has(pedidoId)) {
       return false;
@@ -128,7 +111,6 @@ class PedidoLinkedListCache {
     return true;
   }
 
-  // Obtener todos los pedidos ordenados por recencia
   getAllOrdered() {
     const pedidos = [];
     let current = this.head.next;
@@ -148,7 +130,6 @@ class PedidoLinkedListCache {
     return pedidos;
   }
 
-  // Obtener pedidos más accedidos
   getMostAccessed(limit = 10) {
     const allPedidos = this.getAllOrdered();
     return allPedidos
@@ -156,7 +137,6 @@ class PedidoLinkedListCache {
       .slice(0, limit);
   }
 
-  // Obtener pedidos más recientes
   getMostRecent(limit = 10) {
     const allPedidos = this.getAllOrdered();
     return allPedidos
@@ -164,29 +144,25 @@ class PedidoLinkedListCache {
       .slice(0, limit);
   }
 
-  // Buscar pedidos por filtros
   search(filters = {}) {
     const allPedidos = this.getAllOrdered();
     
     return allPedidos.filter(pedido => {
-      // Filtro por estado
       if (filters.estado && pedido.estado !== filters.estado) {
         return false;
       }
       
-      // Filtro por restaurante
+      
       if (filters.restaurante && 
           !pedido.restaurante?.nombre?.toLowerCase().includes(filters.restaurante.toLowerCase())) {
         return false;
       }
       
-      // Filtro por cliente
       if (filters.cliente && 
           !pedido.cliente?.nombreCompleto?.toLowerCase().includes(filters.cliente.toLowerCase())) {
         return false;
       }
       
-      // Filtro por rango de fechas
       if (filters.fechaDesde) {
         const fechaPedido = new Date(pedido.fechaDeCreacion || pedido.createdAt);
         const fechaDesde = new Date(filters.fechaDesde);
@@ -199,7 +175,6 @@ class PedidoLinkedListCache {
         if (fechaPedido > fechaHasta) return false;
       }
       
-      // Filtro por monto mínimo
       if (filters.montoMinimo && pedido.total < filters.montoMinimo) {
         return false;
       }
@@ -208,7 +183,6 @@ class PedidoLinkedListCache {
     });
   }
 
-  // Obtener estadísticas del cache
   getStats() {
     const allPedidos = this.getAllOrdered();
     
@@ -223,18 +197,15 @@ class PedidoLinkedListCache {
       };
     }
     
-    // Calcular estadísticas
     const totalAccesos = allPedidos.reduce((sum, p) => sum + p.cacheInfo.accessCount, 0);
     const promedioAccesos = Math.round((totalAccesos / allPedidos.length) * 100) / 100;
     
-    // Distribución por estados
     const estadosDistribution = {};
     allPedidos.forEach(pedido => {
       const estado = pedido.estado || 'DESCONOCIDO';
       estadosDistribution[estado] = (estadosDistribution[estado] || 0) + 1;
     });
     
-    // Restaurantes más populares en cache
     const restaurantesCount = {};
     allPedidos.forEach(pedido => {
       const nombreRestaurante = pedido.restaurante?.nombre || 'Desconocido';
@@ -256,7 +227,6 @@ class PedidoLinkedListCache {
     };
   }
 
-  // Limpiar cache
   clear() {
     this.cache.clear();
     this.head.next = this.tail;
@@ -266,10 +236,9 @@ class PedidoLinkedListCache {
     console.log('Cache de pedidos limpiado');
   }
 
-  // Optimizar cache (remover pedidos muy antiguos)
   optimize() {
     const cutoffTime = new Date();
-    cutoffTime.setHours(cutoffTime.getHours() - 24); // 24 horas atrás
+    cutoffTime.setHours(cutoffTime.getHours() - 24); 
     
     let current = this.tail.prev;
     let removedCount = 0;
@@ -278,7 +247,6 @@ class PedidoLinkedListCache {
       const nodeTime = new Date(current.timestamp);
       const prev = current.prev;
       
-      // Si el pedido es muy antiguo y tiene pocos accesos
       if (nodeTime < cutoffTime && current.accessCount <= 2) {
         this.removeNode(current);
         this.cache.delete(current.pedido.id);
@@ -294,6 +262,5 @@ class PedidoLinkedListCache {
   }
 }
 
-// Instancia singleton para usar globalmente
 const pedidoCache = new PedidoLinkedListCache(50);
 export default pedidoCache;

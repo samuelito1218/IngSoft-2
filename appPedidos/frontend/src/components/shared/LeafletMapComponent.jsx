@@ -1,4 +1,3 @@
-// src/components/shared/LeafletMapComponent.jsx//
 import React, { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -10,11 +9,11 @@ import {
   FaMapMarkerAlt, 
   FaStore, 
   FaHome, 
-  FaCheckCircle, // Añadido FaCheckCircle
-  FaExclamationTriangle // Icono para errores
+  FaCheckCircle, 
+  FaExclamationTriangle 
 } from 'react-icons/fa';
 
-// Corregir problemas de iconos en Leaflet
+
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -22,7 +21,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Componente para actualizar la vista del mapa
 function MapView({ center, zoom }) {
   const map = useMap();
   
@@ -35,20 +33,17 @@ function MapView({ center, zoom }) {
   return null;
 }
 
-// Componente para mostrar ruta
 function RouteLine({ positions }) {
   const map = useMap();
   
   useEffect(() => {
     if (!positions || positions.length < 2) return;
     
-    // Crear la línea para la ruta
     const polyline = L.polyline(positions, {
       color: '#4285F4',
       weight: 5
     }).addTo(map);
     
-    // Ajustar mapa para mostrar toda la ruta
     map.fitBounds(polyline.getBounds(), { padding: [50, 50] });
     
     return () => {
@@ -77,11 +72,9 @@ function LeafletMapComponent({
   const watchPositionIdRef = useRef(null);
   const mapRef = useRef(null);
   
-  // Ubicación predeterminada: Cali, Colombia
   const defaultLocation = { lat: 3.45, lng: -76.53 };
   const mapCenter = currentLocation ? [currentLocation.lat, currentLocation.lng] : [defaultLocation.lat, defaultLocation.lng];
   
-  // Iconos personalizados
   const currentLocationIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
@@ -100,7 +93,6 @@ function LeafletMapComponent({
     shadowSize: [41, 41]
   });
 
-  // Limpiar recursos cuando el componente se desmonta
   useEffect(() => {
     return () => {
       if (watchPositionIdRef.current) {
@@ -109,7 +101,6 @@ function LeafletMapComponent({
     };
   }, []);
 
-  // Si estamos en modo entrega, iniciar seguimiento
   useEffect(() => {
     if (isDelivery) {
       startTracking();
@@ -168,7 +159,6 @@ function LeafletMapComponent({
     }
   };
 
-  // Actualizar ruta si tenemos origen y destino
   const updateRouteIfPossible = (currentLoc) => {
     if (!destination || !currentLoc) return;
     
@@ -181,7 +171,6 @@ function LeafletMapComponent({
     ]);
   };
 
-  // Iniciar seguimiento en tiempo real
   const startTracking = () => {
     if (!navigator.geolocation) {
       setLocationError('La geolocalización no está disponible en este navegador.');
@@ -210,7 +199,6 @@ function LeafletMapComponent({
     );
   };
 
-  // Detener seguimiento
   const stopTracking = () => {
     if (watchPositionIdRef.current) {
       navigator.geolocation.clearWatch(watchPositionIdRef.current);
@@ -219,7 +207,6 @@ function LeafletMapComponent({
     setIsTracking(false);
   };
 
-  // Manejar éxito en obtener posición
   const handlePositionSuccess = async (position) => {
     const { latitude, longitude, heading } = position.coords;
     
@@ -254,7 +241,6 @@ function LeafletMapComponent({
     }
   };
 
-  // Manejar error al obtener posición
   const handlePositionError = (error) => {
     console.error('Error al obtener ubicación:', error);
     
@@ -291,7 +277,6 @@ function LeafletMapComponent({
     setLocationError(errorMessage);
   };
 
-  // Centrar mapa en ubicación actual
   const centerMap = () => {
     if (mapRef.current && currentLocation) {
       mapRef.current.setView([currentLocation.lat, currentLocation.lng], 15);
@@ -350,10 +335,8 @@ function LeafletMapComponent({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
-        {/* Componente para actualizar la vista central */}
         <MapView center={mapCenter} zoom={15} />
         
-        {/* Marcador de ubicación actual */}
         {currentLocation && !currentLocation.isDelivered && (
           <Marker 
             position={[currentLocation.lat, currentLocation.lng]} 
@@ -365,7 +348,6 @@ function LeafletMapComponent({
           </Marker>
         )}
         
-        {/* Marcador de destino */}
         {destination && (
           <Marker 
             position={[
@@ -380,7 +362,6 @@ function LeafletMapComponent({
           </Marker>
         )}
         
-        {/* Mostrar ruta si tenemos las posiciones */}
         {routePositions && !currentLocation?.isDelivered && (
           <RouteLine positions={routePositions} />
         )}

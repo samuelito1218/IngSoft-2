@@ -10,14 +10,13 @@ function ResetPassword() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Nuevo estado para mostrar/ocultar confirmación
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [animateForm, setAnimateForm] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   
-  // Nuevo estado para validaciones individuales
   const [validations, setValidations] = useState({
     minLength: false,
     hasUppercase: false,
@@ -28,7 +27,6 @@ function ResetPassword() {
     setAnimateForm(true);
   }, []);
 
-  // Validar cada requisito individualmente
   useEffect(() => {
     const minLength = password.length >= 8;
     const hasUppercase = /[A-Z]/.test(password);
@@ -40,22 +38,20 @@ function ResetPassword() {
       passwordsMatch
     });
     
-    // Evaluar la fuerza de la contraseña
     if (password.length === 0) {
       setPasswordStrength(0);
     } else if (!minLength || !hasUppercase) {
-      setPasswordStrength(1); // Débil
+      setPasswordStrength(1);
     } else if (minLength && hasUppercase && /[0-9]/.test(password)) {
-      setPasswordStrength(3); // Fuerte
+      setPasswordStrength(3);
     } else {
-      setPasswordStrength(2); // Media
+      setPasswordStrength(2);
     }
   }, [password, confirmPassword]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validar todos los requisitos antes de enviar
     if (!validations.minLength) {
       setError('La contraseña debe tener al menos 8 caracteres');
       return;
@@ -75,13 +71,10 @@ function ResetPassword() {
       setIsLoading(true);
       setError('');
       
-      // Usar el método correcto del ApiService
       await ApiService.auth.resetPasswordForgot(token, password);
       
       setSuccess(true);
     } catch (error) {
-      console.error('Error al restablecer contraseña:', error);
-      
       if (error.response && error.response.data) {
         setError(error.response.data.message || 'Error al restablecer contraseña');
       } else {
@@ -159,7 +152,6 @@ function ResetPassword() {
                   </button>
                 </div>
                 
-                {/* Requisitos de la contraseña */}
                 {password && (
                   <div className="password-requirements">
                     <div className={`requirement ${validations.minLength ? 'valid' : 'invalid'}`}>
@@ -208,7 +200,6 @@ function ResetPassword() {
                   </button>
                 </div>
                 
-                {/* Validación de coincidencia de contraseñas */}
                 {confirmPassword && (
                   <div className={`password-match ${validations.passwordsMatch ? 'valid' : 'invalid'}`}>
                     <span className="match-icon">

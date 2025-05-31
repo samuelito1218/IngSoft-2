@@ -1,4 +1,3 @@
-//Login.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -28,11 +27,9 @@ function Login() {
       setIsLoading(true);
       setError('');
       
-      // Llamada al login del contexto
       const result = await login({ email, password });
       
       if (result.success) {
-        // Guardar token según la preferencia del usuario
         if (rememberMe) {
           localStorage.setItem('token', result.token);
         } else {
@@ -41,10 +38,8 @@ function Login() {
         
         console.log("Login exitoso. Usuario:", result.user, "Token:", result.token);
         
-        // Redireccionar según el rol
-        // Redireccionar según el rol
       if (result.user.rol === 'Admin') {
-        navigate('/admin'); // Cambiar de '/admin' a '/restaurante'
+        navigate('/admin'); 
       } else if (result.user.rol === 'Repartidor') {
         navigate('/repartidor');
       } else if (result.user.rol === 'Cliente') {
@@ -61,7 +56,6 @@ function Login() {
     } catch (error) {
       console.error('Error de inicio de sesión:', error);
       
-      // Esta parte maneja errores generales
       if (error.message && error.message.includes('network')) {
         setError('No se pudo conectar al servidor. Verifica que el backend esté funcionando.');
       } else if (error.message) {

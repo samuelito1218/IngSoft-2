@@ -1,4 +1,3 @@
-// src/components/client/DeliveryTrackingg.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth';
@@ -21,11 +20,10 @@ const DeliveryTracking = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('map');
   const [repartidorLocation, setRepartidorLocation] = useState(null);
-  const [statusStep, setStatusStep] = useState(1); // 1: Pendiente, 2: En_Camino, 3: Entregado
+  const [statusStep, setStatusStep] = useState(1);
   const [locationAttempted, setLocationAttempted] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
   
-  // Cargar datos del pedido
   useEffect(() => {
     const checkGeolocationPermission = async () => {
       try {
@@ -37,7 +35,7 @@ const DeliveryTracking = () => {
           setPermissionDenied(result.state === 'denied');
         });
       } catch (error) {
-        console.error('Error al verificar permisos:', error);
+        
       }
     };
 
@@ -48,7 +46,6 @@ const DeliveryTracking = () => {
         setLoading(true);
         setError(null);
         
-        // Obtener información del pedido
         const response = await ApiService.pedidos.detalle(pedidoId);
         
         if (!response.data || !response.data.pedido) {
@@ -58,7 +55,6 @@ const DeliveryTracking = () => {
         const pedidoData = response.data.pedido;
         setPedido(pedidoData);
         
-        // Determinar el paso actual según el estado
         switch (pedidoData.estado) {
           case 'Pendiente':
             setStatusStep(1);
@@ -73,22 +69,18 @@ const DeliveryTracking = () => {
             setStatusStep(1);
         }
         
-        // Si hay repartidor asignado
         if (response.data.repartidor) {
           setRepartidor(response.data.repartidor);
         }
         
-        // Obtener ubicación inicial solo si hay repartidor asignado y no lo hemos intentado antes
         if (pedidoData.repartidor_Id && pedidoData.estado === 'En_Camino' && !locationAttempted) {
           try {
             const locationData = await LocationService.getCurrentLocation(pedidoId);
             if (locationData) {
               setRepartidorLocation(locationData);
-            } else {
-              console.log("Ubicación no disponible, esperando actualizaciones en tiempo real");
             }
           } catch (locationError) {
-            console.error("Error al obtener ubicación inicial:", locationError);
+            
           } finally {
             setLocationAttempted(true);
           }
@@ -96,7 +88,6 @@ const DeliveryTracking = () => {
         
         setLoading(false);
       } catch (error) {
-        console.error('Error al cargar información del pedido:', error);
         setError('No se pudo cargar la información del pedido. Por favor, intente nuevamente.');
         setLoading(false);
       }
@@ -111,7 +102,6 @@ const DeliveryTracking = () => {
         pedidoId,
         (locationData, error) => {
           if (error) {
-            console.error('Error en actualización de ubicación:', error);
             return;
           }
           if (locationData) {
@@ -122,14 +112,12 @@ const DeliveryTracking = () => {
     }
     
     return () => {
-      // Limpiar suscripciones
       if (typeof unsubscribeLocation === 'function') {
         unsubscribeLocation();
       }
     };
   }, [pedidoId, locationAttempted]);
   
-  // Formatear precio
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -138,7 +126,6 @@ const DeliveryTracking = () => {
     }).format(price);
   };
   
-  // Formatear fecha
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-CO', {
@@ -150,24 +137,20 @@ const DeliveryTracking = () => {
     });
   };
   
-  // Volver a la página anterior
   const handleBack = () => {
     navigate(-1);
   };
   
-  // Cambiar entre mapa y chat
   const toggleTab = (tab) => {
     setActiveTab(tab);
   };
   
-  // Llamar al repartidor
   const callDeliveryPerson = () => {
     if (repartidor && repartidor.telefono) {
       window.location.href = `tel:${repartidor.telefono}`;
     }
   };
   
-  // Ir a calificar pedido
   const goToRateOrder = () => {
     navigate(`/cliente/calificar/${pedidoId}`);
   };
@@ -331,7 +314,7 @@ const DeliveryTracking = () => {
               pedidoId={pedidoId}
               location={repartidorLocation}
               destination={pedido.direccionEntrega}
-              pedido={pedido} // Añadir esta línea
+              pedido={pedido}
               height={350}
             />
             {!repartidorLocation && (

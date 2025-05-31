@@ -1,18 +1,10 @@
 
 
-
-
-
-//VERSION SAMUELllll
-
-
 import axios from 'axios';
 import MisRestaurantes from '../components/admin/MisRestaurantes';
 
-// Definir la URL base de la API
 const API_URL = 'http://localhost:5000/api'; 
 
-// Configurar cliente axios
 const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
@@ -20,7 +12,6 @@ const apiClient = axios.create({
   }
 });
 
-// Interceptor para manejar tokens de autenticación
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -32,7 +23,6 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Interceptor para manejar errores de respuesta
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -47,7 +37,6 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Servicio API principal
 const ApiService = {
   // Autenticación
    auth: {
@@ -62,7 +51,7 @@ const ApiService = {
     resetPasswordForgot: (token, password) => apiClient.post('/auth/reset-password-forgot', { token, newPassword: password }),
   },
   
-  // Usuarios
+  
  // Usuarios
   usuarios: {
     perfil: () => apiClient.get('/usuarios/perfil'),
@@ -75,7 +64,7 @@ const ApiService = {
     //guardarDireccion: (direccionData) => apiClient.post('/usuarios/guardar-direccion', direccionData),
   },
   
-  // Modificación en ApiService.js
+  
   direcciones: {
     listar: () => apiClient.get('/api/direcciones'),
     guardar: (data) => apiClient.post('/api/direcciones', data)
@@ -125,7 +114,6 @@ const ApiService = {
     historial: () => apiClient.get('/pedidos/cliente'),
     activo: () => apiClient.get('/pedidos/cliente/activo'),
 
-    //Nuevas funciones
 
     disponibles: () => apiClient.get('/pedidos/disponibles'),
   repartidorActivos: () => apiClient.get('/pedidos/repartidor/activos'), 
@@ -170,8 +158,6 @@ const ApiService = {
   }
 };
 
-// Exportar ApiService como exportación predeterminada
 export default ApiService;
 
-// Exportar el cliente axios como "api"
 export { apiClient as api };

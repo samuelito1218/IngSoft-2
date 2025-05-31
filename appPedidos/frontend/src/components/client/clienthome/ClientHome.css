@@ -1,4 +1,3 @@
-/* src/components/client/ClientHome.csss */
 .client-home {
     font-family: 'Poppins', -apple-system, sans-serif;
   }
@@ -154,8 +153,7 @@
   .no-results p {
     color: #888;
   }
-  
-  /* Responsive */
+
   @media (max-width: 768px) {
     .hero-section {
       height: 250px;

@@ -5,33 +5,21 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
-//const { sendEmail } = require('../services/emailService');
 
 const prisma = new PrismaClient();
 const saltRounds = 10;
 
-// Configuración del servicio de correo
-const mailConfig = {
-  service: process.env.EMAIL_SERVICE || 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER || 'fastfood.notificaciones@gmail.com',
-    pass: process.env.EMAIL_PASSWORD || 'app_password_here'
-  }
-};
 
-// Función para enviar correo (mejorada con mejor manejo de errores)
+// Función para enviar correo 
 const sendEmail = async (to, subject, htmlContent) => {
-  // En un entorno de desarrollo/pruebas, sólo logueamos en consola
   console.log('\n========== CORREO ELECTRÓNICO ==========');
   console.log(`PARA: ${to}`);
   console.log(`ASUNTO: ${subject}`);
   console.log(`CONTENIDO HTML: ${htmlContent}`);
   console.log('=========================================\n');
-  
-  // Si estamos en producción, enviar realmente el correo
+
   if (process.env.NODE_ENV === 'production') {
     try {
-      // Verificar configuración
       if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
         console.error('ADVERTENCIA: Credenciales de correo no configuradas en .env');
         return false;
@@ -60,7 +48,7 @@ const sendEmail = async (to, subject, htmlContent) => {
     }
   }
   
-  return true; // Simular éxito en desarrollo
+  return true;
 };
 
 // Registro de usuario
@@ -112,11 +100,10 @@ exports.register = async(req, res) => {
                 message: 'Teléfono, cédula y comuna deben ser valores numéricos'
             });
         }
-        
-        // Para administradores, establecer estado de verificación
-        const verificado = true; // Todos los usuarios verificados automáticamente
 
-        // Datos para crear el usuario - adaptado para MongoDB
+        const verificado = true; 
+
+        // Datos para crear el usuario
         console.log('Preparando datos de usuario...');
         const userData = {
             nombreCompleto,
@@ -127,7 +114,7 @@ exports.register = async(req, res) => {
             direccion,
             rol,
             vehiculo: rol === 'Repartidor' ? vehiculo : null,
-            verificado, // Ahora siempre es true
+            verificado, 
             historialDirecciones: [  // Formato MongoDB
                 {
                     comuna: comunaNum,
@@ -154,8 +141,6 @@ exports.register = async(req, res) => {
             {expiresIn: '24h'}
         );
 
-        // ==== NUEVO CÓDIGO PARA ENVIAR CORREO ====
-        
         // Crear el contenido del correo según el rol
         let htmlCorreo = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
@@ -196,8 +181,6 @@ exports.register = async(req, res) => {
         } catch (emailError) {
             console.error('Error al enviar correo de bienvenida:', emailError);
         }
-        
-        // ==== FIN DEL NUEVO CÓDIGO ====
 
         res.status(201).json({
             message: 'Usuario registrado exitosamente',
@@ -217,8 +200,7 @@ exports.register = async(req, res) => {
     } catch (error) {
         console.error('Error al registrar el usuario:', error);
         console.error('Detalles adicionales del error:', JSON.stringify(error, null, 2));
-        
-        // Proporcionar detalles del error para facilitar la depuración
+
         res.status(500).json({
             message: 'Error al registrar el usuario', 
             error: error.message,
@@ -250,13 +232,6 @@ exports.login = async(req, res) => {
         const isPasswordValid = await bcrypt.compare(password, user.contrase_a);
         if (!isPasswordValid) {
             return res.status(401).json({message: 'Credenciales inválidas'});
-        }
-
-        // Verificar si el usuario está verificado en caso de Admin
-        if (user.rol === 'Admin' && !user.verificado) {
-            return res.status(403).json({
-                message: 'Tu cuenta está pendiente de verificación. Por favor, revisa tu correo electrónico.'
-            });
         }
 
         // Generar token de acceso
@@ -312,7 +287,7 @@ exports.requestPasswordReset = async(req, res) => {
             where: {id: user.id},
             data: {
                 resetToken: token,
-                resetTokenExpiry: expirationDate.toISOString(), // Guardar como string en formato ISO   
+                resetTokenExpiry: expirationDate.toISOString(),
             }
         });
 
@@ -391,7 +366,7 @@ exports.resetPassword = async (req, res) => {
 // Obtener información del usuario actual
 exports.getCurrentUser = async (req, res) => {
   try {
-    // req.user.id está disponible gracias al middleware de autenticación
+    // req.user.id está disponible gracias al middleware de autenticación :)
     const userId = req.user.id;
     
     // Buscar el usuario en la base de datos
@@ -402,8 +377,6 @@ exports.getCurrentUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
-    
-    // Devolver la información del usuario (sin la contraseña)
     res.status(200).json({
       id: user.id,
       nombreCompleto: user.nombreCompleto,
@@ -421,7 +394,6 @@ exports.getCurrentUser = async (req, res) => {
   }
 };
 
-// Validar cédula (verificar disponibilidad)
 exports.validateCedula = async (req, res) => {
   try {
     const { cedula } = req.params;
@@ -430,22 +402,17 @@ exports.validateCedula = async (req, res) => {
     if (!cedula || cedula.length < 5) {
       return res.status(400).json({ message: 'Formato de cédula inválido' });
     }
-    
-    // CORREGIDO: Usar 'Usuarios' con mayúscula, no 'usuarios'
-    // También, convertir la cédula a número entero (parseInt)
     const existingUser = await prisma.Usuarios.findFirst({
       where: { cedula: parseInt(cedula) }
     });
     
     if (existingUser) {
-      // Si existe, retornar conflicto
       return res.status(409).json({ 
         message: 'Esta cédula ya está registrada en el sistema',
         field: 'cedula'
       });
     }
-    
-    // Si no existe, retornar éxito
+
     return res.status(200).json({ 
       message: 'Cédula disponible',
       valid: true
@@ -457,31 +424,25 @@ exports.validateCedula = async (req, res) => {
   }
 };
 
-// Validar teléfono (verificar disponibilidad)
 exports.validateTelefono = async (req, res) => {
   try {
     const { telefono } = req.params;
-    
-    // Validar formato de teléfono si es necesario
+
     if (!telefono || telefono.length < 6) {
       return res.status(400).json({ message: 'Formato de teléfono inválido' });
     }
-    
-    // CORREGIDO: Usar 'Usuarios' con mayúscula, no 'usuarios'
-    // También, convertir el teléfono a número entero (parseInt)
+
     const existingUser = await prisma.Usuarios.findFirst({
       where: { telefono: parseInt(telefono) }
     });
     
     if (existingUser) {
-      // Si existe, retornar conflicto
       return res.status(409).json({ 
         message: 'Este número de teléfono ya está registrado',
         field: 'telefono'
       });
     }
-    
-    // Si no existe, retornar éxito
+
     return res.status(200).json({ 
       message: 'Teléfono disponible',
       valid: true
@@ -525,10 +486,8 @@ exports.forgotPassword = async (req, res) => {
       }
     });
 
-    // Crear URL de recuperación
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password-forgot/${resetToken}`;
 
-    // Contenido del correo
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e1e1e1; border-radius: 5px;">
         <div style="text-align: center; margin-bottom: 20px;">
@@ -596,10 +555,8 @@ exports.resetPasswordForgot = async (req, res) => {
       });
     }
 
-    // Encriptar la nueva contraseña
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // Actualizar contraseña y limpiar campos de recuperación
     await prisma.Usuarios.update({
       where: { id: usuario.id },
       data: {

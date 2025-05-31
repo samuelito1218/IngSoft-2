@@ -1,4 +1,3 @@
-// src/components/client/Cart.jsx - Versión mejorada
 import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaTrash, FaPlus, FaMinus, FaShoppingCart } from 'react-icons/fa';
@@ -10,7 +9,6 @@ import './Cart.css';
 
 const DEFAULT_IMAGE = '/images/food-placeholder.jpg';
 
-// Función helper para obtener la URL de imagen correcta (igual que en FoodItem)
 const getImageUrl = (product) => {
   const imageFields = ['imagen', 'imageUrl', 'image', 'foto', 'picture'];
   
@@ -40,7 +38,6 @@ const Cart = () => {
   const [error, setError] = useState(null);
   const [imageErrors, setImageErrors] = useState(new Set());
   
-  // Verificar si hay un pedido activo
   React.useEffect(() => {
     const fetchActivePedido = async () => {
       try {
@@ -58,7 +55,6 @@ const Cart = () => {
     }
   }, [user]);
   
-  // Formatear precio
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -67,7 +63,6 @@ const Cart = () => {
     }).format(price);
   };
   
-  // Manejar error de imagen
   const handleImageError = (itemId, e) => {
     if (!imageErrors.has(itemId)) {
       setImageErrors(prev => new Set([...prev, itemId]));
@@ -75,17 +70,14 @@ const Cart = () => {
     }
   };
   
-  // Manejar cambio de cantidad
   const handleQuantityChange = (id, newQuantity) => {
     if (newQuantity > 0) {
       updateItemQuantity(id, newQuantity);
     }
   };
   
-  // Eliminar item del carrito
   const handleRemoveItem = (id) => {
     removeItemCompletely(id);
-    // Limpiar error de imagen cuando se elimina el item
     setImageErrors(prev => {
       const newSet = new Set(prev);
       newSet.delete(id);
@@ -93,37 +85,30 @@ const Cart = () => {
     });
   };
   
-  // Volver a la página anterior
   const handleBack = () => {
     navigate(-1);
   };
   
-  // Proceder al checkout
   const handleCheckout = () => {
-    // Verificar si ya hay un pedido activo
     if (activePedido) {
       setError('Ya tienes un pedido activo. Debes esperar a que sea entregado antes de crear uno nuevo.');
       return;
     }
     
-    // Verificar si hay productos en el carrito
     if (cartItems.length === 0) {
       setError('No hay productos en el carrito. Agrega algunos productos antes de proceder al pago.');
       return;
     }
     
-    // Ir a la página de checkout
     navigate('/cliente/checkout');
   };
   
-  // Ir al seguimiento del pedido activo
   const goToActiveOrder = () => {
     if (activePedido && activePedido.pedido) {
       navigate(`/cliente/delivery-tracking/${activePedido.pedido.id}`);
     }
   };
   
-  // Ver detalles de un producto
   const viewProductDetails = (productId) => {
     navigate(`/cliente/producto/${productId}`);
   };

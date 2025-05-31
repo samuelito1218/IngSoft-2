@@ -29,8 +29,7 @@ const PedidosActivosPreview = () => {
     ENTREGADO: 'Entregado',
     CANCELADO: 'Cancelado'
   };
-  
-  // Colores de los estados
+
   const estadoColores = {
     PENDIENTE: 'var(--color-warning)',
     PREPARANDO: 'var(--color-info)',
@@ -78,7 +77,6 @@ const PedidosActivosPreview = () => {
   
   const handleCambiarEstado = async (pedidoId, nuevoEstado) => {
     try {
-      // Verificar si ya hay un pedido en camino y el nuevo estado es EN_CAMINO
       if (nuevoEstado === 'EN_CAMINO' && hayPedidoEnCamino()) {
         window.showNotification('No puedes iniciar otra entrega mientras tienes un pedido en camino', 'warning');
         return;
@@ -125,7 +123,6 @@ const PedidosActivosPreview = () => {
     navigate('/repartidor/pedidos-activos');
   };
 
-  // Determinar qué botones de acción mostrar según el estado actual
   const getAccionesEstado = (pedido) => {
     const enCamino = hayPedidoEnCamino();
     const estePedidoEnCamino = pedido.estado === 'EN_CAMINO';
@@ -220,12 +217,11 @@ const PedidosActivosPreview = () => {
 
   return (
     <div className="pedidos-activos-preview">
-      {/* Añadir NotificationManager */}
       <NotificationManager />
       
       {hayPedidoEnCamino() && (
         <div className="warning-banner-sm">
-          <p>⚠️ Pedido en camino activo</p>
+          <p> Pedido en camino activo</p>
         </div>
       )}
       

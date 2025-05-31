@@ -1,4 +1,3 @@
-//
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth';
@@ -22,14 +21,12 @@ const RepartidorDashboard = () => {
     pedidosDisponibles: 0
   });
   
-  // Cargar estadísticas del repartidor
   useEffect(() => {
     const fetchRepartidorStats = async () => {
         try {
           setLoading(true);
           setError(null);
           
-          // Obtener pedidos disponibles
           let disponiblesResponse, disponiblesData;
           try {
             disponiblesResponse = await fetch('http://localhost:5000/api/pedidos/disponibles', {
@@ -39,11 +36,9 @@ const RepartidorDashboard = () => {
             });
             disponiblesData = await disponiblesResponse.json();
           } catch (error) {
-            console.error('Error al obtener pedidos disponibles:', error);
             disponiblesData = { data: [] };
           }
           
-          // Obtener pedidos activos del repartidor
           let activosResponse, activosData;
           try {
             activosResponse = await fetch('http://localhost:5000/api/pedidos/repartidor/activos', {
@@ -53,11 +48,9 @@ const RepartidorDashboard = () => {
             });
             activosData = await activosResponse.json();
           } catch (error) {
-            console.error('Error al obtener pedidos activos:', error);
             activosData = { data: [] };
           }
           
-          // Obtener historial de entregas
           let historialResponse, historialData;
           try {
             historialResponse = await fetch('http://localhost:5000/api/pedidos/repartidor/historial', {
@@ -67,36 +60,27 @@ const RepartidorDashboard = () => {
             });
             historialData = await historialResponse.json();
           } catch (error) {
-            console.error('Error al obtener historial:', error);
             historialData = { data: [] };
           }
           
-          // Calcular calificación promedio
           let totalCalificacion = 0;
           let cantidadCalificaciones = 0;
           
           if (historialData && Array.isArray(historialData.data || historialData)) {
             const historialArray = historialData.data || historialData;
-            console.log("Datos de historial completo:", historialArray);
 
             historialArray.forEach(pedido => {
-
-               console.log(`Procesando pedido ${pedido.id} - Calificaciones:`, pedido.calificaciones)
               if (pedido.calificaciones && Array.isArray(pedido.calificaciones) && pedido.calificaciones.length > 0) {
-
-                //Se recorre cada calificación del pedido
                 pedido.calificaciones.forEach(calificacion => {
                   if 
                   (calificacion.calificacionRepartidor && calificacion.calificacionRepartidor > 0){
                     totalCalificacion += calificacion.calificacionRepartidor;
                     cantidadCalificaciones++;
-                    console.log(`Sumada calificación: ${calificacion.calificacionRepartidor}`);
                   }});
           }
         });
       }
 
-      console.log(`Total calificaciones: ${cantidadCalificaciones}, Suma: ${totalCalificacion}`);
       const calificacionPromedio = cantidadCalificaciones > 0 
             ? (totalCalificacion / cantidadCalificaciones).toFixed(1) 
             : 0;
@@ -113,7 +97,6 @@ const RepartidorDashboard = () => {
           
           setLoading(false);
         } catch (error) {
-          console.error('Error al cargar estadísticas del repartidor:', error);
           setError('No se pudieron cargar las estadísticas. Intente nuevamente.');
           setLoading(false);
         }
@@ -122,12 +105,10 @@ const RepartidorDashboard = () => {
     fetchRepartidorStats();
   }, []);
   
-  // Ir a la sección de pedidos disponibles
   const goToPedidosDisponibles = () => {
     navigate('/repartidor/pedidos-disponibles');
   };
   
-  // Ir a la sección de pedidos activos
   const goToPedidosActivos = () => {
     navigate('/repartidor/pedidos-activos');
   };
@@ -149,6 +130,7 @@ const RepartidorDashboard = () => {
       </div>
     );
   }
+  
   const navigateToChat = (pedidoId) => {
   navigate(`/repartidor/chat/${pedidoId}`);
 };

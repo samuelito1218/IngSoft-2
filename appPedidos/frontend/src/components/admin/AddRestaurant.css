@@ -1,4 +1,3 @@
-/**/
 .add-restaurant-container {
   max-width: 800px;
   margin: 0 auto;
@@ -308,7 +307,6 @@
   box-shadow: none;
 }
 
-/* Responsive styles */
 @media (max-width: 768px) {
   .branch-fields {
     grid-template-columns: 1fr;
@@ -352,5 +350,108 @@
   .image-upload-placeholder, 
   .image-preview-container {
     height: 160px;
+  }
+}
+.info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background-color: #e3f2fd;
+  border: 1px solid #bbdefb;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.info-icon {
+  color: #1976d2;
+  font-size: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.info-banner p {
+  margin: 0;
+  color: #1565c0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.optional-badge {
+  font-size: 12px;
+  font-weight: normal;
+  color: #666;
+  background-color: #f0f0f0;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 8px;
+}
+
+.branch-status {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.branch-status.complete {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.branch-status.incomplete {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.branch-status.empty {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #e9ecef;
+}
+
+.form-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #999;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .info-banner {
+    flex-direction: column;
+    gap: 8px;
+  }
+ 
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+ 
+  .add-branch-btn {
+    width: 100%;
+    justify-content: center;
   }
 }

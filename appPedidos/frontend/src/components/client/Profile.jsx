@@ -1,4 +1,3 @@
-// src/components/client/Profile.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -24,7 +23,6 @@ function Profile() {
     comuna: '',
   });
   
-  // Estado para cambio de contraseña
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [passwordData, setPasswordData] = useState({
     newPassword: '',
@@ -32,7 +30,6 @@ function Profile() {
   });
   const [passwordError, setPasswordError] = useState('');
   
-  // Estado para eliminación de cuenta (simplificado con modal)
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [deleteError, setDeleteError] = useState('');
@@ -52,7 +49,6 @@ function Profile() {
       const userData = await ProfileService.getUserProfile();
       setProfile(userData);
       
-      // Inicializar formulario con datos actuales
       const lastDireccion = userData.historialDirecciones && 
                          userData.historialDirecciones.length > 0 ? 
                          userData.historialDirecciones[userData.historialDirecciones.length - 1] : null;
@@ -65,7 +61,6 @@ function Profile() {
       });
       
     } catch (error) {
-      console.error('Error al cargar perfil:', error);
       setError('No se pudo cargar la información del perfil');
     } finally {
       setIsLoading(false);
@@ -80,7 +75,6 @@ function Profile() {
     }));
   };
   
-  // Método para manejar cambios en el formulario de contraseña
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordData(prev => ({
@@ -89,7 +83,6 @@ function Profile() {
     }));
   };
   
-  // Método para manejar el envío del formulario de contraseña
   const handleChangePassword = async (e) => {
     e.preventDefault();
     
@@ -125,7 +118,6 @@ function Profile() {
       }, 5000);
       
     } catch (error) {
-      console.error('Error al cambiar contraseña:', error);
       if (error.response && error.response.data && error.response.data.message) {
         setPasswordError(error.response.data.message);
         window.showNotification(error.response.data.message, 'error');
@@ -138,14 +130,12 @@ function Profile() {
     }
   };
   
-  // Método para mostrar el modal de eliminación
   const handleMostrarConfirmacionEliminacion = () => {
     setDeleteConfirmation('');
     setDeleteError('');
     setShowDeleteModal(true);
   };
   
-  // Método para cerrar el modal de eliminación
   const handleCerrarModalEliminacion = () => {
     setShowDeleteModal(false);
     setDeleteConfirmation('');
@@ -153,11 +143,9 @@ function Profile() {
     setDeletingAccount(false);
   };
   
-  // Método para eliminar cuenta después de confirmar
   const handleEliminarCuenta = async () => {
     setDeleteError('');
     
-    // Verificar confirmación
     if (deleteConfirmation.toLowerCase() !== 'eliminar') {
       setDeleteError('Debes escribir "eliminar" para confirmar');
       return;
@@ -168,20 +156,16 @@ function Profile() {
       
       await ProfileService.eliminarCuenta();
       
-      // Mostrar notificación de éxito
       window.showNotification('Tu cuenta ha sido eliminada exitosamente. Redirigiendo...', 'success');
       
-      // Cerrar modal
       setShowDeleteModal(false);
       
-      // Cerrar sesión y redirigir después de 2 segundos
       setTimeout(() => {
         logout();
         navigate('/login');
       }, 2000);
       
     } catch (error) {
-      console.error('Error al eliminar cuenta:', error);
       if (error.response && error.response.data && error.response.data.message) {
         setDeleteError(error.response.data.message);
         window.showNotification(error.response.data.message, 'error');
@@ -221,7 +205,6 @@ function Profile() {
       }, 3000);
       
     } catch (error) {
-      console.error('Error al actualizar perfil:', error);
       setError('Error al actualizar el perfil. Intente nuevamente.');
       window.showNotification('Error al actualizar el perfil. Intente nuevamente.', 'error');
     } finally {
@@ -261,7 +244,6 @@ function Profile() {
       }, 3000);
       
     } catch (error) {
-      console.error('Error al subir imagen:', error);
       setError('Error al subir la imagen. Intente nuevamente.');
       window.showNotification('Error al subir la imagen. Intente nuevamente.', 'error');
     } finally {
@@ -280,7 +262,6 @@ function Profile() {
   
   return (
     <div className="profile-container">
-      {/* Agregar el NotificationManager */}
       <NotificationManager />
       
       <div className="profile-header">
@@ -483,7 +464,6 @@ function Profile() {
                 </button>
               </div>
               
-              {/* Formulario para cambiar contraseña */}
               {showPasswordForm && (
                 <div className="password-form-container">
                   <h4>Cambiar contraseña</h4>
@@ -546,7 +526,6 @@ function Profile() {
         </div>
       </div>
 
-      {/* Modal de confirmación para eliminar cuenta */}
       {showDeleteModal && (
         <div className='confirmation-modal-overlay'>
           <div className='confirmation-modal delete-modal'>

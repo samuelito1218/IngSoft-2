@@ -1,9 +1,7 @@
 import { api } from './api';
 
 const RestaurantService = {
-  /**
-   * Obtener lista de restaurantes//
-   */
+  
   getRestaurants: async () => {
     try {
       const response = await api.get('/restaurantes');
@@ -21,9 +19,7 @@ const RestaurantService = {
     }
   },
   
-  /**
-   * Obtener restaurantes del usuario autenticado
-   */
+  
   getMyRestaurants: async () => {
     try {
       const response = await api.get('/restaurantes/mine');
@@ -41,9 +37,7 @@ const RestaurantService = {
     }
   },
   
-  /**
-   * Obtener detalle de un restaurante
-   */
+  
   getRestaurantById: async (id) => {
     try {
       const response = await api.get(`/restaurantes/${id}`);
@@ -61,9 +55,7 @@ const RestaurantService = {
     }
   },
   
-  /**
-   * Crear un nuevo restaurante
-   */
+  
   createRestaurant: async (restaurantData) => {
     try {
       const response = await api.post('/restaurantes/crear', restaurantData);
@@ -81,9 +73,7 @@ const RestaurantService = {
     }
   },
   
-  /**
-   * Actualizar un restaurante existente
-   */
+  
   updateRestaurant: async (id, restaurantData) => {
     try {
       const response = await api.put(`/restaurantes/editar/${id}`, restaurantData);
@@ -101,9 +91,7 @@ const RestaurantService = {
     }
   },
   
-  /**
-   * Eliminar un restaurante
-   */
+  
   deleteRestaurant: async (id) => {
     try {
       const response = await api.delete(`/restaurantes/eliminar/${id}`);
@@ -121,9 +109,7 @@ const RestaurantService = {
     }
   },
   
-  /**
-   * Obtener productos de un restaurante
-   */
+  
   getProductsByRestaurant: async (restaurantId) => {
     try {
       const response = await api.get(`/restaurantes/${restaurantId}/productos`);
@@ -141,9 +127,7 @@ const RestaurantService = {
     }
   },
   
-  /**
-   * Actualizar imagen de un restaurante
-   */
+  
   updateRestaurantImage: async (id, imageUrl) => {
     try {
       const response = await api.put(`/restaurantes/${id}/imagen`, { imageUrl });
@@ -161,9 +145,7 @@ const RestaurantService = {
     }
   },
 
-  /**
-   * Obtener pedidos de un restaurante
-   */
+  
   getOrdersByRestaurant: async (restaurantId, filters = {}) => {
     try {
       const response = await api.get(`/pedidos/restaurante/${restaurantId}`, {
@@ -183,9 +165,7 @@ const RestaurantService = {
     }
   },
 
-  /**
-   * Obtener pedidos pendientes de un restaurante
-   */
+  
   getPendingOrdersByRestaurant: async (restaurantId) => {
     try {
       const response = await api.get(`/pedidos/restaurante/${restaurantId}/pendientes`);
@@ -203,9 +183,7 @@ const RestaurantService = {
     }
   },
 
-  /**
-   * Aceptar un pedido
-   */
+  
   acceptOrder: async (orderId) => {
     try {
       const response = await api.put(`/pedidos/aceptar/${orderId}`);
@@ -223,9 +201,7 @@ const RestaurantService = {
     }
   },
 
-  /**
-   * Rechazar un pedido
-   */
+  
   rejectOrder: async (orderId, motivo) => {
     try {
       const response = await api.put(`/pedidos/rechazar/${orderId}`, { motivo });
@@ -243,9 +219,7 @@ const RestaurantService = {
     }
   },
 
-  /**
-   * Marcar pedido como preparado
-   */
+  
   markOrderAsReady: async (orderId) => {
     try {
       const response = await api.put(`/pedidos/preparado/${orderId}`);

@@ -1,4 +1,3 @@
-/* src/components/client/DeliveryTrackingg.css - Versión mejorada */
 .delivery-tracking {
   max-width: 800px;
   margin: 0 auto;
@@ -88,7 +87,6 @@
   transform: translateX(-50%);
 }
 
-/* Estado de entrega mejorado */
 .delivery-status {
   margin-bottom: 35px;
   padding: 30px 25px;
@@ -178,7 +176,6 @@
   background-color: #4CAF50;
 }
 
-/* Resumen del pedido mejorado */
 .order-summary {
   background-color: white;
   border-radius: 16px;
@@ -284,7 +281,6 @@
   color: #F44336;
 }
 
-/* Información del repartidor mejorada */
 .delivery-person-info {
   display: flex;
   flex-direction: column;
@@ -376,7 +372,6 @@
   box-shadow: none;
 }
 
-/* Navegación por pestañas mejorada */
 .tab-navigation {
   display: flex;
   margin-bottom: 20px;
@@ -453,8 +448,6 @@
 .chat-tab {
   height: 100%;
 }
-
-/* Botón de calificación mejorado */
 .order-actions {
   display: flex;
   justify-content: center;
@@ -483,7 +476,6 @@
   box-shadow: 0 6px 18px rgba(255, 75, 43, 0.35);
 }
 
-/* Contenedor de error mejorado */
 .error-container {
   text-align: center;
   padding: 50px 30px;
@@ -531,7 +523,6 @@
   background-color: rgba(211, 47, 47, 0.05);
 }
 
-/* Media queries mejorados */
 @media (max-width: 768px) {
   .delivery-tracking {
     padding: 20px;
@@ -612,7 +603,7 @@
     font-size: 14px;
   }
 }
-/* Resumen del pedido mejorado */
+
 .order-summary {
   background-color: white;
   border-radius: 16px;
@@ -715,7 +706,6 @@
   color: #F44336;
 }
 
-/* Información del repartidor mejorada */
 .delivery-person-info {
   display: flex;
   flex-direction: column;
@@ -806,8 +796,6 @@
   transform: none;
   box-shadow: none;
 }
-
-/* Navegación por pestañas mejorada */
 .tab-navigation {
   display: flex;
   margin-bottom: 20px;
@@ -884,8 +872,6 @@
 .chat-tab {
   height: 100%;
 }
-
-/* Botón de calificación mejorado */
 .order-actions {
   display: flex;
   justify-content: center;
@@ -914,7 +900,6 @@
   box-shadow: 0 6px 18px rgba(255, 75, 43, 0.35);
 }
 
-/* Contenedor de error mejorado */
 .error-container {
   text-align: center;
   padding: 50px 30px;
@@ -962,7 +947,6 @@
   background-color: rgba(211, 47, 47, 0.05);
 }
 
-/* Media queries mejorados */
 @media (max-width: 768px) {
   .delivery-tracking {
     padding: 20px;

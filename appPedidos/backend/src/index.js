@@ -9,10 +9,8 @@ const ubicacionRoutes = require("./routes/ubicacionRoutes");
 const calificacionesRoutes = require("./routes/calificacionesRoutes"); 
 const restaurantesRoutes = require("./routes/restaurantesRoutes");
 const usuariosRoutes = require('./routes/usuariosRoutes');
-// Comentamos la importación de direccionesRoutes para probar directamente
-// const direccionesRoutes = require('./routes/direccionesRoutes');
+const pagosRoutes = require('./routes/pagosRoutes');
 const productosRoutes = require('./routes/productosRoutes');
-const restaurantesVerificacionRoutes = require('./routes/restaurantesVerificacionRoutes');
 const sucursalesRoutes = require('./routes/sucursalesRoutes');
 
 // Cargar variables de entorno
@@ -62,16 +60,15 @@ app.post('/api/direcciones', (req, res) => {
 // Rutas normales
 app.use('/api/auth', authRoutes);
 app.use('/api/calificaciones', calificacionesRoutes);
-app.use('/api/mensajes', mensajesRoutes);        
+app.use('/api/mensajes', mensajesRoutes);
+app.use('/api/pagos', pagosRoutes);
 app.use('/api/ubicacion', ubicacionRoutes);
-app.use('/api/restaurantes/verificacion', restaurantesVerificacionRoutes);
 app.use('/api/restaurantes', restaurantesRoutes);
 app.use('/api/sucursales', sucursalesRoutes);
 app.use('/api/pedidos', pedidoRoutes);
 app.use('/api/productos', productosRoutes);
+app.use('/api/pagos', pagosRoutes);
 
-// Comentamos la ruta de direcciones para probar directamente
-// app.use('/api/direcciones', direccionesRoutes);
 
 app.use('/api/usuarios', usuariosRoutes);
 

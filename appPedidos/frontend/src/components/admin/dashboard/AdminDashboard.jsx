@@ -17,8 +17,7 @@ import './AdminDashboard.css';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  
-  // Estados
+
   const [restaurants, setRestaurants] = useState([]);
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [stats, setStats] = useState({
@@ -33,14 +32,12 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Cargar datos iniciales
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
         setError(null);
-        
-        // 1. Obtener restaurantes del usuario usando el endpoint correcto
+
         let userRestaurants = [];
         
         try {
@@ -56,7 +53,6 @@ const AdminDashboard = () => {
             const altResponse = await api.get("/restaurantes/mis-restaurantes");
             console.log("Respuesta de /restaurantes/mis-restaurantes:", altResponse.data);
             
-            // Si la respuesta tiene un campo 'restaurantes', usamos ese
             if (altResponse.data && altResponse.data.restaurantes) {
               userRestaurants = altResponse.data.restaurantes;
             } else {
@@ -70,19 +66,16 @@ const AdminDashboard = () => {
         
         console.log("Restaurantes obtenidos:", userRestaurants);
         setRestaurants(userRestaurants);
-        
-        // Inicializar estadísticas
+
         let totalProducts = 0;
         let pendingOrders = 0;
         let totalOrders = 0;
         let totalIncome = 0;
         let averageRating = 0;
-        
-        // Seleccionar el primer restaurante por defecto
+
         if (userRestaurants.length > 0) {
           setSelectedRestaurant(userRestaurants[0].id);
           
-          // 2. Obtener productos de cada restaurante
           for (const restaurant of userRestaurants) {
             try {
               const productsResponse = await api.get(`/restaurantes/${restaurant.id}/productos`);
@@ -94,21 +87,17 @@ const AdminDashboard = () => {
             }
           }
           
-          // 3. Obtener pedidos del restaurante seleccionado
           try {
             const ordersResponse = await api.get(`/pedidos/restaurante/${userRestaurants[0].id}`);
             if (ordersResponse.data) {
               const orders = ordersResponse.data;
               totalOrders = orders.length;
               
-              // Filtrar pedidos pendientes
               pendingOrders = orders.filter(order => order.estado === 'Pendiente').length;
               
-              // Calcular ingresos totales (de pedidos entregados)
               const completedOrders = orders.filter(order => order.estado === 'Entregado');
               totalIncome = completedOrders.reduce((sum, order) => sum + order.total, 0);
-              
-              // Guardar pedidos recientes
+
               setRecentOrders(
                 orders
                   .sort((a, b) => new Date(b.fechaDeCreacion) - new Date(a.fechaDeCreacion))
@@ -119,7 +108,6 @@ const AdminDashboard = () => {
             console.error(`Error al obtener pedidos del restaurante ${userRestaurants[0].id}:`, err);
           }
 
-          // 4. OBTENER CALIFICACIÓN DINÁMICA DEL RESTAURANTE
           try {
             const calificacionesResponse = await api.get(`/calificaciones/restaurante/${userRestaurants[0].id}`);
             if (calificacionesResponse.data && calificacionesResponse.data.restaurante) {
@@ -127,18 +115,17 @@ const AdminDashboard = () => {
             }
           } catch (err) {
             console.error(`Error al obtener calificaciones del restaurante ${userRestaurants[0].id}:`, err);
-            averageRating = 0; // Valor por defecto si hay error
+            averageRating = 0;
           }
         }
-        
-        // Actualizar estadísticas
+
         setStats({
           totalRestaurants: userRestaurants.length,
           totalProducts,
           pendingOrders,
           totalOrders,
           totalIncome,
-          averageRating // USAR CALIFICACIÓN DINÁMICA
+          averageRating 
         });
         
         setLoading(false);
@@ -152,32 +139,26 @@ const AdminDashboard = () => {
     fetchDashboardData();
   }, []);
   
-  // Cambiar restaurante seleccionado
   const handleRestaurantChange = async (e) => {
     const restaurantId = e.target.value;
     setSelectedRestaurant(restaurantId);
-    
-    // Actualizar estadísticas para el restaurante seleccionado
+
     try {
       let pendingOrders = 0;
       let totalOrders = 0;
       let totalIncome = 0;
       let averageRating = 0;
-      
-      // Obtener pedidos
+
       const ordersResponse = await api.get(`/pedidos/restaurante/${restaurantId}`);
       if (ordersResponse.data) {
         const orders = ordersResponse.data;
         totalOrders = orders.length;
-        
-        // Filtrar pedidos pendientes
+
         pendingOrders = orders.filter(order => order.estado === 'Pendiente').length;
         
-        // Calcular ingresos totales (de pedidos entregados)
         const completedOrders = orders.filter(order => order.estado === 'Entregado');
         totalIncome = completedOrders.reduce((sum, order) => sum + order.total, 0);
-        
-        // Guardar pedidos recientes
+
         setRecentOrders(
           orders
             .sort((a, b) => new Date(b.fechaDeCreacion) - new Date(a.fechaDeCreacion))
@@ -185,7 +166,6 @@ const AdminDashboard = () => {
         );
       }
 
-      // OBTENER CALIFICACIÓN DINÁMICA
       try {
         const calificacionesResponse = await api.get(`/calificaciones/restaurante/${restaurantId}`);
         if (calificacionesResponse.data && calificacionesResponse.data.restaurante) {
@@ -195,31 +175,27 @@ const AdminDashboard = () => {
         console.error(`Error al obtener calificaciones del restaurante ${restaurantId}:`, err);
         averageRating = 0;
       }
-      
-      // Actualizar estadísticas
+
       setStats(prev => ({
         ...prev,
         pendingOrders,
         totalOrders,
         totalIncome,
-        averageRating // USAR CALIFICACIÓN DINÁMICA
+        averageRating 
       }));
     } catch (err) {
       console.error(`Error al obtener datos del restaurante ${restaurantId}:`, err);
     }
   };
-  
-  // Manejar clic en crear restaurante
+
   const handleCreateRestaurant = () => {
     navigate('/admin/restaurantes/nuevo');
   };
-  
-  // Manejar clic en administrar restaurante
+
   const handleManageRestaurant = (id) => {
     navigate(`/admin/restaurantes/${id}`);
   };
   
-  // Formatear precio
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -227,8 +203,7 @@ const AdminDashboard = () => {
       minimumFractionDigits: 0
     }).format(amount);
   };
-  
-  // Formatear fecha
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('es-CO', {

@@ -1,6 +1,3 @@
-// 2. MODIFICAR FoodItem.jsx - Con manejo de restricción de restaurante
-
-// src/components/client/fooditem/FoodItem.jsx
 import React, { useState, useContext } from 'react';
 import { FaPlus, FaMinus, FaShoppingCart } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -10,7 +7,6 @@ import './FoodItem.css';
 
 const DEFAULT_IMAGE = '/images/food-placeholder.jpg';
 
-// Función helper para obtener la URL de imagen correcta
 const getImageUrl = (product) => {
   const imageFields = ['imagen', 'imageUrl', 'image', 'foto', 'picture'];
   
@@ -32,13 +28,10 @@ const FoodItem = ({ product, onClick, restaurantName }) => {
   const [showRestaurantModal, setShowRestaurantModal] = useState(false);
   const [restrictionInfo, setRestrictionInfo] = useState(null);
   
-  // Obtener la cantidad actual en el carrito
   const quantity = getItemQuantity(product.id);
   
-  // Obtener la URL de imagen
   const imageUrl = getImageUrl(product);
   
-  // Formatear precio
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -47,7 +40,6 @@ const FoodItem = ({ product, onClick, restaurantName }) => {
     }).format(price);
   };
   
-  // Manejar clic en el elemento
   const handleClick = () => {
     if (onClick) {
       onClick(product.id);
@@ -56,7 +48,6 @@ const FoodItem = ({ product, onClick, restaurantName }) => {
     }
   };
   
-  // Manejar clic en el botón de agregar
   const handleAddClick = (e) => {
     e.stopPropagation();
     setIsAdding(true);
@@ -64,7 +55,6 @@ const FoodItem = ({ product, onClick, restaurantName }) => {
     const result = addToCart(product, restaurantName);
     
     if (!result.success) {
-      // Mostrar modal de restricción
       setRestrictionInfo({
         reason: result.reason,
         currentRestaurant: result.currentRestaurant,
@@ -78,7 +68,6 @@ const FoodItem = ({ product, onClick, restaurantName }) => {
     setTimeout(() => setIsAdding(false), 300);
   };
   
-  // Manejar clic en el botón de incrementar cantidad
   const handleIncrement = (e) => {
     e.stopPropagation();
     const result = addToCart(product, restaurantName);
@@ -93,13 +82,11 @@ const FoodItem = ({ product, onClick, restaurantName }) => {
     }
   };
   
-  // Manejar clic en el botón de decrementar cantidad
   const handleDecrement = (e) => {
     e.stopPropagation();
     removeFromCart(product.id);
   };
   
-  // Manejar error de imagen
   const handleImageError = (e) => {
     if (!imageError) {
       setImageError(true);
@@ -107,7 +94,6 @@ const FoodItem = ({ product, onClick, restaurantName }) => {
     }
   };
   
-  // Manejar confirmación de cambio de restaurante
   const handleRestaurantChange = () => {
     clearCart();
     const result = addToCart(product, restaurantName);
@@ -118,7 +104,6 @@ const FoodItem = ({ product, onClick, restaurantName }) => {
     }
   };
   
-  // Manejar cancelación de cambio de restaurante
   const handleRestaurantCancel = () => {
     setShowRestaurantModal(false);
     setRestrictionInfo(null);
@@ -192,7 +177,6 @@ const FoodItem = ({ product, onClick, restaurantName }) => {
         </div>
       </div>
       
-      {/* Modal de cambio de restaurante */}
       {showRestaurantModal && restrictionInfo && (
         <RestaurantChangeModal
           isOpen={showRestaurantModal}

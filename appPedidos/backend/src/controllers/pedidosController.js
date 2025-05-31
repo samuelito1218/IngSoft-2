@@ -1,7 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
-//const { ObjectId } = require('mongodb');
-//
+
 const prisma = new PrismaClient();
+
 // Método para obtener el historial de pedidos de un cliente
 exports.getPedidosCliente = async (req, res) => {
   try {
@@ -26,7 +26,7 @@ exports.getPedidosCliente = async (req, res) => {
     });
   }
 };
-// Método para obtener detalles de un pedido específico
+
 // Método para obtener detalles de un pedido específico
 exports.getPedidoDetalle = async (req, res) => {
   try {
@@ -42,12 +42,10 @@ exports.getPedidoDetalle = async (req, res) => {
       return res.status(404).json({ message: 'Pedido no encontrado' });
     }
     
-    // Verificar permisos (solo cliente del pedido o repartidor asignado)
     if (pedido.usuario_id !== usuario_id && pedido.repartidor_Id !== usuario_id) {
       return res.status(403).json({ message: 'No tienes permiso para ver este pedido' });
     }
     
-    // Si hay un repartidor asignado, obtener sus datos
     let repartidor = null;
     if (pedido.repartidor_Id) {
       repartidor = await prisma.usuarios.findUnique({
@@ -74,15 +72,13 @@ exports.getPedidoDetalle = async (req, res) => {
     });
   }
 };
-//Método para crear pedido
+
+
 exports.crearPedido = async (req, res) => {
   try {
     const { direccionEntrega, productos } = req.body;
     const usuario_id = req.user.id;
-    //console.log('ID del usuario autenticado:', usuario_id);
-    
-    //Método que impide que un usuario cree otro pedido mientras no haya finalizado el anterior
-
+  
     const pedidosActivos = await prisma.pedidos.count({
       where: {
         usuario_id: usuario_id,
@@ -111,9 +107,6 @@ exports.crearPedido = async (req, res) => {
       return res.status(400).json({ message: 'Dirección de entrega incompleta.' });
     }
 
-    
-
-    // Obtener los productos de la BD
     const productosIds = productos.map(p => p.productoId);
     const productosDB = await prisma.productos.findMany({
       where: { id: { in: productosIds } }
@@ -142,7 +135,7 @@ exports.crearPedido = async (req, res) => {
         estado: 'Pendiente',
         total,
         usuario_id,
-        repartidor_Id: null, // O el ID de un repartidor válido si aplica
+        repartidor_Id: null,
         fechaDeCreacion: new Date(),
         direccionEntrega: {
           barrio,
@@ -153,9 +146,6 @@ exports.crearPedido = async (req, res) => {
         mensajes: []
       }
     });
-
-
-    
 
     res.status(201).json(nuevoPedido);
   } catch (error) {
@@ -181,7 +171,6 @@ exports.getPedidoActivo = async (req, res) => {
       }
     });
     
-    // Si no hay pedido activo, devolver un objeto vacío con código 200, no 404
     if (!pedidoActivo) {
       return res.status(200).json({ 
         message: 'No hay pedido activo',
@@ -203,7 +192,6 @@ exports.getPedidoActivo = async (req, res) => {
       });
     }
     
-    // Obtener datos del cliente
     const cliente = await prisma.usuarios.findUnique({
       where: { id: usuario_id },
       select: {
@@ -223,8 +211,6 @@ exports.getPedidoActivo = async (req, res) => {
   }
 };
 
-
-//Método para asignar un pedido a un repartidor, usando sesiones y el id del pedido
 exports.asignarPedido = async (req,res)=>{
   try{
     const  { pedidoId }  = req.params;
@@ -253,8 +239,6 @@ exports.asignarPedido = async (req,res)=>{
   }
 };
 
-//Método para cambiar el estado del pedido (solo el repartidor puede hacer esto)
-
 exports.marcarEnCamino = async (req,res) =>{
   try {
     const  { pedidoId } = req.params;
@@ -269,20 +253,16 @@ exports.marcarEnCamino = async (req,res) =>{
       return res.status(404).json({message:"Pedido no encontrado"});
     }
 
-    //Verificar que si sea el repartidor el asignado a ese pedido
-
     if (pedido.repartidor_Id !==repartidor_Id){
       return res.status(403).json({message:"No posees el permiso para cambiar el estado de este pedido"});
 
     }
 
-    //Verificar que el estado previo sea Pendiente
     if (pedido.estado != "Pendiente"){
       return res.status(400).json({message: "El pedido debe haber estado pendiente para poder ir En camino"});
     }
 
     //Cambiar el estado a En_Camino
-
     const pedidoActualizado = await prisma.pedidos.update({
       where:{id:pedidoId},
       data:{estado:"En_Camino"}
@@ -297,7 +277,6 @@ exports.marcarEnCamino = async (req,res) =>{
 };
 
 //Cambiar el estado a Entregado
-
 exports.marcarEntregado = async (req,res)=>{
   try {
     const { pedidoId } = req.params;
@@ -324,7 +303,6 @@ exports.marcarEntregado = async (req,res)=>{
       return res.status(400).json({message: "El pedido debe estar en camino para poder ser entregado"});
     }
     //Cambiar el estado a Entregado
-
     const pedidoActualizado = await prisma.pedidos.update({
       where: {id:pedidoId},
       data: {estado:"Entregado"}
@@ -338,7 +316,6 @@ exports.marcarEntregado = async (req,res)=>{
   }
 };
 
-//Método para eliminar pedido (solamente por el usuario que creo el pedido) Nota: Si ya se asigno un repartidor no se peude eliminar
 exports.eliminarPedido = async (req,res)=>{
   try{
     const { pedidoId } = req.params;
@@ -361,14 +338,12 @@ exports.eliminarPedido = async (req,res)=>{
       });
     }
     //Se verifica que el pedido no tenga repartidor asignado
-
     if (pedido.repartidor_Id !== null){
       return res.status(400).json({
         message: "No puedes eliminar un pedido con repartidor asignado"
       });
     }
     //Eliminar pedido
-
     await prisma.pedidos.delete({
       where: { id: pedidoId},
     });
@@ -385,15 +360,13 @@ exports.eliminarPedido = async (req,res)=>{
 };
 
 //Método para editar pedido (solamente si no hay repartidor asignado) Nota: los productos asociados siguen perteneciendo al restaurante del pedido original
-
 exports.editarPedido = async (req, res) =>{
   try{
     const { pedidoId } = req.params;
-    const { productos } = req.body; // productos: [{productoId, cantidad}]
+    const { productos } = req.body; 
     const clienteId = req.user.id;
 
     //Buscar el pedido
-
     const pedido = await prisma.pedidos.findUnique({
       where: { id: pedidoId },
       include: { productos: true},
@@ -404,7 +377,7 @@ exports.editarPedido = async (req, res) =>{
         message: "Pedido no encontrado"
       });
     }
-    //Validar si el pedido pertenece al usuario y el estado del mismo:
+
     if (pedido.usuario_id !==clienteId){
       return res.status(403).json({
         message: "No tienes permiso para editar este pedido"
@@ -417,7 +390,6 @@ exports.editarPedido = async (req, res) =>{
       });
     }
     //Se obtiene el restaurante original mediante el primer producto
-
     const productoOriginal = await prisma.productos.findUnique({
       where: { id: pedido.productos[0].productoId },
     });
@@ -425,7 +397,6 @@ exports.editarPedido = async (req, res) =>{
 
     let total=0;
     //Se valida que todos los nuevos productos pertenezcan al mismo restaurante
-
     for (const item of productos){
       if (item.cantidad<=0){
         return res.status(400).json({
@@ -449,7 +420,6 @@ exports.editarPedido = async (req, res) =>{
       total += producto.precio * item.cantidad;
     }
     //Actualizar los productos del pedido
-
     await prisma.pedidos.update({
       where: { id: pedidoId},
       data: {
@@ -491,11 +461,8 @@ exports.getPedidosRestaurante = async (req, res) => {
       return res.status(403).json({ message: 'No tienes permiso para acceder a este restaurante' });
     }
 
-    // Construir la consulta con filtros opcionales
     let where = {};
-    
-    // Para filtrar pedidos del restaurante, necesitamos verificar los productos
-    // Primero obtenemos todos los productos del restaurante
+  
     const productosRestaurante = await prisma.productos.findMany({
       where: { restaurante_Id: restauranteId },
       select: { id: true }
@@ -503,19 +470,16 @@ exports.getPedidosRestaurante = async (req, res) => {
     
     const productosIds = productosRestaurante.map(p => p.id);
     
-    // Buscamos pedidos que contengan estos productos
     where.productos = {
       some: {
         productoId: { in: productosIds }
       }
     };
 
-    // Filtrar por estado si se proporciona
     if (estado) {
       where.estado = estado;
     }
 
-    // Filtrar por rango de fechas si se proporciona
     if (fechaDesde || fechaHasta) {
       where.fechaDeCreacion = {};
       
@@ -539,7 +503,6 @@ exports.getPedidosRestaurante = async (req, res) => {
       }
     });
 
-    // Para cada pedido, obtener información del cliente
     const pedidosConCliente = await Promise.all(pedidos.map(async (pedido) => {
       const cliente = await prisma.usuarios.findUnique({
         where: { id: pedido.usuario_id },
@@ -550,7 +513,6 @@ exports.getPedidosRestaurante = async (req, res) => {
         }
       });
 
-      // Obtener detalles de los productos (nombre, precio)
       const productosConDetalles = await Promise.all(pedido.productos.map(async (item) => {
         const producto = await prisma.productos.findUnique({
           where: { id: item.productoId }
@@ -586,7 +548,6 @@ exports.getPedidosPendientesRestaurante = async (req, res) => {
     const { restauranteId } = req.params;
     const adminId = req.user.id;
 
-    // Verificar que el restaurante existe y pertenece al admin
     const restaurante = await prisma.restaurantes.findUnique({
       where: { id: restauranteId }
     });
@@ -618,7 +579,7 @@ exports.getPedidosPendientesRestaurante = async (req, res) => {
         }
       },
       orderBy: {
-        fechaDeCreacion: 'asc' // Primero los más antiguos
+        fechaDeCreacion: 'asc' 
       }
     });
 
@@ -633,7 +594,6 @@ exports.getPedidosPendientesRestaurante = async (req, res) => {
         }
       });
 
-      // Obtener detalles de los productos (nombre, precio)
       const productosConDetalles = await Promise.all(pedido.productos.map(async (item) => {
         const producto = await prisma.productos.findUnique({
           where: { id: item.productoId }
@@ -677,13 +637,11 @@ exports.aceptarPedido = async (req, res) => {
     if (!pedido) {
       return res.status(404).json({ message: 'Pedido no encontrado' });
     }
-    
-    // Verificar que el pedido esté en estado Pendiente
+  
     if (pedido.estado !== 'Pendiente') {
       return res.status(400).json({ message: 'Solo se pueden aceptar pedidos en estado Pendiente' });
     }
     
-    // Obtener el primer producto del pedido para identificar el restaurante
     const primerProducto = await prisma.productos.findUnique({
       where: { id: pedido.productos[0].productoId }
     });
@@ -692,17 +650,14 @@ exports.aceptarPedido = async (req, res) => {
       return res.status(404).json({ message: 'No se encontró información del producto' });
     }
     
-    // Obtener el restaurante
     const restaurante = await prisma.restaurantes.findUnique({
       where: { id: primerProducto.restaurante_Id }
     });
-    
-    // Verificar que el restaurante pertenezca al admin
+
     if (!restaurante || !restaurante.ownerId.includes(adminId)) {
       return res.status(403).json({ message: 'No tienes permiso para gestionar este pedido' });
     }
-    
-    // Actualizar el estado del pedido a "En_Preparacion" (agregamos este estado)
+
     const pedidoActualizado = await prisma.pedidos.update({
       where: { id: pedidoId },
       data: { estado: 'En_Preparacion' }
@@ -721,7 +676,6 @@ exports.aceptarPedido = async (req, res) => {
   }
 };
 
-// Método para que el restaurante rechace un pedido
 exports.rechazarPedido = async (req, res) => {
   try {
     const { pedidoId } = req.params;
@@ -737,12 +691,10 @@ exports.rechazarPedido = async (req, res) => {
       return res.status(404).json({ message: 'Pedido no encontrado' });
     }
     
-    // Verificar que el pedido esté en estado Pendiente
     if (pedido.estado !== 'Pendiente') {
       return res.status(400).json({ message: 'Solo se pueden rechazar pedidos en estado Pendiente' });
     }
-    
-    // Obtener el primer producto del pedido para identificar el restaurante
+
     const primerProducto = await prisma.productos.findUnique({
       where: { id: pedido.productos[0].productoId }
     });
@@ -986,10 +938,7 @@ exports.getEstadisticasRestaurante = async (req, res) => {
   }
 };
 
-//Nuevos métodos para el frontend del repartidor desde aqui:
 
-// Método para obtener todos los pedidos disponibles (sin repartidor asignado)
-// Método corregido para obtener pedidos disponibles
 exports.getPedidosDisponibles = async (req, res) => {
   try {
     // Buscar pedidos sin repartidor asignado
@@ -1028,13 +977,11 @@ exports.getPedidosDisponibles = async (req, res) => {
         // Obtener restaurante y sucursal a partir del primer producto
         if (pedido.productos && pedido.productos.length > 0) {
           try {
-            // 1. Obtener información del producto
             const primerProducto = await prisma.productos.findUnique({
               where: { id: pedido.productos[0].productoId }
             });
             
             if (primerProducto) {
-              // 2. Obtener información del restaurante con sucursales
               const restaurante = await prisma.restaurantes.findUnique({
                 where: { id: primerProducto.restaurante_Id },
                 select: {
@@ -1058,15 +1005,12 @@ exports.getPedidosDisponibles = async (req, res) => {
                 infoRestaurante.id = restaurante.id;
                 infoRestaurante.nombre = restaurante.nombre;
                 infoRestaurante.imageUrl = restaurante.imageUrl;
-                
-                // 3. Obtener información de la sucursal
+          
                 if (restaurante.sucursales && restaurante.sucursales.length > 0) {
                   const sucursal = restaurante.sucursales[0];
-                  
-                  // Guardamos la dirección principal para compatibilidad
+
                   infoRestaurante.direccion = sucursal.direccion;
-                  
-                  // Guardamos la información completa de la sucursal
+
                   infoRestaurante.sucursal = {
                     id: sucursal.id,
                     nombre: sucursal.nombre,
@@ -1119,9 +1063,7 @@ exports.getPedidosDisponibles = async (req, res) => {
     });
   }
 };
-// Método para obtener pedidos activos de un repartidor
-// Función mejorada con mejor manejo de errores
-// Método corregido para obtener pedidos activos de un repartidor
+
 exports.getPedidosRepartidor = async (req, res) => {
   try {
     console.log("ID de usuario:", req.user.id);
@@ -1243,7 +1185,6 @@ exports.getPedidosRepartidor = async (req, res) => {
         });
       } catch (pedidoError) {
         console.error(`Error procesando pedido ${pedido.id}:`, pedidoError);
-        // Agregar pedido con datos por defecto para evitar romper el frontend
         pedidosConInfo.push({
           ...pedido,
           cliente: {
@@ -1273,12 +1214,9 @@ exports.getPedidosRepartidor = async (req, res) => {
   }
 };
 
-// Método para obtener historial de pedidos de un repartidor
 exports.getHistorialRepartidor = async (req, res) => {
   try {
     const repartidor_Id = req.user.id;
-    
-    // Buscar pedidos completados por el repartidor
     const pedidos = await prisma.pedidos.findMany({
       where: {
         repartidor_Id,
@@ -1293,8 +1231,7 @@ exports.getHistorialRepartidor = async (req, res) => {
         fechaDeCreacion: 'desc'
       }
     });
-    
-    // Obtener información detallada de cada pedido
+
     const pedidosConInfo = await Promise.all(pedidos.map(async (pedido) => {
       // Obtener información del cliente
       const cliente = await prisma.usuarios.findUnique({
@@ -1304,8 +1241,7 @@ exports.getHistorialRepartidor = async (req, res) => {
           nombreCompleto: true
         }
       });
-      
-      // Obtener restaurante basado en el primer producto del pedido
+
       let restaurante = null;
       if (pedido.productos && pedido.productos.length > 0) {
         const primerProducto = await prisma.productos.findUnique({
@@ -1339,17 +1275,13 @@ exports.getHistorialRepartidor = async (req, res) => {
     });
   }
 };
-// En pedidosController.js
 exports.listarPedidosUsuario = async (req, res) => {
-  // Simplemente redirigir al método existente
   return exports.getPedidosCliente(req, res);
 };
 exports.obtenerPedido = async (req, res) => {
-  // Puedes simplemente redirigir al método existente
   return exports.getPedidoDetalle(req, res);
 };
-// En pedidosController.js
+
 exports.asignarRepartidor = async (req, res) => {
-  // Puedes redirigir al método existente
   return exports.asignarPedido(req, res);
 };

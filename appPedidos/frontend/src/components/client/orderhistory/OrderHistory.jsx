@@ -1,4 +1,3 @@
-// src/components/client/OrderHistory.jssx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -22,7 +21,6 @@ const OrderHistory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('Todos');
   
-  // Cargar pedidos del usuario
   useEffect(() => {
     const fetchPedidos = async () => {
       try {
@@ -32,7 +30,6 @@ const OrderHistory = () => {
         const response = await ApiService.pedidos.historial();
         
         if (response.data && Array.isArray(response.data)) {
-          // Ordenar pedidos por fecha, más recientes primero
           const sortedPedidos = response.data.sort((a, b) => 
             new Date(b.fechaDeCreacion) - new Date(a.fechaDeCreacion)
           );
@@ -46,7 +43,6 @@ const OrderHistory = () => {
         
         setLoading(false);
       } catch (error) {
-        console.error('Error al cargar pedidos:', error);
         setError('No se pudieron cargar tus pedidos. Intenta nuevamente.');
         setLoading(false);
       }
@@ -57,31 +53,25 @@ const OrderHistory = () => {
     }
   }, [user]);
   
-  // Filtrar pedidos cuando cambia el término de búsqueda o filtro de estado
   useEffect(() => {
     if (!pedidos.length) return;
     
     let filtered = [...pedidos];
     
-    // Filtrar por estado
     if (filterStatus !== 'Todos') {
       filtered = filtered.filter(pedido => pedido.estado === filterStatus);
     }
     
-    // Filtrar por término de búsqueda
     if (searchTerm.trim() !== '') {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(pedido => {
-        // Buscar en ID del pedido
         if (pedido.id.toLowerCase().includes(term)) return true;
         
-        // Buscar en dirección
         if (pedido.direccionEntrega && (
           pedido.direccionEntrega.barrio.toLowerCase().includes(term) ||
           pedido.direccionEntrega.direccionEspecifica.toLowerCase().includes(term)
         )) return true;
         
-        // Si hay productos, buscar en nombres de productos
         if (pedido.productos && Array.isArray(pedido.productos)) {
           return pedido.productos.some(producto => 
             producto.nombre && producto.nombre.toLowerCase().includes(term)
@@ -95,7 +85,6 @@ const OrderHistory = () => {
     setFilteredPedidos(filtered);
   }, [searchTerm, filterStatus, pedidos]);
   
-  // Formatear fecha
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-CO', {
@@ -107,7 +96,6 @@ const OrderHistory = () => {
     });
   };
   
-  // Formatear precio
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -116,7 +104,6 @@ const OrderHistory = () => {
     }).format(price);
   };
   
-  // Obtener ícono según estado
   const getStatusIcon = (estado) => {
     switch (estado) {
       case 'Pendiente':
@@ -132,33 +119,27 @@ const OrderHistory = () => {
     }
   };
   
-  // Verificar si se puede calificar el pedido
   const canRate = (pedido) => {
     return pedido.estado === 'Entregado' && !pedido.calificado;
   };
   
-  // Ver detalles del pedido
   const viewOrderDetails = (pedidoId) => {
     navigate(`/cliente/delivery-tracking/${pedidoId}`);
   };
   
-  // Calificar pedido
   const rateOrder = (pedidoId, event) => {
-    event.stopPropagation(); // Evitar que el clic se propague al elemento padre
+    event.stopPropagation();
     navigate(`/cliente/calificar/${pedidoId}`);
   };
   
-  // Manejar cambio en campo de búsqueda
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
   
-  // Cambiar filtro de estado
   const handleStatusFilter = (estado) => {
     setFilterStatus(estado);
   };
   
-  // Volver atrás
   const handleBack = () => {
     navigate(-1);
   };

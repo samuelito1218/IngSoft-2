@@ -14,48 +14,37 @@ const Checkout = () => {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [step, setStep] = useState(1); // 1: Dirección, 2: Método de pago, 3: Confirmación
+  const [step, setStep] = useState(1); 
   const [success, setSuccess] = useState(false);
   const [pedidoId, setPedidoId] = useState(null);
   
-  // Estado para dirección de entrega
   const [direccion, setDireccion] = useState({
     barrio: '',
     comuna: '',
     direccionEspecifica: ''
   });
   
-  // Estado para método de pago
   const [metodoPago, setMetodoPago] = useState('efectivo');
   
-  // Estado para guardar dirección
   const [guardaDireccion, setGuardaDireccion] = useState(false);
   
-  // Estado para direcciones guardadas
   const [direccionesGuardadas, setDireccionesGuardadas] = useState([]);
   const [direccionSeleccionada, setDireccionSeleccionada] = useState(null);
   
-  // Verificar si hay productos en el carrito
   useEffect(() => {
     if (cartItems.length === 0 && !success) {
       navigate('/cliente/carrito');
     }
   }, [cartItems, navigate, success]);
   
-  // Versión simplificada para cargar direcciones (sin llamadas API)
-  // Esta es una solución temporal mientras se resuelven los problemas de backend
   useEffect(() => {
-  // Solo proceder si hay un usuario autenticado
   if (!user) return;
   
   const cargarDirecciones = async () => {
-    console.log('Intentando cargar direcciones para usuario:', user.id);
-    
+
     try {
-      // Intenta cargar direcciones desde la API
-      const response = await ApiService.usuarios.perfil(); // Cambiado a perfil() en lugar de direcciones()
-      console.log('Respuesta de perfil:', response);
-      
+      const response = await ApiService.usuarios.perfil();
+  
       // Verificar si el usuario tiene direcciones guardadas en su perfil
       if (response.data && response.data.historialDirecciones && 
           Array.isArray(response.data.historialDirecciones) && 
@@ -77,30 +66,18 @@ const Checkout = () => {
       }
     } catch (error) {
       console.error('Error al cargar direcciones:', error);
-      
-      // Si hay un error, inicializar con un array vacío
+    
       setDireccionesGuardadas([]);
-      
-      // Aquí podrías cargar datos ficticios para pruebas si lo deseas
-      /*
-      const direccionesEjemplo = [
-        {
-          barrio: "El Poblado",
-          comuna: 14,
-          direccionEspecifica: "Calle 10 #43-12"
-        }
-      ];
-      setDireccionesGuardadas(direccionesEjemplo);
-      */
+    
     }
   };
   
   // Ejecutar la carga de direcciones
   cargarDirecciones();
   
-}, [user]); // Dependencia: usuario // Dependencia: usuario
+}, [user]); 
   
-  // Formatear precio
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -109,7 +86,6 @@ const Checkout = () => {
     }).format(price);
   };
   
-  // Manejar cambio en formulario de dirección
   const handleDireccionChange = (e) => {
     const { name, value } = e.target;
     setDireccion(prevState => ({
@@ -118,18 +94,15 @@ const Checkout = () => {
     }));
   };
   
-  // Seleccionar una dirección guardada
   const handleDireccionSelect = (direccion) => {
     setDireccion(direccion);
     setDireccionSeleccionada(direccion);
   };
-  
-  // Manejar cambio en método de pago
+
   const handleMetodoPagoChange = (metodo) => {
     setMetodoPago(metodo);
   };
   
-  // Validar formulario de dirección
   const validarDireccion = () => {
     if (!direccion.barrio.trim()) {
       setError('El barrio es obligatorio');
@@ -148,8 +121,7 @@ const Checkout = () => {
     
     return true;
   };
-  
-  // Continuar al siguiente paso
+
   const handleContinuar = () => {
     setError(null);
     
@@ -162,7 +134,6 @@ const Checkout = () => {
     }
   };
   
-  // Volver al paso anterior
   const handleVolver = () => {
     if (step > 1) {
       setStep(step - 1);
@@ -177,16 +148,14 @@ const Checkout = () => {
       setLoading(true);
       setError(null);
       
-      // Crear estructura de datos para el pedido
       const productos = cartItems.map(item => ({
         productoId: item.id,
         cantidad: item.quantity
       }));
-      
-      // Convertir comuna a número entero antes de enviar al servidor
+
       const direccionFormateada = {
         ...direccion,
-        comuna: parseInt(direccion.comuna, 10) // Convertir a entero
+        comuna: parseInt(direccion.comuna, 10) 
       };
       
       const pedidoData = {
@@ -194,18 +163,14 @@ const Checkout = () => {
         productos,
         metodoPago
       };
-      
-      // Simular guardado de dirección (sin llamada API)
+  
       if (guardaDireccion && user) {
           try {
-            // Actualizar el perfil del usuario con la nueva dirección
             const perfilActual = await ApiService.usuarios.perfil();
             
             if (perfilActual.data) {
-              // Crear un historial de direcciones si no existe
               const historialDirecciones = perfilActual.data.historialDirecciones || [];
               
-              // Añadir la nueva dirección
               const actualizado = await ApiService.usuarios.actualizar({
                 ...perfilActual.data,
                 historialDirecciones: [
@@ -213,44 +178,32 @@ const Checkout = () => {
                   direccionFormateada
                 ]
               });
-              
-              console.log('Dirección guardada correctamente:', actualizado);
             } else {
               console.error('No se pudo obtener el perfil actual');
             }
           } catch (dirError) {
-            console.error('Error al guardar dirección:', dirError);
-            // No interrumpir el flujo si falla el guardado de dirección
           }
         }
       
-      // Log para depuración
-      console.log('Enviando datos del pedido:', pedidoData);
-      
       // Enviar pedido al backend
       const response = await ApiService.pedidos.crear(pedidoData);
-      console.log('Respuesta del servidor:', response);
       
       if (response.data && response.data.id) {
         setPedidoId(response.data.id);
         setSuccess(true);
-        clearCart(); // Limpiar carrito después de crear el pedido
-        
-        // Si el método de pago es tarjeta, proceder al pago
+        clearCart();
         if (metodoPago === 'tarjeta') {
           try {
             // Crear intención de pago
             const pagoResponse = await ApiService.pagos.crearIntencion(response.data.id);
-            if (pagoResponse.data && pagoResponse.data.clientSecret) {
-              // Redirigir a la página de pago
-              navigate(`/cliente/pago/${response.data.id}`, {
-                state: { clientSecret: pagoResponse.data.clientSecret }
-              });
-              return;
+            if (pagoResponse.data && pagoResponse.data.success) {
+            } else {
+              throw new Error('Error en la respuesta del servidor de pagos');
             }
           } catch (pagoError) {
-            console.error('Error al crear intención de pago:', pagoError);
-            // Continuar mostrando éxito aunque falle el pago
+            setError('Error al procesar el pago. Por favor, intenta de nuevo.');
+            setLoading(false);
+            return;
           }
         }
       } else {
@@ -259,9 +212,7 @@ const Checkout = () => {
       
       setLoading(false);
     } catch (error) {
-      console.error('Error al confirmar pedido:', error);
       
-      // Mejorar el mensaje de error basado en el tipo de error
       let errorMsg = 'Error al confirmar el pedido. Inténtalo de nuevo.';
       
       if (error.response) {
@@ -273,7 +224,6 @@ const Checkout = () => {
         } else if (error.response.status === 401) {
           errorMsg = 'Sesión expirada. Por favor, inicia sesión nuevamente.';
         } else if (error.response.status === 500) {
-          // Buscar el mensaje de error específico en la respuesta
           if (error.response.data && error.response.data.error && 
               typeof error.response.data.error === 'string' && 
               error.response.data.error.includes('Expected Int, provided String')) {
@@ -287,7 +237,6 @@ const Checkout = () => {
           errorMsg = error.response.data.message;
         }
       } else if (error.request) {
-        // Error de conexión
         errorMsg = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
       }
       
@@ -308,9 +257,7 @@ const Checkout = () => {
     navigate('/cliente');
   };
   
-  // Renderizar paso actual
   const renderPaso = () => {
-    // Si el pedido fue exitoso, mostrar mensaje de éxito
     if (success) {
       return (
         <div className="checkout-success">

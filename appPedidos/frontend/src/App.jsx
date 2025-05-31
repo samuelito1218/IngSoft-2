@@ -1,12 +1,10 @@
-// Archivo App.jsx completo (Rutas actualizadas)//
-
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'; 
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { useAuth } from './hooks/useAuth';
 import ChatService from './services/ChatService';
-import MapTest from './components/client/MapTest';
+
 
 // Componentes de autenticación
 import Login from './pages/Login';
@@ -112,7 +110,6 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
-// El componente principal App
 function AppContent() {
   const { user, isAuthenticated } = useAuth();
   const location = useLocation();
@@ -130,7 +127,6 @@ function AppContent() {
     if (isAuthenticated && user) {
       const loadActivePedido = async () => {
         try {
-          // Buscar pedido activo según el rol
           let endpoint = '';
           
           if (user.rol === 'Cliente' || user.rol === 'cliente') {
@@ -329,16 +325,7 @@ function AppContent() {
             </ProtectedRoute>
           } 
         />
-        <Route 
-          path="/cliente/map-test" 
-          element={
-            <ProtectedRoute allowedRoles={['Cliente', 'cliente']}>
-              <ClientLayout>
-                <MapTest />
-              </ClientLayout>
-            </ProtectedRoute>
-          } 
-        />
+        
         
         {/* Rutas Repartidor */}
         <Route 
@@ -407,7 +394,7 @@ function AppContent() {
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
       
-      {/* Floating Chat Icon - Only show for authenticated users with active chat */}
+      {/* Floating Chat Icon*/}
       {isAuthenticated && 
        user && 
        chatInfo.pedidoId && 
@@ -419,7 +406,6 @@ function AppContent() {
         />
       )}
       
-      {/* Floating Chat Window */}
       {showChat && chatInfo.pedidoId && (
         <FloatingChat 
           pedidoId={chatInfo.pedidoId}

@@ -15,10 +15,9 @@ const SucursalesManagement = ({ restaurante, onClose }) => {
   const [mostrarFormNueva, setMostrarFormNueva] = useState(false);
   const [error, setError] = useState(null);
   
-  // Estados para el modal de confirmación
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmModalConfig, setConfirmModalConfig] = useState({
-    type: 'success', // 'success', 'warning', 'danger'
+    type: 'success',
     title: '',
     message: '',
     confirmText: '',
@@ -30,13 +29,10 @@ const SucursalesManagement = ({ restaurante, onClose }) => {
     cargarSucursales();
   }, [restaurante.id]);
 
-  // Función para mostrar modal de confirmación
   const showConfirmation = (config) => {
     setConfirmModalConfig(config);
     setShowConfirmModal(true);
   };
-
-  // Función para cerrar modal de confirmación
   const closeConfirmModal = () => {
     setShowConfirmModal(false);
     setConfirmModalConfig({});
@@ -113,7 +109,7 @@ const SucursalesManagement = ({ restaurante, onClose }) => {
       setNuevaSucursal({ nombre: '', direccion: '', comuna: '' });
       setMostrarFormNueva(false);
       
-      // Modal de éxito
+
       showConfirmation({
         type: 'success',
         title: '¡Éxito!',
@@ -144,8 +140,7 @@ const SucursalesManagement = ({ restaurante, onClose }) => {
       
       await cargarSucursales();
       setEditando(null);
-      
-      // Modal de éxito para actualización
+
       showConfirmation({
         type: 'success',
         title: '¡Actualizado!',
@@ -189,8 +184,7 @@ const SucursalesManagement = ({ restaurante, onClose }) => {
       console.log('Sucursal eliminada exitosamente');
       
       await cargarSucursales();
-      
-      // Modal de éxito para eliminación
+
       showConfirmation({
         type: 'success',
         title: '¡Eliminado!',
@@ -212,7 +206,6 @@ const SucursalesManagement = ({ restaurante, onClose }) => {
     }
   };
 
-  // Función para manejar el cierre con ESC
   useEffect(() => {
     const handleEsc = (event) => {
       if (event.keyCode === 27) {
@@ -229,7 +222,6 @@ const SucursalesManagement = ({ restaurante, onClose }) => {
     };
   }, [onClose, showConfirmModal]);
 
-  // Función para prevenir el cierre al hacer click en el contenido
   const handleModalClick = (e) => {
     e.stopPropagation();
   };

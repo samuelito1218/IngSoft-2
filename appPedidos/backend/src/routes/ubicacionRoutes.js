@@ -1,10 +1,8 @@
-// ubicacionRoutes.js
 const express = require('express');
 const router = express.Router();
 const ubicacionController = require('../controllers/ubicacionController');
 const { authenticate } = require('../middlewares/authMiddleware');
-//
-// Rutas para ubicaciones de pedidos
+
 router.get(
   '/pedido/:pedidoId',
   authenticate,
